@@ -1,3 +1,7 @@
+// ===========================
+// BioHealing Monitor - main.js
+// ===========================
+
 // ===== Edad compacta =====
 function makeLocalDate(y,m,d,hh,mm){const dt=new Date(Date.UTC(y,m-1,d,hh,mm));return new Date(dt.getTime()-3*3600*1000);}
 const birth = makeLocalDate(1976,12,4,0,50);
@@ -13,50 +17,42 @@ function renderAge(){
   const a1=document.getElementById('age'); if(a1) a1.textContent=txt;
   const a2=document.getElementById('ov-age'); if(a2) a2.textContent='Edad: '+txt;
 }
-setInterval(renderAge,1000);renderAge();
+setInterval(renderAge,1000); renderAge();
+
 // ===== Audio minimal (hum + beep) =====
-let audioCtx = null, masterGain = null, humOsc = null, humGain = null;
-let soundOn = true; // estado del botón Sonido
+let audioCtx=null, masterGain=null, humOsc=null, humGain=null;
+let soundOn=true;
 
 function ensureAudio(){
   if (audioCtx) return;
-  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  masterGain = audioCtx.createGain();
-  masterGain.gain.value = 0.0009; // volumen maestro muy bajo (ambiente suave)
+  audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+  masterGain=audioCtx.createGain();
+  masterGain.gain.value=0.0009; // volumen maestro bajo
   masterGain.connect(audioCtx.destination);
 }
-
 function playBeep(){
-  if (!audioCtx || !soundOn) return;
-  const o = audioCtx.createOscillator();
-  const g = audioCtx.createGain();
-  o.type = 'sine';
-  o.frequency.value = 880;
-  g.gain.value = 0.001; // beep suave
+  if(!audioCtx || !soundOn) return;
+  const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+  o.type='sine'; o.frequency.value=880; g.gain.value=0.001;
   o.connect(g).connect(masterGain);
   o.start();
-  g.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.12);
-  o.stop(audioCtx.currentTime + 0.14);
+  g.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime+0.12);
+  o.stop(audioCtx.currentTime+0.14);
 }
-
 function startHum(){
-  if (!audioCtx || humOsc || !soundOn) return;
-  humOsc = audioCtx.createOscillator();
-  humGain = audioCtx.createGain();
-  humOsc.type = 'sawtooth';
-  humOsc.frequency.value = 110;   // zumbido grave
-  humGain.gain.value = 0.0005;    // volumen bajito
+  if(!audioCtx || humOsc || !soundOn) return;
+  humOsc=audioCtx.createOscillator(); humGain=audioCtx.createGain();
+  humOsc.type='sawtooth'; humOsc.frequency.value=110;
+  humGain.gain.value=0.0005;
   humOsc.connect(humGain).connect(masterGain);
   humOsc.start();
 }
-
 function stopHum(){
-  if (!humOsc) return;
-  humGain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.2);
-  humOsc.stop(audioCtx.currentTime + 0.25);
-  humOsc = null; humGain = null;
+  if(!humOsc) return;
+  humGain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime+0.2);
+  humOsc.stop(audioCtx.currentTime+0.25);
+  humOsc=null; humGain=null;
 }
-
 
 // ===== Bio extra para bienvenida =====
 const CHINESE=['Rata','Buey','Tigre','Conejo','Dragón','Serpiente','Caballo','Cabra','Mono','Gallo','Perro','Cerdo'];
@@ -90,30 +86,38 @@ if(h<12)return'Alerta alta';
 if(h<14)return'Bajada posalmuerzo';
 if(h<18)return'Segundo pico de energía';
 return'Desaceleración vespertina';}
+
 function biorr(d){
   const days=Math.floor((new Date(d.getFullYear(),d.getMonth(),d.getDate()) - new Date(birth.getFullYear(),birth.getMonth(),birth.getDate()))/86400000);
   const val=p=> (Math.round(Math.sin(2*Math.PI*days/p)*100))+'%';
-  document.getElementById('ov-bio-f').textContent='Físico: '+val(23);
-  document.getElementById('ov-bio-e').textContent='Emocional: '+val(28);
-  document.getElementById('ov-bio-i').textContent='Intelectual: '+val(33);
-  document.getElementById('ov-zodiac').textContent='Zodiaco: '+zodiac(new Date(1976,11,4));
-  document.getElementById('ov-czodiac').textContent='Chino: '+chinese(1976);
-  document.getElementById('ov-moon').textContent='Luna: '+moon(d);
-  document.getElementById('ov-circ').textContent='Circadiano: '+circadian(d);
+  const f='Físico: '+val(23), e='Emocional: '+val(28), i='Intelectual: '+val(33);
+  const z='Zodiaco: '+zodiac(new Date(1976,11,4));
+  const cz='Chino: '+chinese(1976);
+  const mn='Luna: '+moon(d);
+  const cc='Circadiano: '+circadian(d);
+  const q=(id,txt)=>{const el=document.getElementById(id); if(el) el.textContent=txt;};
+  q('ov-bio-f',f); q('ov-bio-e',e); q('ov-bio-i',i);
+  q('ov-zodiac',z); q('ov-czodiac',cz); q('ov-moon',mn); q('ov-circ',cc);
 }
-setInterval(()=>biorr(new Date()),60000);biorr(new Date());
+setInterval(()=>biorr(new Date()),60000); biorr(new Date());
 
 // ===== Bienvenida: contadores =====
 function animateCounter(el,to,ms=3200){
-  const start=0;const t0=performance.now();
-  function step(t){const k=Math.min(1,(t-t0)/ms);const eased=0.5-0.5*Math.cos(Math.PI*k);el.textContent=Math.round(start+(to-start)*eased).toLocaleString('es-UY');if(k<1)requestAnimationFrame(step);}
+  const start=0, t0=performance.now();
+  function step(t){
+    const k=Math.min(1,(t-t0)/ms);
+    const eased=0.5-0.5*Math.cos(Math.PI*k);
+    el.textContent=Math.round(start+(to-start)*eased).toLocaleString('es-UY');
+    if(k<1) requestAnimationFrame(step);
+  }
   requestAnimationFrame(step);
 }
 function initWelcome(){
   const base=12_000_000, ops=Math.floor(base*(0.90+Math.random()*0.06));
-  animateCounter(document.getElementById('n-total'),base,3200);
-  animateCounter(document.getElementById('n-op'),ops,3400);
-  setTimeout(()=>{document.getElementById('swarm-bar').style.width=Math.round(ops/base*100)+'%'},700);
+  const elT=document.getElementById('n-total'), elO=document.getElementById('n-op'), bar=document.getElementById('swarm-bar');
+  if(elT) animateCounter(elT,base,3200);
+  if(elO) animateCounter(elO,ops,3400);
+  if(bar) setTimeout(()=>{ bar.style.width=Math.round(ops/base*100)+'%'; },700);
 }
 initWelcome();
 
@@ -122,58 +126,70 @@ const overlay=document.getElementById('overlay');
 const startBtn=document.getElementById('startBtn');
 const powerBtn=document.getElementById('power-btn');
 const led=document.getElementById('led');
-const soundBtn = document.getElementById('sound-btn');
-if (soundBtn) {
-  soundBtn.addEventListener('click', async () => {
+const soundBtn=document.getElementById('sound-btn');
+
+let isOn=false;
+
+if (soundBtn){
+  soundBtn.addEventListener('click', async ()=>{
     ensureAudio();
-    try { await audioCtx.resume(); } catch {}
-    soundOn = !soundOn;
-    soundBtn.textContent = 'Sonido: ' + (soundOn ? 'ON' : 'OFF');
+    try{ await audioCtx.resume(); }catch{}
+    soundOn=!soundOn;
+    soundBtn.textContent='Sonido: '+(soundOn?'ON':'OFF');
     soundBtn.setAttribute('aria-pressed', String(soundOn));
-    if (isOn && soundOn) startHum(); else stopHum();
+    if(isOn && soundOn) startHum(); else stopHum();
   });
 }
 
-let isOn=false;
-startBtn.onclick = async () => {
-  overlay.style.display = 'none';
-  // habilita audio tras gesto del usuario (requerido en iOS)
-  ensureAudio();
-  try { await audioCtx.resume(); } catch {}
-  if (!isOn) powerBtn.click();     // enciende
-  if (soundOn) startHum();         // arranca hum si sonido ON
+startBtn.onclick=async ()=>{
+  overlay.style.display='none';
+  ensureAudio(); try{ await audioCtx.resume(); }catch{}
+  if(!isOn) powerBtn.click();      // enciende
+  if(soundOn) startHum();          // hum si sonido ON
 };
 
-powerBtn.onclick = () => {
-  isOn = !isOn;
-  powerBtn.textContent = isOn ? 'Apagar' : 'Encender';
+powerBtn.onclick=()=>{
+  isOn=!isOn;
+  powerBtn.textContent=isOn?'Apagar':'Encender';
   led.classList.toggle('on', isOn);
   toggleModules(isOn);
-  if (!audioCtx) return;          // si aún no se habilitó audio, nada
-  if (isOn && soundOn) startHum();
-  else stopHum();
+  if(!audioCtx) return;
+  if(isOn && soundOn) startHum(); else stopHum();
 };
 
-// Failsafe 15s
-setTimeout(()=>{if(overlay.style.display!=='none'){overlay.style.display='none';if(!isOn)powerBtn.click();}},15000);
+// Failsafe 15s: cierra overlay y enciende si quedó trabado
+setTimeout(()=>{
+  if(overlay.style.display!=='none'){
+    overlay.style.display='none';
+    if(!isOn) powerBtn.click();
+  }
+},15000);
 
 // ===== Monitores (gauges) =====
 const grid=document.getElementById('grid');
 const MODULES=[
-  { id:'org-internos',   title:'Rejuvenecimiento — Órganos internos', target:95 },
-  { id:'org-externos',   title:'Rejuvenecimiento — Piel & tejido externo', target:92 },
-  { id:'glucosa',        title:'Regulación de azúcar', target:94 },
-  { id:'globulos',       title:'Glóbulos (inmunidad)', target:90 },
-  { id:'presion',        title:'Presión arterial', target:88 },
-  { id:'detox',          title:'Detox hepático', target:93 },
-  { id:'mental', title:'Estado mental — Neuroquímica', target:91 },
+  { id:'org-internos', title:'Rejuvenecimiento — Órganos internos', target:95 },
+  { id:'org-externos', title:'Rejuvenecimiento — Piel & tejido externo', target:92 },
+  { id:'glucosa',      title:'Regulación de azúcar', target:94 },
+  { id:'globulos',     title:'Glóbulos (inmunidad)', target:90 },
+  { id:'presion',      title:'Presión arterial',     target:88 },
+  { id:'detox',        title:'Detox hepático',       target:93 },
+  { id:'mental',       title:'Estado mental — Neuroquímica', target:91 },
 ];
+
 function clamp(n,min,max){return Math.max(min,Math.min(max,n));}
 function toAngle(v){return -120 + (clamp(v,0,100)*2.4);}
-function setStatus(card,text,level){const dot=card.querySelector('.dot');const st=card.querySelector('.status span');dot.className='dot '+level;st.textContent=text;}
+function setStatus(card,text,level){
+  const dot=card.querySelector('.dot');
+  const st=card.querySelector('.status span');
+  if(dot) dot.className='dot '+level;
+  if(st)  st.textContent=text;
+}
 function setVisual(card,v,active){
   const needle=card.querySelector('.needle'), value=card.querySelector('.value');
-  card.dataset.current=v; needle.style.transform=`rotate(${toAngle(v)}deg)`; value.textContent=`${Math.round(v)}%`;
+  card.dataset.current=v;
+  if(needle) needle.style.transform=`rotate(${toAngle(v)}deg)`;
+  if(value)  value.textContent=`${Math.round(v)}%`;
   if(v<40) setStatus(card, active?'Calibrando':'En espera', 'bad');
   else if(v<75) setStatus(card, active?'Calibrando':'Ajustando', 'warn');
   else setStatus(card, 'Estable', 'good');
@@ -190,63 +206,44 @@ function animateTo(card,goal){
 function createCard(mod){
   const card=document.createElement('section'); card.className='card';
 
-  const title=document.createElement('div'); 
-  title.className='title-sm'; 
-  title.textContent=mod.title;
+  const title=document.createElement('div'); title.className='title-sm'; title.textContent=mod.title;
 
-  const status=document.createElement('div'); 
-  status.className='status'; 
+  const status=document.createElement('div'); status.className='status';
   const dot=document.createElement('i'); dot.className='dot bad';
-  const stText=document.createElement('span'); stText.textContent='En espera'; 
+  const stText=document.createElement('span'); stText.textContent='En espera';
   status.append(dot,stText);
 
-  const gauge=document.createElement('div'); 
-  gauge.className='gauge';
-
-  const dial=document.createElement('div'); 
-  dial.className='dial';
+  const gauge=document.createElement('div'); gauge.className='gauge';
+  const dial=document.createElement('div'); dial.className='dial';
 
   // Valor inicial aleatorio entre 20 y 60
-  const init = Math.floor(20 + Math.random() * 40);
+  const init=Math.floor(20+Math.random()*40);
 
-  const needle=document.createElement('div'); 
-  needle.className='needle'; 
+  const needle=document.createElement('div'); needle.className='needle';
   needle.style.transform=`rotate(${toAngle(init)}deg)`;
+  const hub=document.createElement('div'); hub.className='hub';
+  const value=document.createElement('div'); value.className='value'; value.textContent=init+'%';
 
-  const hub=document.createElement('div'); 
-  hub.className='hub';
-
-  const value=document.createElement('div'); 
-  value.className='value'; 
-  value.textContent = init + '%';
-
-  // ⬇️ FALTABA ESTO
   gauge.append(dial, needle, hub, value);
 
-  const controls=document.createElement('div'); 
-  controls.className='controls';
+  const controls=document.createElement('div'); controls.className='controls';
   const bStart=document.createElement('button'); bStart.className='btn mod'; bStart.textContent='Activar';
   const bStop=document.createElement('button'); bStop.className='btn alt mod'; bStop.textContent='Detener';
   controls.append(bStart,bStop);
 
   card.append(title,status,gauge,controls);
 
-  card._timer=null; 
-  card._active=false; 
-  card.dataset.current=init;
-
-  // Ajusta el estado visual según el init (color del dot y texto)
+  card._timer=null; card._active=false; card.dataset.current=init;
   setVisual(card, init, false);
 
   const goal=clamp(mod.target??92,70,100);
 
-  function start(){ 
-    if(!isOn||card._active) return; 
-    card._active=true; 
-    animateTo(card,goal); 
+  function start(){
+    if(!isOn||card._active) return;
+    card._active=true;
+    animateTo(card,goal);
     playBeep();
   }
-
   function stop(){
     clearInterval(card._timer); card._active=false;
     card._timer=setInterval(()=>{
@@ -257,115 +254,82 @@ function createCard(mod){
     },90);
   }
   bStart.addEventListener('click',start);
-  bStop.addEventListener('click',stop);
+  bStop .addEventListener('click',stop);
   bStart.disabled=true; bStop.disabled=true;
 
   return card;
 }
+MODULES.forEach(m=> grid.appendChild(createCard(m)));
 
-
-  function stop(){
-    clearInterval(card._timer); card._active=false;
-    card._timer=setInterval(()=>{
-      let cur=Number(card.dataset.current||10);
-      cur -= Math.max(0.8,(cur-10)*0.06);
-      if(cur<=10){cur=10;setVisual(card,cur,false);clearInterval(card._timer);}
-      else setVisual(card,cur,false);
-    },90);
-  }
-  bStart.addEventListener('click',start);
-  bStop.addEventListener('click',stop);
-  bStart.disabled=true; bStop.disabled=true;
-
-  return card;
-}
-MODULES.forEach(m=>grid.appendChild(createCard(m)));
 function toggleModules(on){
   document.querySelectorAll('.card').forEach(card=>{
     const btns=card.querySelectorAll('.btn.mod');
     btns.forEach(b=> b.disabled=!on);
-    if(!on){ clearInterval(card._timer); setVisual(card,0,false); setStatus(card,'En espera','bad'); card._active=false; }
+    if(!on){
+      clearInterval(card._timer);
+      setVisual(card,0,false);
+      setStatus(card,'En espera','bad');
+      card._active=false;
+    }
   });
 }
 
 // ===== Chequeos simples =====
-const CHECKS = [
+const CHECKS=[
   { id:'scan',           label:'Escaneo sistémico' },
   { id:'torrente',       label:'Recuento en torrente sanguíneo' },
   { id:'operativos',     label:'Nanorobots operativos' },
   { id:'autorreparacion',label:'Autorreparación celular' },
   { id:'depuracion',     label:'Depuración de toxinas' },
-  { id:'serotonina', label:'Serotonina (ánimo)' },
-{ id:'dopamina', label:'Dopamina (motivación)' },
-{ id:'oxitocina', label:'Oxitocina (vínculo)' },
-{ id:'melatonina', label:'Melatonina (sueño)' },
-{ id:'cortisol', label:'Cortisol (estrés)' },
+  { id:'serotonina',     label:'Serotonina (ánimo)' },
+  { id:'dopamina',       label:'Dopamina (motivación)' },
+  { id:'oxitocina',      label:'Oxitocina (vínculo)' },
+  { id:'melatonina',     label:'Melatonina (sueño)' },
+  { id:'cortisol',       label:'Cortisol (estrés)' },
 ];
 
-const checklist = document.getElementById('checklist');
-
-// Construcción sin estilos inline (usa clases CSS)
-CHECKS.forEach(ch => {
-  const row = document.createElement('div');
-  row.className = 'row';
-
-  const head = document.createElement('div');
-  head.className = 'row-head';
-
-  const label = document.createElement('div');
-  label.className = 'row-label';
-  label.textContent = ch.label;
-
-  const perc = document.createElement('div');
-  perc.className = 'perc';
-  perc.id = `p-${ch.id}`;
-  perc.textContent = '0%';
-
-  head.append(label, perc);
-
-  const bar = document.createElement('div');
-  bar.className = 'bar';
-
-  const fill = document.createElement('div');
-  fill.className = 'fill';
-  fill.id = `b-${ch.id}`;
-
-  bar.append(fill);
-  row.append(head, bar);
-
+const checklist=document.getElementById('checklist');
+CHECKS.forEach(ch=>{
+  const row=document.createElement('div'); row.className='row';
+  const head=document.createElement('div'); head.className='row-head';
+  const label=document.createElement('div'); label.className='row-label'; label.textContent=ch.label;
+  const perc=document.createElement('div'); perc.className='perc'; perc.id=`p-${ch.id}`; perc.textContent='0%';
+  head.append(label,perc);
+  const bar=document.createElement('div'); bar.className='bar';
+  const fill=document.createElement('div'); fill.className='fill'; fill.id=`b-${ch.id}`;
+  bar.append(fill); row.append(head,bar);
   checklist.appendChild(row);
 });
 
-function setCheck(id, pct){
-  pct = Math.max(0, Math.min(100, pct));
-  const f = document.getElementById(`b-${id}`);
-  const p = document.getElementById(`p-${id}`);
-  if (f) f.style.width = pct + '%';
-  if (p) p.textContent = Math.round(pct) + '%';
+function setCheck(id,pct){
+  pct=Math.max(0,Math.min(100,pct));
+  const f=document.getElementById(`b-${id}`);
+  const p=document.getElementById(`p-${id}`);
+  if(f) f.style.width=pct+'%';
+  if(p) p.textContent=Math.round(pct)+'%';
 }
 
-// Al iniciar monitoreo, asignamos valores
-document.getElementById('startBtn').addEventListener('click', () => {
-  setCheck('scan', 28);
-  setCheck('torrente', 84);
-  setCheck('operativos', 92);
-  setCheck('autorreparacion', 31);
-  setCheck('depuracion', 47);
-  setCheck('serotonina', 76);
-setCheck('dopamina', 64);
-setCheck('oxitocina', 58);
-setCheck('melatonina', 71);
-setCheck('cortisol', 43);
-});
-
-// También asigna algo por defecto si el usuario espera en la bienvenida
-setTimeout(() => {
-  if (document.getElementById('overlay')?.style.display !== 'none') {
+// Valores por defecto si el usuario espera en la bienvenida
+setTimeout(()=>{
+  if(document.getElementById('overlay')?.style.display!=='none'){
     setCheck('scan', 10);
     setCheck('torrente', 20);
     setCheck('operativos', 25);
     setCheck('autorreparacion', 8);
     setCheck('depuracion', 12);
   }
-}, 1500);
+},1500);
 
+// Al iniciar monitoreo, asignamos valores "buenos"
+document.getElementById('startBtn').addEventListener('click', ()=>{
+  setCheck('scan', 28);
+  setCheck('torrente', 84);
+  setCheck('operativos', 92);
+  setCheck('autorreparacion', 31);
+  setCheck('depuracion', 47);
+  setCheck('serotonina', 76);
+  setCheck('dopamina', 64);
+  setCheck('oxitocina', 58);
+  setCheck('melatonina', 71);
+  setCheck('cortisol', 43);
+});
