@@ -166,6 +166,7 @@ const MODULES=[
   { id:'globulos',       title:'Glóbulos (inmunidad)', target:90 },
   { id:'presion',        title:'Presión arterial', target:88 },
   { id:'detox',          title:'Detox hepático', target:93 },
+  { id:'mental', title:'Estado mental — Neuroquímica', target:91 },
 ];
 function clamp(n,min,max){return Math.max(min,Math.min(max,n));}
 function toAngle(v){return -120 + (clamp(v,0,100)*2.4);}
@@ -245,6 +246,11 @@ const CHECKS = [
   { id:'operativos',     label:'Nanorobots operativos' },
   { id:'autorreparacion',label:'Autorreparación celular' },
   { id:'depuracion',     label:'Depuración de toxinas' },
+  { id:'serotonina', label:'Serotonina (ánimo)' },
+{ id:'dopamina', label:'Dopamina (motivación)' },
+{ id:'oxitocina', label:'Oxitocina (vínculo)' },
+{ id:'melatonina', label:'Melatonina (sueño)' },
+{ id:'cortisol', label:'Cortisol (estrés)' },
 ];
 
 const checklist = document.getElementById('checklist');
@@ -296,6 +302,11 @@ document.getElementById('startBtn').addEventListener('click', () => {
   setCheck('operativos', 92);
   setCheck('autorreparacion', 31);
   setCheck('depuracion', 47);
+  setCheck('serotonina', 76);
+setCheck('dopamina', 64);
+setCheck('oxitocina', 58);
+setCheck('melatonina', 71);
+setCheck('cortisol', 43);
 });
 
 // También asigna algo por defecto si el usuario espera en la bienvenida
