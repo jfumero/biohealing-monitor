@@ -20,39 +20,59 @@ function renderAge(){
 setInterval(renderAge,1000); renderAge();
 
 // ===== Audio minimal (hum + beep) =====
-let audioCtx=null, masterGain=null, humOsc=null, humGain=null;
-let soundOn=true;
+let audioCtx = null, masterGain = null, humOsc = null, humGain = null;
+let soundOn = true; // estado del botón Sonido
 
 function ensureAudio(){
   if (audioCtx) return;
-  audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-  masterGain=audioCtx.createGain();
-  masterGain.gain.value=0.0009; // volumen maestro bajo
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  masterGain = audioCtx.createGain();
+  masterGain.gain.value = 0.02; // ↑ subimos volumen maestro (antes 0.0009)
   masterGain.connect(audioCtx.destination);
 }
-function playBeep(){
-  if(!audioCtx || !soundOn) return;
-  const o=audioCtx.createOscillator(), g=audioCtx.createGain();
-  o.type='sine'; o.frequency.value=880; g.gain.value=0.001;
+
+// Sube un poco el beep para que se note en parlantes de notebook
+function playBeep(freq = 880, dur = 0.18){
+  if (!audioCtx || !soundOn) return;
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.type = 'sine';
+  o.frequency.value = freq;
+  g.gain.value = 0.02; // ↑ antes 0.001
   o.connect(g).connect(masterGain);
-  o.start();
-  g.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime+0.12);
-  o.stop(audioCtx.currentTime+0.14);
+  const t0 = audioCtx.currentTime;
+  o.start(t0);
+  g.gain.exponentialRampToValueAtTime(0.00001, t0 + dur);
+  o.stop(t0 + dur + 0.02);
 }
+
+// Hum más audible (220 Hz) y un poco más de ganancia
 function startHum(){
-  if(!audioCtx || humOsc || !soundOn) return;
-  humOsc=audioCtx.createOscillator(); humGain=audioCtx.createGain();
-  humOsc.type='sawtooth'; humOsc.frequency.value=110;
-  humGain.gain.value=0.0005;
+  if (!audioCtx || humOsc || !soundOn) return;
+  humOsc = audioCtx.createOscillator();
+  humGain = audioCtx.createGain();
+  humOsc.type = 'sawtooth';
+  humOsc.frequency.value = 220;    // ↑ antes 110 Hz
+  humGain.gain.value = 0.003;      // ↑ antes 0.0005
   humOsc.connect(humGain).connect(masterGain);
   humOsc.start();
 }
+
 function stopHum(){
-  if(!humOsc) return;
-  humGain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime+0.2);
-  humOsc.stop(audioCtx.currentTime+0.25);
-  humOsc=null; humGain=null;
+  if (!humOsc) return;
+  const t = audioCtx.currentTime;
+  humGain.gain.exponentialRampToValueAtTime(0.00001, t + 0.2);
+  humOsc.stop(t + 0.25);
+  humOsc = null; humGain = null;
 }
+
+// Utilidad para forzar que el contexto quede en running
+async function resumeAudio(){
+  ensureAudio();
+  try { await audioCtx.resume(); } catch {}
+  // chrome puede quedar 'suspended' si no hubo gesto; este resume tras click debería bastar
+}
+
 
 // ===== Bio extra para bienvenida =====
 const CHINESE=['Rata','Buey','Tigre','Conejo','Dragón','Serpiente','Caballo','Cabra','Mono','Gallo','Perro','Cerdo'];
@@ -130,22 +150,22 @@ const soundBtn=document.getElementById('sound-btn');
 
 let isOn=false;
 
-if (soundBtn){
-  soundBtn.addEventListener('click', async ()=>{
-    ensureAudio();
-    try{ await audioCtx.resume(); }catch{}
-    soundOn=!soundOn;
-    soundBtn.textContent='Sonido: '+(soundOn?'ON':'OFF');
+if (soundBtn) {
+  soundBtn.addEventListener('click', async () => {
+    await resumeAudio();
+    soundOn = !soundOn;
+    soundBtn.textContent = 'Sonido: ' + (soundOn ? 'ON' : 'OFF');
     soundBtn.setAttribute('aria-pressed', String(soundOn));
-    if(isOn && soundOn) startHum(); else stopHum();
+    if (isOn && soundOn) { startHum(); playBeep(1200, 0.12); } else { stopHum(); }
   });
 }
 
-startBtn.onclick=async ()=>{
-  overlay.style.display='none';
-  ensureAudio(); try{ await audioCtx.resume(); }catch{}
-  if(!isOn) powerBtn.click();      // enciende
-  if(soundOn) startHum();          // hum si sonido ON
+startBtn.onclick = async () => {
+  overlay.style.display = 'none';
+  await resumeAudio();     // <- garantiza running
+  playBeep(880, 0.15);     // <- beep de confirmación
+  if (!isOn) powerBtn.click(); // enciende
+  if (soundOn) startHum();     // hum si sonido ON
 };
 
 powerBtn.onclick=()=>{
