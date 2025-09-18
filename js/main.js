@@ -189,44 +189,80 @@ function animateTo(card,goal){
 }
 function createCard(mod){
   const card=document.createElement('section'); card.className='card';
-  const title=document.createElement('div'); title.className='title-sm'; title.textContent=mod.title;
-  const status=document.createElement('div'); status.className='status'; const dot=document.createElement('i'); dot.className='dot bad';
-  const stText=document.createElement('span'); stText.textContent='En espera'; status.append(dot,stText);
 
-  const gauge=document.createElement('div'); gauge.className='gauge';
-  const dial=document.createElement('div'); dial.className='dial';
+  const title=document.createElement('div'); 
+  title.className='title-sm'; 
+  title.textContent=mod.title;
+
+  const status=document.createElement('div'); 
+  status.className='status'; 
+  const dot=document.createElement('i'); dot.className='dot bad';
+  const stText=document.createElement('span'); stText.textContent='En espera'; 
+  status.append(dot,stText);
+
+  const gauge=document.createElement('div'); 
+  gauge.className='gauge';
+
+  const dial=document.createElement('div'); 
+  dial.className='dial';
+
   // Valor inicial aleatorio entre 20 y 60
-const init = Math.floor(20 + Math.random() * 40);
+  const init = Math.floor(20 + Math.random() * 40);
 
-const needle=document.createElement('div'); 
-needle.className='needle'; 
-needle.style.transform=`rotate(${toAngle(init)}deg)`;
+  const needle=document.createElement('div'); 
+  needle.className='needle'; 
+  needle.style.transform=`rotate(${toAngle(init)}deg)`;
 
-const hub=document.createElement('div'); 
-hub.className='hub';
+  const hub=document.createElement('div'); 
+  hub.className='hub';
 
-const value=document.createElement('div'); 
-value.className='value'; 
-value.textContent = init + '%';
+  const value=document.createElement('div'); 
+  value.className='value'; 
+  value.textContent = init + '%';
 
+  // ⬇️ FALTABA ESTO
+  gauge.append(dial, needle, hub, value);
 
-  const controls=document.createElement('div'); controls.className='controls';
+  const controls=document.createElement('div'); 
+  controls.className='controls';
   const bStart=document.createElement('button'); bStart.className='btn mod'; bStart.textContent='Activar';
   const bStop=document.createElement('button'); bStop.className='btn alt mod'; bStop.textContent='Detener';
   controls.append(bStart,bStop);
 
   card.append(title,status,gauge,controls);
+
   card._timer=null; 
-card._active=false; 
-card.dataset.current=init;
+  card._active=false; 
+  card.dataset.current=init;
+
+  // Ajusta el estado visual según el init (color del dot y texto)
+  setVisual(card, init, false);
 
   const goal=clamp(mod.target??92,70,100);
+
   function start(){ 
-  if(!isOn||card._active) return; 
-  card._active=true; 
-  animateTo(card,goal); 
-  playBeep(); // <- beep suave al activar
+    if(!isOn||card._active) return; 
+    card._active=true; 
+    animateTo(card,goal); 
+    playBeep();
+  }
+
+  function stop(){
+    clearInterval(card._timer); card._active=false;
+    card._timer=setInterval(()=>{
+      let cur=Number(card.dataset.current||10);
+      cur -= Math.max(0.8,(cur-10)*0.06);
+      if(cur<=10){cur=10;setVisual(card,cur,false);clearInterval(card._timer);}
+      else setVisual(card,cur,false);
+    },90);
+  }
+  bStart.addEventListener('click',start);
+  bStop.addEventListener('click',stop);
+  bStart.disabled=true; bStop.disabled=true;
+
+  return card;
 }
+
 
   function stop(){
     clearInterval(card._timer); card._active=false;
