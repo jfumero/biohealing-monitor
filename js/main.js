@@ -27,18 +27,18 @@ function ensureAudio(){
   if (audioCtx) return;
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   masterGain = audioCtx.createGain();
-  masterGain.gain.value = 0.02; // ↑ subimos volumen maestro (antes 0.0009)
+  masterGain.gain.value = 0.08; // ↑ volumen maestro más audible (ajusta a gusto)
   masterGain.connect(audioCtx.destination);
 }
 
-// Sube un poco el beep para que se note en parlantes de notebook
-function playBeep(freq = 880, dur = 0.18){
+// Beep claro para parlantes de notebook
+function playBeep(freq = 880, dur = 0.2){
   if (!audioCtx || !soundOn) return;
   const o = audioCtx.createOscillator();
   const g = audioCtx.createGain();
-  o.type = 'sine';
+  o.type = 'square';         // ↑ más presente que 'sine'
   o.frequency.value = freq;
-  g.gain.value = 0.02; // ↑ antes 0.001
+  g.gain.value = 0.05;       // ↑ ganancia audible
   o.connect(g).connect(masterGain);
   const t0 = audioCtx.currentTime;
   o.start(t0);
@@ -46,14 +46,14 @@ function playBeep(freq = 880, dur = 0.18){
   o.stop(t0 + dur + 0.02);
 }
 
-// Hum más audible (220 Hz) y un poco más de ganancia
+// Hum más audible (220 Hz) y ganancia suficiente
 function startHum(){
   if (!audioCtx || humOsc || !soundOn) return;
   humOsc = audioCtx.createOscillator();
   humGain = audioCtx.createGain();
   humOsc.type = 'sawtooth';
-  humOsc.frequency.value = 220;    // ↑ antes 110 Hz
-  humGain.gain.value = 0.003;      // ↑ antes 0.0005
+  humOsc.frequency.value = 220; // ↑ más audible que 110 Hz
+  humGain.gain.value = 0.01;    // ↑ hum perceptible (ajusta a gusto)
   humOsc.connect(humGain).connect(masterGain);
   humOsc.start();
 }
@@ -66,13 +66,16 @@ function stopHum(){
   humOsc = null; humGain = null;
 }
 
-// Utilidad para forzar que el contexto quede en running
+// Intento robusto de dejar el contexto en running
 async function resumeAudio(){
   ensureAudio();
   try { await audioCtx.resume(); } catch {}
-  // chrome puede quedar 'suspended' si no hubo gesto; este resume tras click debería bastar
 }
 
+// Fallback extra: primer toque en cualquier parte habilita audio (una sola vez)
+document.addEventListener('pointerdown', async ()=>{
+  await resumeAudio();
+}, { once:true });
 
 // ===== Bio extra para bienvenida =====
 const CHINESE=['Rata','Buey','Tigre','Conejo','Dragón','Serpiente','Caballo','Cabra','Mono','Gallo','Perro','Cerdo'];
@@ -162,8 +165,8 @@ if (soundBtn) {
 
 startBtn.onclick = async () => {
   overlay.style.display = 'none';
-  await resumeAudio();     // <- garantiza running
-  playBeep(880, 0.15);     // <- beep de confirmación
+  await resumeAudio();     // garantiza running
+  playBeep(880, 0.18);     // beep de confirmación
   if (!isOn) powerBtn.click(); // enciende
   if (soundOn) startHum();     // hum si sonido ON
 };
@@ -262,7 +265,7 @@ function createCard(mod){
     if(!isOn||card._active) return;
     card._active=true;
     animateTo(card,goal);
-    playBeep();
+    playBeep(); // beep al activar
   }
   function stop(){
     clearInterval(card._timer); card._active=false;
