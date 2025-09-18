@@ -6,8 +6,8 @@
   <title>BioHealing Monitor — Jonathan Fumero Mesa</title>
   <meta name="description" content="Panel personal de monitoreo de nanorobots — BioHealing Monitor." />
   <meta name="theme-color" content="#0a0f1a" />
-  <!-- Usa ruta relativa para evitar 404 en subcarpetas -->
-  <link rel="stylesheet" href="css/style.css">
+  <!-- CSS: si usas subcarpeta, cambia a href="css/style.css" -->
+  <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
   <!-- Overlay de bienvenida -->
@@ -78,7 +78,7 @@
       <div id="led" class="led"></div>
       <button id="power-btn" class="btn">Encender</button>
       <button id="sound-btn" class="btn" aria-pressed="true">Sonido: ON</button>
-      <!-- NUEVO botón de ambiente (retro futurista) -->
+      <!-- NUEVO: ambiente retro -->
       <button id="amb-btn" class="btn" aria-pressed="false">Ambiente: OFF</button>
     </div>
   </header>
@@ -92,7 +92,7 @@
     </section>
   </main>
 
-  <!-- JS (ruta relativa) -->
-  <script src="js/main.js" defer></script>
+  <!-- JS: usa ruta relativa si la absoluta falla (/js/main.js -> js/main.js) -->
+  <script src="/js/main.js" defer></script>
 </body>
 </html>
