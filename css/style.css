@@ -96,3 +96,31 @@ main{padding:16px}
 }
 /* Botón de sonido: aspecto cuando está OFF */
 .btn[aria-pressed="false"] { opacity: .6; }
+/* 1) Mejorar disposición de controles en el header en pantallas chicas */
+@media (max-width: 480px){
+  .header-ctrls{
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+  .btn{ padding: 8px 12px; font-size: 14px; }
+}
+
+/* 2) Efecto sutil para mostrar que el led "late" cuando está encendido */
+.led.on{
+  animation: ledPulse 1.8s ease-in-out infinite;
+}
+@keyframes ledPulse{
+  0%,100%{ box-shadow: 0 0 6px #22d3ee; }
+  50%{ box-shadow: 0 0 14px #22d3ee; }
+}
+
+/* 3) Barra del enjambre con gradiente animado (queda futurista) */
+.bar--swarm .fill{
+  background: linear-gradient(90deg, #0ea5e9, #22d3ee, #7dd3fc);
+  background-size: 300% 100%;
+  animation: sweep 4s linear infinite;
+}
+@keyframes sweep{
+  0%{ background-position: 0% 0% }
+  100%{ background-position: 300% 0% }
+}
