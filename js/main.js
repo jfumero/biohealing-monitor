@@ -195,10 +195,20 @@ function createCard(mod){
 
   const gauge=document.createElement('div'); gauge.className='gauge';
   const dial=document.createElement('div'); dial.className='dial';
-  const needle=document.createElement('div'); needle.className='needle'; needle.style.transform=`rotate(${toAngle(0)}deg)`;
-  const hub=document.createElement('div'); hub.className='hub';
-  const value=document.createElement('div'); value.className='value'; value.textContent='0%';
-  gauge.append(dial,needle,hub,value);
+  // Valor inicial aleatorio entre 20 y 60
+const init = Math.floor(20 + Math.random() * 40);
+
+const needle=document.createElement('div'); 
+needle.className='needle'; 
+needle.style.transform=`rotate(${toAngle(init)}deg)`;
+
+const hub=document.createElement('div'); 
+hub.className='hub';
+
+const value=document.createElement('div'); 
+value.className='value'; 
+value.textContent = init + '%';
+
 
   const controls=document.createElement('div'); controls.className='controls';
   const bStart=document.createElement('button'); bStart.className='btn mod'; bStart.textContent='Activar';
@@ -206,7 +216,10 @@ function createCard(mod){
   controls.append(bStart,bStop);
 
   card.append(title,status,gauge,controls);
-  card._timer=null; card._active=false; card.dataset.current=0;
+  card._timer=null; 
+card._active=false; 
+card.dataset.current=init;
+
   const goal=clamp(mod.target??92,70,100);
   function start(){ 
   if(!isOn||card._active) return; 
