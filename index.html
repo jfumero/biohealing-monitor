@@ -6,8 +6,8 @@
   <title>BioHealing Monitor — Jonathan Fumero Mesa</title>
   <meta name="description" content="Panel personal de monitoreo de nanorobots — BioHealing Monitor." />
   <meta name="theme-color" content="#0a0f1a" />
-  <!-- CSS: ruta absoluta funciona, pero si tu sitio usa subcarpeta probá cambiar a href="css/style.css" -->
-  <link rel="stylesheet" href="/css/style.css">
+  <!-- Usa ruta relativa para evitar 404 en subcarpetas -->
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <!-- Overlay de bienvenida -->
@@ -47,30 +47,28 @@
       <div class="mini">Integridad del enjambre</div>
       <div class="bar bar--swarm"><div id="swarm-bar" class="fill"></div></div>
 
-     <!-- Bio panel -->
-<div class="cols">
-  <div class="metric">
-    <div class="section-title">Biorritmo del día</div>
-    <div class="mini" id="ov-bio-f">Físico: —</div>
-    <div class="mini" id="ov-bio-e">Emocional: —</div>
-    <div class="mini" id="ov-bio-i">Intelectual: —</div>
-  </div>
-  <div class="metric">
-    <div class="section-title">Astrología & Energía</div>
-    <div class="mini" id="ov-zodiac">Zodiaco: —</div>
-    <div class="mini" id="ov-czodiac">Chino: —</div>
-    <div class="mini" id="ov-moon">Luna: —</div>
-    <div class="mini" id="ov-circ">Circadiano: —</div>
-  </div>
-</div>
-
-
+      <!-- Bio panel -->
+      <div class="cols">
+        <div class="metric">
+          <div class="section-title">Biorritmo del día</div>
+          <div class="mini" id="ov-bio-f">Físico: —</div>
+          <div class="mini" id="ov-bio-e">Emocional: —</div>
+          <div class="mini" id="ov-bio-i">Intelectual: —</div>
+        </div>
+        <div class="metric">
+          <div class="section-title">Astrología & Energía</div>
+          <div class="mini" id="ov-zodiac">Zodiaco: —</div>
+          <div class="mini" id="ov-czodiac">Chino: —</div>
+          <div class="mini" id="ov-moon">Luna: —</div>
+          <div class="mini" id="ov-circ">Circadiano: —</div>
+        </div>
+      </div>
 
       <button id="startBtn" class="btn">Iniciar monitoreo</button>
     </div>
   </div>
 
-    <header>
+  <header>
     <h2>BioHealing Monitor</h2>
     <div class="patient">
       <div class="pill">Paciente: <b>Jonathan Fumero Mesa</b></div>
@@ -79,8 +77,9 @@
     <div class="header-ctrls">
       <div id="led" class="led"></div>
       <button id="power-btn" class="btn">Encender</button>
-      <!-- NUEVO -->
       <button id="sound-btn" class="btn" aria-pressed="true">Sonido: ON</button>
+      <!-- NUEVO botón de ambiente (retro futurista) -->
+      <button id="amb-btn" class="btn" aria-pressed="false">Ambiente: OFF</button>
     </div>
   </header>
 
@@ -93,8 +92,7 @@
     </section>
   </main>
 
-  <!-- JS: usa RUTA RELATIVA si la absoluta falla en tu dominio -->
-  <!-- Si /js/main.js devuelve 404, cambia a js/main.js -->
+  <!-- JS (ruta relativa) -->
   <script src="js/main.js" defer></script>
 </body>
 </html>
