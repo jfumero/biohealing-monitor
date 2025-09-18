@@ -19,7 +19,7 @@ function renderAge(){
 }
 setInterval(renderAge,1000); renderAge();
 
-// ===== Audio minimal (hum + beep) =====
+// ===== Audio (Web Audio) =====
 let audioCtx = null, masterGain = null, humOsc = null, humGain = null;
 let soundOn = true; // estado del botón Sonido
 
@@ -27,18 +27,22 @@ function ensureAudio(){
   if (audioCtx) return;
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   masterGain = audioCtx.createGain();
-  masterGain.gain.value = 0.08; // ↑ volumen maestro más audible (ajusta a gusto)
+  masterGain.gain.value = 0.08; // volumen maestro audible (ajústalo a gusto)
   masterGain.connect(audioCtx.destination);
 }
+async function resumeAudio(){
+  ensureAudio();
+  try { await audioCtx.resume(); } catch {}
+}
 
-// Beep claro para parlantes de notebook
-function playBeep(freq = 880, dur = 0.2){
+// Beep claro (útil para confirmar acciones)
+function playBeep(freq = 880, dur = 0.20){
   if (!audioCtx || !soundOn) return;
   const o = audioCtx.createOscillator();
   const g = audioCtx.createGain();
-  o.type = 'square';         // ↑ más presente que 'sine'
+  o.type = 'square';        // más presente que 'sine'
   o.frequency.value = freq;
-  g.gain.value = 0.05;       // ↑ ganancia audible
+  g.gain.value = 0.05;      // ganancia audible
   o.connect(g).connect(masterGain);
   const t0 = audioCtx.currentTime;
   o.start(t0);
@@ -46,18 +50,17 @@ function playBeep(freq = 880, dur = 0.2){
   o.stop(t0 + dur + 0.02);
 }
 
-// Hum más audible (220 Hz) y ganancia suficiente
+// Zumbido de fondo muy suave
 function startHum(){
   if (!audioCtx || humOsc || !soundOn) return;
   humOsc = audioCtx.createOscillator();
   humGain = audioCtx.createGain();
   humOsc.type = 'sawtooth';
-  humOsc.frequency.value = 220; // ↑ más audible que 110 Hz
-  humGain.gain.value = 0.01;    // ↑ hum perceptible (ajusta a gusto)
+  humOsc.frequency.value = 220; // más audible que 110 Hz
+  humGain.gain.value = 0.01;    // hum perceptible
   humOsc.connect(humGain).connect(masterGain);
   humOsc.start();
 }
-
 function stopHum(){
   if (!humOsc) return;
   const t = audioCtx.currentTime;
@@ -66,16 +69,8 @@ function stopHum(){
   humOsc = null; humGain = null;
 }
 
-// Intento robusto de dejar el contexto en running
-async function resumeAudio(){
-  ensureAudio();
-  try { await audioCtx.resume(); } catch {}
-}
-
-// Fallback extra: primer toque en cualquier parte habilita audio (una sola vez)
-document.addEventListener('pointerdown', async ()=>{
-  await resumeAudio();
-}, { once:true });
+// Habilita audio en el primer toque (por políticas de autoplay)
+document.addEventListener('pointerdown', async ()=>{ await resumeAudio(); }, { once:true });
 
 // ===== Bio extra para bienvenida =====
 const CHINESE=['Rata','Buey','Tigre','Conejo','Dragón','Serpiente','Caballo','Cabra','Mono','Gallo','Perro','Cerdo'];
@@ -124,7 +119,7 @@ function biorr(d){
 }
 setInterval(()=>biorr(new Date()),60000); biorr(new Date());
 
-// ===== Bienvenida: contadores =====
+// ===== Bienvenida: contadores + tono ascendente =====
 function animateCounter(el,to,ms=3200){
   const start=0, t0=performance.now();
   function step(t){
@@ -135,12 +130,32 @@ function animateCounter(el,to,ms=3200){
   }
   requestAnimationFrame(step);
 }
+// tono ascendente para acompañar el recuento
+function playAscending(ms=3400){
+  if(!audioCtx || !soundOn) return;
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.type='sine';
+  const t0 = audioCtx.currentTime;
+  const t1 = t0 + (ms/1000);
+  o.frequency.setValueAtTime(220, t0);
+  o.frequency.exponentialRampToValueAtTime(1000, t1);
+  g.gain.setValueAtTime(0.0, t0);
+  g.gain.linearRampToValueAtTime(0.03, t0+0.15);
+  g.gain.exponentialRampToValueAtTime(0.00001, t1);
+  o.connect(g).connect(masterGain);
+  o.start(t0);
+  o.stop(t1 + 0.02);
+}
+
 function initWelcome(){
   const base=12_000_000, ops=Math.floor(base*(0.90+Math.random()*0.06));
   const elT=document.getElementById('n-total'), elO=document.getElementById('n-op'), bar=document.getElementById('swarm-bar');
   if(elT) animateCounter(elT,base,3200);
   if(elO) animateCounter(elO,ops,3400);
   if(bar) setTimeout(()=>{ bar.style.width=Math.round(ops/base*100)+'%'; },700);
+  // dispara tono ascendente (si ya hay permiso de audio)
+  playAscending(3400);
 }
 initWelcome();
 
@@ -217,15 +232,56 @@ function setVisual(card,v,active){
   else if(v<75) setStatus(card, active?'Calibrando':'Ajustando', 'warn');
   else setStatus(card, 'Estable', 'good');
 }
+
+// ==== Sonido que sigue a la aguja ====
+function startGaugeTone(card){
+  if(!audioCtx || !soundOn || card._tone) return;
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.type='triangle';
+  g.gain.value = 0.02; // volumen suave
+  o.connect(g).connect(masterGain);
+  o.start();
+  card._tone = { o, g };
+}
+function stopGaugeTone(card){
+  if(!card._tone) return;
+  try{
+    const t = audioCtx.currentTime;
+    card._tone.g.gain.exponentialRampToValueAtTime(0.00001, t+0.12);
+    card._tone.o.stop(t+0.14);
+  }catch{}
+  card._tone = null;
+}
+function mapPctToFreq(p){ // 0..100% => 300..1400 Hz
+  const pct = Math.max(0, Math.min(100, p||0));
+  return 300 + (pct/100)*(1400-300);
+}
+
 function animateTo(card,goal){
   clearInterval(card._timer);
   card._timer=setInterval(()=>{
     let cur=Number(card.dataset.current||0);
     cur += (goal-cur)*0.10 + 0.6;
-    if(Math.abs(goal-cur)<0.6){cur=goal;setVisual(card,cur,true);clearInterval(card._timer);card._active=false;}
-    else setVisual(card,cur,true);
+
+    // Actualiza tono si está activo
+    if(card._tone && audioCtx){
+      const f = mapPctToFreq(cur);
+      try{ card._tone.o.frequency.setTargetAtTime(f, audioCtx.currentTime, 0.05); }catch{}
+    }
+
+    if(Math.abs(goal-cur)<0.6){
+      cur=goal;
+      setVisual(card,cur,true);
+      clearInterval(card._timer);
+      card._active=false;
+      stopGaugeTone(card); // detener tono al llegar al objetivo
+    }else{
+      setVisual(card,cur,true);
+    }
   },100);
 }
+
 function createCard(mod){
   const card=document.createElement('section'); card.className='card';
 
@@ -264,11 +320,13 @@ function createCard(mod){
   function start(){
     if(!isOn||card._active) return;
     card._active=true;
+    startGaugeTone(card);     // <<< inicia tono ligado a la aguja
     animateTo(card,goal);
-    playBeep(); // beep al activar
+    playBeep();               // beep al activar
   }
   function stop(){
     clearInterval(card._timer); card._active=false;
+    stopGaugeTone(card);      // <<< detiene tono al parar
     card._timer=setInterval(()=>{
       let cur=Number(card.dataset.current||10);
       cur -= Math.max(0.8,(cur-10)*0.06);
@@ -290,6 +348,7 @@ function toggleModules(on){
     btns.forEach(b=> b.disabled=!on);
     if(!on){
       clearInterval(card._timer);
+      stopGaugeTone(card);
       setVisual(card,0,false);
       setStatus(card,'En espera','bad');
       card._active=false;
