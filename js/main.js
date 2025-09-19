@@ -257,7 +257,7 @@ function buildTicks(){
     const t = document.createElement('div');
     t.className = 'tick';
     // Rota hasta el ángulo y empuja hacia el borde (-78% aprox. del radio)
-    t.style.transform = `rotate(${pctToDeg(p)}deg) translateY(-88%)`;
+    t.style.transform = `rotate(${pctToDeg(p)}deg) translateY(-100%)`;
     wrap.appendChild(t);
   }
 
@@ -267,7 +267,7 @@ function buildTicks(){
 
     const t = document.createElement('div');
     t.className = 'tick major';
-    t.style.transform = `rotate(${deg}deg) translateY(-88%)`;
+    t.style.transform = `rotate(${deg}deg) translateY(-100%)`;
     wrap.appendChild(t);
 
     // Label: misma posición, pero re-rotado para que quede "derecho"
