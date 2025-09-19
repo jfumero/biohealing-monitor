@@ -244,25 +244,41 @@ const MODULES = [
 function clamp(n,min,max){ return Math.max(min,Math.min(max,n)); }
 function toAngle(v){ return -120 + (clamp(v,0,100)*2.4); }
 
-// Escala 0–100 con ticks
+// Escala 0–100: ticks y números en negro, borde interior del dial
 function buildTicks(){
-  const wrap=document.createElement('div');
-  wrap.className='ticks';
-  const pctToAngle=p=> -120+(p*2.4);
-  // minor cada 5%
-  for(let p=5;p<100;p+=5){
-    const t=document.createElement('div'); t.className='tick';
-    t.style.transform=`rotate(${pctToAngle(p)}deg) translateX(-50%)`;
+  const wrap = document.createElement('div');
+  wrap.className = 'ticks';
+
+  const pctToDeg = p => -120 + (p * 2.4); // mapea 0–100 a -120..+120
+
+  // Ticks menores cada 5%
+  for (let p = 5; p < 100; p += 5) {
+    if (p % 10 === 0) continue; // los de 10% serán "major"
+    const t = document.createElement('div');
+    t.className = 'tick';
+    // Rota hasta el ángulo y empuja hacia el borde (-78% aprox. del radio)
+    t.style.transform = `rotate(${pctToDeg(p)}deg) translateY(-78%)`;
     wrap.appendChild(t);
   }
-  // major + labels cada 10%
-  for(let p=0;p<=100;p+=10){
-    const t=document.createElement('div'); t.className='tick major';
-    t.style.transform=`rotate(${pctToAngle(p)}deg) translateX(-50%)`;
-    const lbl=document.createElement('div'); lbl.className='tick-label'; lbl.textContent=String(p); lbl.style.top='-4px';
-    t.appendChild(lbl);
+
+  // Ticks mayores + etiqueta cada 10%
+  for (let p = 0; p <= 100; p += 10) {
+    const deg = pctToDeg(p);
+
+    const t = document.createElement('div');
+    t.className = 'tick major';
+    t.style.transform = `rotate(${deg}deg) translateY(-78%)`;
     wrap.appendChild(t);
+
+    // Label: misma posición, pero re-rotado para que quede "derecho"
+    const lbl = document.createElement('div');
+    lbl.className = 'tick-label';
+    lbl.textContent = String(p);
+    // Empuja un poco más que el tick para quedar justo dentro del borde
+    lbl.style.transform = `rotate(${deg}deg) translateY(-84%) rotate(${-deg}deg)`;
+    wrap.appendChild(lbl);
   }
+
   return wrap;
 }
 
