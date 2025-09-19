@@ -71,31 +71,51 @@ main{padding:16px}
   position:absolute; inset:0; border-radius:50%;
   background:
     conic-gradient(from 210deg,
-      #7f1d1d 0 30deg,
-      #b45309 30deg 60deg,
-      #d97706 60deg 150deg,
-      #16a34a 150deg 210deg);
+      #7f1d1d 0 30deg,     /* rojo crítico */
+      #b45309 30deg 60deg, /* ámbar oscuro */
+      #d97706 60deg 150deg,/* ámbar */
+      #16a34a 150deg 210deg/* verde */
+    );
+  /* Ventana de anillo */
   -webkit-mask: radial-gradient(circle at 50% 50%, black 64%, transparent 65%),
                 radial-gradient(circle at 50% 50%, transparent 0 70%, black 71% 100%);
           mask: radial-gradient(circle at 50% 50%, black 64%, transparent 65%),
                 radial-gradient(circle at 50% 50%, transparent 0 70%, black 71% 100%);
   border:1px solid var(--border);
-  box-shadow: inset 0 0 12px rgba(0,0,0,.55), 0 10px 24px rgba(0,0,0,.35);
-  filter: saturate(115%) contrast(110%);
+  /* Más contraste y sombras para marcar la división */
+  box-shadow:
+    inset 0 0 18px rgba(0,0,0,.55),
+    inset 0 0 3px rgba(0,0,0,.9),
+    0 10px 24px rgba(0,0,0,.35);
+  filter: saturate(125%) contrast(125%);
 }
 
-/* Ticks y labels (0–100) */
-.ticks{ position:absolute; inset:6% 6% 30% 6%; border-radius:50%; pointer-events:none }
+/* Contenedor de graduaciones (ocupa todo el círculo para calcular desde el centro) */
+.ticks{
+  position:absolute; inset:0;
+  border-radius:50%; pointer-events:none;
+}
+
+/* Ticks en negro, anclados al centro: se “empujan” hacia el borde con translateY */
 .tick{
   position:absolute; left:50%; top:50%;
-  width:1px; height:10%; background:rgba(230,241,255,.45);
-  transform-origin: 0% 100%;
-  opacity:.7;
+  width:1.5px; height:9%;
+  background:rgba(0,0,0,.85);
+  transform-origin: 50% 100%;
+  opacity: .95;
 }
-.tick.major{ height:13%; width:2px; background:#e6f1ff }
+.tick.major{
+  height:12%;
+  width:2.2px;
+  background:#000;
+}
+
+/* Números 0–100 en negro, dentro del borde */
 .tick-label{
-  position:absolute; left:50%; transform:translate(-50%, -140%);
-  font-size:10px; color:#d2e4ff; text-shadow:0 0 6px rgba(0,229,255,.3);
+  position:absolute; left:50%; top:50%;
+  font-size:10px; font-weight:700;
+  color:#000; text-shadow:none;
+  transform-origin: 50% 50%;
 }
 
 /* Aguja más visible */
