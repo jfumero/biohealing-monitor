@@ -6,61 +6,26 @@
   <title>BioHealing Monitor — Jonathan Fumero Mesa</title>
   <meta name="description" content="Panel personal de monitoreo de nanorobots — BioHealing Monitor." />
   <meta name="theme-color" content="#0a0f1a" />
-  <!-- CSS: si usas subcarpeta, cambia a href="css/style.css" -->
-  <link rel="stylesheet" href="css/style.css">
+  <!-- CSS: ahora apunta al mismo folder que index.html -->
+  <link rel="stylesheet" href="./style.css">
 </head>
 <body>
   <!-- Overlay de bienvenida -->
   <div id="overlay" class="overlay">
     <div class="welcome">
       <div class="title"><div class="logo"></div> BIOHEALING MONITOR</div>
-      <h2>Bienvenido al centro de monitoreo de nanorobots</h2>
-      <p>Inicializando protocolo de verificación…</p>
+      <div class="mini">Nanorobots inicializando protocolos de escaneo y autorreparación…</div>
 
-      <!-- Datos paciente -->
       <div class="cols">
         <div class="metric">
-          <div class="mini">Paciente</div>
-          <div class="big">Jonathan Fumero Mesa</div>
-          <div class="mini" id="ov-age">Edad: —</div>
-          <div class="mini">Zona: America/Montevideo</div>
+          <div class="label">Nanorobots listos</div>
+          <div class="big"><span id="nanoCount">0</span> / 120.000</div>
+          <div class="bar"><div class="fill" id="nanoBar"></div></div>
         </div>
         <div class="metric">
-          <div class="mini">Identificador</div>
-          <div class="big" id="ov-id">JFM-19761204</div>
-          <div class="mini">Nacimiento: 04/12/1976 — 00:50</div>
-          <div class="mini">Uruguay</div>
-        </div>
-      </div>
-
-      <!-- Recuento nanorobots -->
-      <div class="cols">
-        <div class="metric">
-          <div class="mini">Nanorobots en torrente</div>
-          <div id="n-total" class="big">—</div>
-        </div>
-        <div class="metric">
-          <div class="mini">Operativos</div>
-          <div id="n-op" class="big">—</div>
-        </div>
-      </div>
-      <div class="mini">Integridad del enjambre</div>
-      <div class="bar bar--swarm"><div id="swarm-bar" class="fill"></div></div>
-
-      <!-- Bio panel -->
-      <div class="cols">
-        <div class="metric">
-          <div class="section-title">Biorritmo del día</div>
-          <div class="mini" id="ov-bio-f">Físico: —</div>
-          <div class="mini" id="ov-bio-e">Emocional: —</div>
-          <div class="mini" id="ov-bio-i">Intelectual: —</div>
-        </div>
-        <div class="metric">
-          <div class="section-title">Astrología & Energía</div>
-          <div class="mini" id="ov-zodiac">Zodiaco: —</div>
-          <div class="mini" id="ov-czodiac">Chino: —</div>
-          <div class="mini" id="ov-moon">Luna: —</div>
-          <div class="mini" id="ov-circ">Circadiano: —</div>
+          <div class="label">Tasa de integración</div>
+          <div class="big"><span id="intRate">0</span>%</div>
+          <div class="bar"><div class="fill" id="intBar"></div></div>
         </div>
       </div>
 
@@ -69,15 +34,16 @@
   </div>
 
   <header>
-    <h2>BioHealing Monitor</h2>
     <div class="patient">
-      <div class="pill">Paciente: <b>Jonathan Fumero Mesa</b></div>
-      <div class="pill">Edad: <span id="age">—</span></div>
+      <span class="pill">Paciente: <strong>Jonathan Fumero</strong></span>
+      <span class="pill" id="agepill"></span>
+      <span class="pill">Protocolo: <strong>BH-Ω</strong></span>
     </div>
-    <div class="header-ctrls">
-      <div id="led" class="led"></div>
-      <button id="power-btn" class="btn">Encender</button>
-      <button id="sound-btn" class="btn" aria-pressed="true">Sonido: ON</button>
+
+    <div class="actions">
+      <span class="led" id="status-led" title="Estado"></span>
+      <button id="power-btn" class="btn alt" aria-pressed="false">Encender</button>
+      <button id="sound-btn" class="btn" aria-pressed="false">Sonido: ON</button>
       <!-- NUEVO: ambiente retro -->
       <button id="amb-btn" class="btn" aria-pressed="false">Ambiente: OFF</button>
     </div>
@@ -92,7 +58,7 @@
     </section>
   </main>
 
-  <!-- JS: usa ruta relativa si la absoluta falla -->
-  <script src="js/main.js" defer></script>
+  <!-- JS: ahora apunta al mismo folder que index.html -->
+  <script src="./main.js" defer></script>
 </body>
 </html>
