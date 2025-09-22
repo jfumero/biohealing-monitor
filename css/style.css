@@ -1,3 +1,11 @@
+/* Reset básico y estilo de fondo */
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: #0a0f1a; /* Fondo oscuro */
+  color: #e2e8f0;
+  min-height: 100vh;
+}
 /* Dial más nítido y con zonas marcadas */
 .dial{
   position:absolute; inset:0; border-radius:50%;
