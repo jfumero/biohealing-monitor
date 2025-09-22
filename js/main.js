@@ -34,7 +34,7 @@
     }
     setInterval(renderAge,1000); renderAge();
 
-    // ---------- Audio (no bloquea UI si falla) ----------
+    // ---------- Audio (robusto) ----------
     let audioCtx=null, masterGain=null, humOsc=null, humGain=null;
     let soundOn=true;
 
@@ -43,11 +43,12 @@
       try{
         audioCtx = new (window.AudioContext||window.webkitAudioContext)();
         masterGain = audioCtx.createGain();
-        masterGain.gain.value = 0.06;
+        masterGain.gain.value = 0.06;           // volumen maestro
         masterGain.connect(audioCtx.destination);
-      }catch{ /* navegador que no soporta AudioContext */ }
+      }catch{ /* navegador sin AudioContext */ }
     }
     async function resumeAudio(){ try{ ensureAudio(); await audioCtx?.resume(); }catch{} }
+    // Primer toque en cualquier parte habilita audio (desktop/mobile)
     document.addEventListener('pointerdown', ()=>{ resumeAudio(); }, {once:true});
 
     function playBeep(freq=880,dur=0.18){
@@ -137,16 +138,13 @@
     }
     function initWelcome(){
       const base=12_000_000, ops=Math.floor(base*(0.90+Math.random()*0.06));
-      const elT=document.getElementById('n-total');
-      const elO=document.getElementById('n-op');
+      animateCounter(document.getElementById('n-total'), base, 3200);
+      animateCounter(document.getElementById('n-op'), ops, 3400);
       const bar=document.getElementById('swarm-bar');
-      animateCounter(elT, base, 3200);
-      animateCounter(elO, ops, 3400);
       if(bar) setTimeout(()=>{ bar.style.width=Math.round(ops/base*100)+'%'; }, 700);
     }
-    // Correr al cargar y repetir una vez por si la pestaña estaba en bg
     initWelcome();
-    setTimeout(initWelcome, 1200);
+    setTimeout(initWelcome, 1200); // si la pestaña cargó en background
 
     // ---------- Power & overlay ----------
     const overlay = document.getElementById('overlay');
@@ -184,10 +182,9 @@
       });
     }
 
-    // También cerrar haciendo clic en cualquier parte del overlay
+    // Cerrar overlay clicando fuera del botón
     if(overlay){
       overlay.addEventListener('click', async (e)=>{
-        // evitar doble click si fue el botón
         if(e.target.closest('#startBtn')) return;
         overlay.style.display='none';
         await resumeAudio();
@@ -195,17 +192,8 @@
       });
     }
 
-    if(powerBtn){
-      powerBtn.addEventListener('click', powerToggle);
-    }
-
     // Failsafe 15s
-    setTimeout(()=>{
-      if(overlay && overlay.style.display!=='none'){
-        overlay.style.display='none';
-        if(!isOn) powerToggle();
-      }
-    },15000);
+    setTimeout(()=>{ if(overlay && overlay.style.display!=='none'){ overlay.style.display='none'; if(!isOn) powerToggle(); } },15000);
 
     // ---------- Gauges ----------
     const grid=document.getElementById('grid');
@@ -225,6 +213,7 @@
     function buildTicks(){
       const wrap=document.createElement('div'); wrap.className='ticks';
       const pctToDeg = p => -120 + (p*2.4);
+
       for(let p=5;p<100;p+=5){
         if(p%10===0) continue;
         const t=document.createElement('div'); t.className='tick';
@@ -236,6 +225,7 @@
         const t=document.createElement('div'); t.className='tick major';
         t.style.transform=`rotate(${deg}deg) translateY(-78%)`;
         wrap.appendChild(t);
+
         const lbl=document.createElement('div'); lbl.className='tick-label'; lbl.textContent=String(p);
         lbl.style.transform=`rotate(${deg}deg) translateY(-86%) rotate(${-deg}deg)`;
         wrap.appendChild(lbl);
@@ -279,9 +269,7 @@
       const dial=document.createElement('div'); dial.className='dial';
       const ticks=buildTicks();
 
-      // inicio aleatorio 35–70
-      const init=Math.floor(35+Math.random()*35);
-
+      const init=Math.floor(35+Math.random()*35); // 35–70
       const needle=document.createElement('div'); needle.className='needle';
       needle.style.transform=`rotate(${toAngle(init)}deg)`;
       const hub=document.createElement('div'); hub.className='hub';
@@ -317,7 +305,6 @@
       return card;
     }
 
-    const grid=document.getElementById('grid');
     if(grid){ MODULES.forEach(m=> grid.appendChild(createCard(m))); }
 
     function toggleModules(on){
@@ -327,7 +314,7 @@
         if(!on){ clearInterval(card._timer); setVisual(card,0,false); setStatus(card,'En espera','bad'); card._active=false; }
       });
     }
-    window.toggleModules = toggleModules; // por si lo necesitas en consola
+    window.toggleModules = toggleModules;
 
     // ---------- Chequeos ----------
     const CHECKS=[
