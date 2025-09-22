@@ -12,32 +12,36 @@
                 radial-gradient(circle at 50% 50%, transparent 0 70%, black 71% 100%);
           mask: radial-gradient(circle at 50% 50%, black 64%, transparent 65%),
                 radial-gradient(circle at 50% 50%, transparent 0 70%, black 71% 100%);
-  border:1px solid rgba(255,255,255,.22);
-  box-shadow: inset 0 0 18px rgba(0,0,0,.55), inset 0 0 3px rgba(0,0,0,.9), 0 10px 24px rgba(0,0,0,.35);
-  filter: saturate(125%) contrast(125%);
 }
-
-/* Escala (ticks y números en negro, dentro del aro) */
-.ticks{ position:absolute; inset:0; border-radius:50%; pointer-events:none }
+.ring{
+  position:absolute; inset:6px; border-radius:50%;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255,255,255,.15) 0 64%, transparent 65%),
+    conic-gradient(from 210deg, rgba(255,255,255,.08) 0 30deg, transparent 0 60deg, rgba(255,255,255,.06) 0 150deg, rgba(255,255,255,.12) 0 210deg);
+  border:1px solid rgba(148,163,184,.18);
+  box-shadow: inset 0 0 24px rgba(0,0,0,.5), 0 10px 24px rgba(0,0,0,.35);
+}
 .tick{
-  position:absolute; left:50%; top:50%;
-  width:1.4px; height:9%;
-  background:rgba(0,0,0,.85);
-  transform-origin: 50% 100%;
-  opacity:.95;
+  position:absolute; left:50%; top:50%; width:2px; height:10px; background:#94a3b8;
+  transform-origin: center 110px; opacity:.85; border-radius:1px;
 }
-.tick.major{ height:12%; width:2.2px; background:#000 }
-.tick-label{
-  position:absolute; left:50%; top:50%;
-  font-size:10px; font-weight:700; color:#000; text-shadow:none;
-  transform-origin: 50% 50%;
+.tick.major{ height:18px; width:3px; background:#e2e8f0 }
+.label{
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  font-size:12px; color:#94a3b8; font-weight:700; letter-spacing:.02em; opacity:.9;
 }
-
-/* Aguja más visible */
 .needle{
   position:absolute; left:50%; top:50%;
-  width:3px; height:50%; transform-origin:50% 88%;
-  background:#fff; border-radius:999px;
+  width:4px; height:46%; background:linear-gradient(#e11d48,#ef4444);
+  transform-origin: 50% 90%; transform:rotate(210deg);
+  border-radius:3px; box-shadow:0 0 14px rgba(239,68,68,.35);
+}
+.needle.shadow{
+  width:6px; height:46%; background:linear-gradient(rgba(0,0,0,.5),rgba(0,0,0,.1));
+  filter:blur(2px); opacity:.5;
+}
+.glow{
+  position:absolute; inset:0; border-radius:50%;
   box-shadow: 0 0 12px rgba(255,255,255,.75), 0 0 22px rgba(0,229,255,.45);
   transition: transform 1.05s cubic-bezier(.22,.8,.16,1);
 }
@@ -52,3 +56,74 @@
   font-variant-numeric: tabular-nums; font-weight:800; font-size:18px;
   color:#d6faff; text-shadow:0 0 16px rgba(0,229,255,.45);
 }
+
+/* ====== Base UI mínima para overlay, grid, cards, barras y botones ====== */
+
+/* Overlay de bienvenida */
+.overlay{
+  position:fixed; inset:0; background:rgba(3,7,18,.86);
+  backdrop-filter: blur(4px);
+  display:flex; align-items:center; justify-content:center;
+  z-index:1000;
+}
+.welcome{
+  width:min(920px,92vw); color:#e2e8f0; text-align:center;
+  background:rgba(15,23,42,.7);
+  border:1px solid rgba(148,163,184,.2);
+  border-radius:18px; padding:28px 24px; box-shadow:0 10px 30px rgba(0,0,0,.4);
+}
+.welcome .title{
+  font-weight:900; letter-spacing:.12em; margin-bottom:4px; color:#cbd5e1;
+}
+.welcome .mini{ font-size:.9rem; opacity:.9 }
+.cols{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:14px 0 }
+.metric{ background:rgba(2,6,23,.4); border:1px solid rgba(148,163,184,.18); border-radius:12px; padding:12px }
+.metric .big{ font-size:1.2rem; font-weight:800 }
+
+/* Barras */
+.bar{ position:relative; height:10px; background:#0f172a; border-radius:999px; overflow:hidden; border:1px solid rgba(148,163,184,.2) }
+.bar .fill{ position:absolute; inset:0 auto 0 0; width:0; background:linear-gradient(90deg,#22d3ee,#14b8a6); }
+
+/* Botones */
+.btn{
+  appearance:none; border:0; border-radius:12px; padding:10px 14px;
+  background:#1f2937; color:#e5e7eb; cursor:pointer; font-weight:700;
+  box-shadow:0 6px 18px rgba(0,0,0,.25); transition:transform .06s ease;
+}
+.btn:hover{ transform:translateY(-1px) }
+.btn.alt{ background:#0b1220; border:1px solid rgba(148,163,184,.25) }
+
+/* Header */
+header{
+  display:flex; align-items:center; justify-content:space-between; gap:16px;
+  padding:14px 18px; background:#0b1220; color:#e5e7eb; border-bottom:1px solid rgba(148,163,184,.18)
+}
+.patient{ display:flex; gap:8px; flex-wrap:wrap }
+.pill{ background:#0f172a; border:1px solid rgba(148,163,184,.25); padding:6px 10px; border-radius:999px }
+
+/* LED de estado */
+.led{ width:12px; height:12px; border-radius:50%; background:#7f1d1d; box-shadow:0 0 10px rgba(239,68,68,.35) }
+.led.on{ background:#065f46; box-shadow:0 0 12px rgba(34,197,94,.55) }
+
+/* Layout principal */
+main{ padding:18px }
+.grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px }
+
+/* Tarjetas y gauge */
+.card{
+  background:#0b1220; border:1px solid rgba(148,163,184,.2); border-radius:16px; padding:14px; color:#e2e8f0;
+}
+.title-sm{ font-weight:800; letter-spacing:.02em; margin-bottom:8px; color:#cbd5e1 }
+.status{ display:flex; align-items:center; gap:8px; margin-bottom:10px; opacity:.95 }
+.status .dot{ width:10px; height:10px; border-radius:50%; background:#7f1d1d }
+.status .dot.warn{ background:#a16207 }
+.status .dot.good{ background:#065f46 }
+
+.gauge{ position:relative; aspect-ratio:1/1; margin-bottom:10px }
+.controls{ display:flex; gap:8px }
+
+/* Checklist de sistema */
+#checks .row{ margin-bottom:12px }
+#checks .row-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:6px }
+#checks .row-label{ font-size:.95rem; color:#cbd5e1 }
+#checks .perc{ font-variant-numeric:tabular-nums; font-weight:800 }
