@@ -1,12 +1,3 @@
-body{
-  background:#111;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  height:100vh;
-  margin:0;
-}
-
 /* Dial más nítido y con zonas marcadas */
 .dial{
   position:absolute; inset:0; border-radius:50%;
