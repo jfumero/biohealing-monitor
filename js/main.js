@@ -1,4 +1,4 @@
-// ===== FX Futurista: Fondo de "torrente sanguíneo" con partículas =====
+// ===== FX Futurista: Fondo de "torrente sanguíneo" con partículas (versión sutil) =====
 class BloodstreamFX {
   constructor(canvasId){
     this.canvas = document.getElementById(canvasId);
@@ -32,25 +32,27 @@ class BloodstreamFX {
   initField(){
     if (!this.canvas) return;
     const W = this.canvas.width, H = this.canvas.height;
-    const botsCount = this.reduceMotion ? 80 : 180;
-    const cellsCount = this.reduceMotion ? 20 : 40;
+    const botsCount = this.reduceMotion ? 60 : 120;   // menos partículas que antes
+    const cellsCount = this.reduceMotion ? 15 : 30;
 
-    // Nanobots (azules)
+    // Nanobots (azules, más chicos)
     this.particles = Array.from({length: botsCount}, () => ({
-      x: Math.random()*W, y: Math.random()*H,
-      vx: (0.4 + Math.random()*0.9) * this.pxRatio,
-      amp: 10 + Math.random()*22,
+      x: Math.random()*W, 
+      y: Math.random()*H,
+      vx: (0.3 + Math.random()*0.7) * this.pxRatio,
+      amp: 8 + Math.random()*14,
       phase: Math.random()*Math.PI*2,
-      r: 1.4 + Math.random()*1.8
+      r: 0.4 + Math.random()*1.0   // radio reducido
     }));
 
-    // Células (rosadas)
+    // Células (rosadas, también más sutiles)
     this.cells = Array.from({length: cellsCount}, () => ({
-      x: Math.random()*W, y: Math.random()*H,
-      vx: (0.2 + Math.random()*0.6) * this.pxRatio,
-      amp: 8 + Math.random()*16,
+      x: Math.random()*W, 
+      y: Math.random()*H,
+      vx: (0.15 + Math.random()*0.4) * this.pxRatio,
+      amp: 6 + Math.random()*10,
       phase: Math.random()*Math.PI*2,
-      r: 2.5 + Math.random()*2.5
+      r: 1.5 + Math.random()*1.5   // antes ~3-5, ahora más pequeñas
     }));
   }
 
@@ -64,7 +66,6 @@ class BloodstreamFX {
   stop(){
     if (!this.ctx) return;
     this.running = false;
-    // Limpieza visual suave
     const { ctx, canvas } = this;
     ctx.clearRect(0,0,canvas.width,canvas.height);
   }
@@ -73,25 +74,25 @@ class BloodstreamFX {
     if (!this.running || !this.ctx) return;
     const { ctx, canvas } = this;
     const W = canvas.width, H = canvas.height;
-    const dt = (now - this.t) / 1000; // s
+    const dt = (now - this.t) / 1000;
     this.t = now;
 
-    // Fondo “vaso sanguíneo” con corrientes
+    // Fondo
     const grd = ctx.createLinearGradient(0,0,0,H);
     grd.addColorStop(0, '#0b0a12');
     grd.addColorStop(1, '#110b15');
     ctx.fillStyle = grd;
     ctx.fillRect(0,0,W,H);
 
-    // Corrientes sinusoidales
-    ctx.lineWidth = 10 * this.pxRatio;
-    ctx.strokeStyle = 'rgba(255, 120, 160, .10)';
-    for(let i=0;i<4;i++){
-      const baseY = (H/5)*(i+1) + Math.sin(now/900 + i)*6*this.pxRatio;
+    // Corrientes
+    ctx.lineWidth = 8 * this.pxRatio;
+    ctx.strokeStyle = 'rgba(255, 120, 160, .08)';
+    for(let i=0;i<3;i++){
+      const baseY = (H/4)*(i+1) + Math.sin(now/900 + i)*4*this.pxRatio;
       ctx.beginPath();
       ctx.moveTo(0, baseY);
-      for(let x=0; x<=W; x+= 40*this.pxRatio){
-        const yy = baseY + Math.sin((x+now/5)/50 + i)*3*this.pxRatio;
+      for(let x=0; x<=W; x+= 50*this.pxRatio){
+        const yy = baseY + Math.sin((x+now/5)/60 + i)*2*this.pxRatio;
         ctx.lineTo(x, yy);
       }
       ctx.stroke();
@@ -99,16 +100,16 @@ class BloodstreamFX {
 
     // Células
     for(const c of this.cells){
-      ctx.fillStyle = '#f05a7e';
+      ctx.fillStyle = 'rgba(240,90,126,0.7)';
       ctx.beginPath();
       ctx.arc(c.x, c.y, c.r*this.pxRatio, 0, Math.PI*2);
       ctx.fill();
       c.x += c.vx;
-      c.y += Math.sin((c.x + now/20) / 50) * (0.4*this.pxRatio);
+      c.y += Math.sin((c.x + now/20) / 60) * (0.3*this.pxRatio);
       if (c.x > W + 10) { c.x = -10; c.y = Math.random()*H; }
     }
 
-    // Nanobots (brillo azul con estela)
+    // Nanobots
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
     for(const p of this.particles){
@@ -116,26 +117,25 @@ class BloodstreamFX {
       const y = p.y + yOff;
       const r = p.r * this.pxRatio;
 
-      // Estela
-      const g = ctx.createRadialGradient(p.x, y, 0, p.x, y, r*6);
-      g.addColorStop(0, 'rgba(90,209,255,.45)');
+      // Estela suave
+      const g = ctx.createRadialGradient(p.x, y, 0, p.x, y, r*5);
+      g.addColorStop(0, 'rgba(90,209,255,.25)');
       g.addColorStop(1, 'rgba(90,209,255,0)');
       ctx.fillStyle = g;
       ctx.beginPath();
-      ctx.arc(p.x, y, r*6, 0, Math.PI*2);
+      ctx.arc(p.x, y, r*5, 0, Math.PI*2);
       ctx.fill();
 
-      // Núcleo
+      // Núcleo más discreto
       ctx.fillStyle = '#5ad1ff';
-      ctx.shadowColor = '#5ad1ff';
-      ctx.shadowBlur = 12 * this.pxRatio;
+      ctx.globalAlpha = 0.7;
       ctx.beginPath();
       ctx.arc(p.x, y, r, 0, Math.PI*2);
       ctx.fill();
-      ctx.shadowBlur = 0;
+      ctx.globalAlpha = 1;
 
       // Movimiento
-      p.x += p.vx * (1 + Math.sin(now/1000)*0.05);
+      p.x += p.vx * (1 + Math.sin(now/1200)*0.04);
       p.phase += dt;
       if (p.x > W + 10) { p.x = -10; p.y = Math.random()*H; }
     }
@@ -144,6 +144,7 @@ class BloodstreamFX {
     requestAnimationFrame(this.loop);
   }
 }
+
 
 // ===== Edad compacta =====
 function makeLocalDate(y,m,d,hh,mm){const dt=new Date(Date.UTC(y,m-1,d,hh,mm));return new Date(dt.getTime()-3*3600*1000);}
