@@ -241,9 +241,24 @@ return'Desaceleración vespertina';}
 function biorr(d){
   const days=Math.floor((new Date(d.getFullYear(),d.getMonth(),d.getDate()) - new Date(birth.getFullYear(),birth.getMonth(),birth.getDate()))/86400000);
   const val=p=> (Math.round(Math.sin(2*Math.PI*days/p)*100))+'%';
-  document.getElementById('ov-bio-f').textContent='Físico: '+val(23);
-  document.getElementById('ov-bio-e').textContent='Emocional: '+val(28);
-  document.getElementById('ov-bio-i').textContent='Intelectual: '+val(33);
+  // Helper para imprimir valor con color según signo
+function renderBio(elId, label, period, emoji){
+  const days = Math.floor(
+    (new Date(d.getFullYear(),d.getMonth(),d.getDate()) - new Date(birth.getFullYear(),birth.getMonth(),birth.getDate())) / 86400000
+  );
+  const pct = Math.round(Math.sin(2*Math.PI*days/period) * 100); // -100..+100
+  const cls = pct > 3 ? 'bio-pos' : (pct < -3 ? 'bio-neg' : 'bio-neu'); // margen muerto ±3%
+  const sign = pct > 0 ? '+' : ''; // agrega +
+  const el = document.getElementById(elId);
+  if (el){
+    el.innerHTML = `${label}: <span class="bio-val ${cls}">${sign}${pct}%</span> ${emoji}`;
+  }
+}
+
+renderBio('ov-bio-f', 'Físico',      23, '💪');
+renderBio('ov-bio-e', 'Emocional',   28, '💖');
+renderBio('ov-bio-i', 'Intelectual', 33, '🧠');
+
   document.getElementById('ov-zodiac').textContent='Zodiaco: '+zodiac(new Date(1976,11,4));
   const cz = chinese(1976);
 document.getElementById('ov-czodiac').textContent = 'Chino: ' + cz + (cz === 'Dragón' ? ' 🐉' : '');
