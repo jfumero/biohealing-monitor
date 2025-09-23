@@ -154,3 +154,24 @@ body::after{
 .bio-pos{color:var(--good); text-shadow:0 0 10px rgba(34,197,94,.25)}
 .bio-neg{color:var(--bad);  text-shadow:0 0 10px rgba(239,68,68,.25)}
 .bio-neu{color:var(--warn); text-shadow:0 0 10px rgba(245,158,11,.25)}
+/* HUD en header */
+.hud {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+.hud-item {
+  font-size: 12px;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.04);
+  white-space: nowrap;
+  color: var(--muted);
+}
+.hud .bio-val { font-weight: 700; }
+.hud .bio-pos { color: var(--good); }
+.hud .bio-neg { color: var(--bad); }
+.hud .bio-neu { color: var(--warn); }
