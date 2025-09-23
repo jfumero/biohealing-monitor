@@ -1,3 +1,150 @@
+// ===== FX Futurista: Fondo de "torrente sanguíneo" con partículas =====
+class BloodstreamFX {
+  constructor(canvasId){
+    this.canvas = document.getElementById(canvasId);
+    this.ctx = this.canvas?.getContext('2d') || null;
+    this.pxRatio = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    this.running = false;
+    this.particles = [];
+    this.cells = [];
+    this.t = 0;
+    this.reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ?? false;
+
+    this.resize = this.resize.bind(this);
+    this.loop = this.loop.bind(this);
+
+    if (this.canvas && this.ctx){
+      window.addEventListener('resize', this.resize, { passive:true });
+      this.resize();
+      this.initField();
+    }
+  }
+
+  resize(){
+    if (!this.canvas) return;
+    const { innerWidth:w, innerHeight:h } = window;
+    this.canvas.width = Math.floor(w * this.pxRatio);
+    this.canvas.height = Math.floor(h * this.pxRatio);
+    this.canvas.style.width = w + 'px';
+    this.canvas.style.height = h + 'px';
+  }
+
+  initField(){
+    if (!this.canvas) return;
+    const W = this.canvas.width, H = this.canvas.height;
+    const botsCount = this.reduceMotion ? 80 : 180;
+    const cellsCount = this.reduceMotion ? 20 : 40;
+
+    // Nanobots (azules)
+    this.particles = Array.from({length: botsCount}, () => ({
+      x: Math.random()*W, y: Math.random()*H,
+      vx: (0.4 + Math.random()*0.9) * this.pxRatio,
+      amp: 10 + Math.random()*22,
+      phase: Math.random()*Math.PI*2,
+      r: 1.4 + Math.random()*1.8
+    }));
+
+    // Células (rosadas)
+    this.cells = Array.from({length: cellsCount}, () => ({
+      x: Math.random()*W, y: Math.random()*H,
+      vx: (0.2 + Math.random()*0.6) * this.pxRatio,
+      amp: 8 + Math.random()*16,
+      phase: Math.random()*Math.PI*2,
+      r: 2.5 + Math.random()*2.5
+    }));
+  }
+
+  start(){
+    if (!this.ctx || this.running) return;
+    this.running = true;
+    this.t = performance.now();
+    requestAnimationFrame(this.loop);
+  }
+
+  stop(){
+    if (!this.ctx) return;
+    this.running = false;
+    // Limpieza visual suave
+    const { ctx, canvas } = this;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+  }
+
+  loop(now){
+    if (!this.running || !this.ctx) return;
+    const { ctx, canvas } = this;
+    const W = canvas.width, H = canvas.height;
+    const dt = (now - this.t) / 1000; // s
+    this.t = now;
+
+    // Fondo “vaso sanguíneo” con corrientes
+    const grd = ctx.createLinearGradient(0,0,0,H);
+    grd.addColorStop(0, '#0b0a12');
+    grd.addColorStop(1, '#110b15');
+    ctx.fillStyle = grd;
+    ctx.fillRect(0,0,W,H);
+
+    // Corrientes sinusoidales
+    ctx.lineWidth = 10 * this.pxRatio;
+    ctx.strokeStyle = 'rgba(255, 120, 160, .10)';
+    for(let i=0;i<4;i++){
+      const baseY = (H/5)*(i+1) + Math.sin(now/900 + i)*6*this.pxRatio;
+      ctx.beginPath();
+      ctx.moveTo(0, baseY);
+      for(let x=0; x<=W; x+= 40*this.pxRatio){
+        const yy = baseY + Math.sin((x+now/5)/50 + i)*3*this.pxRatio;
+        ctx.lineTo(x, yy);
+      }
+      ctx.stroke();
+    }
+
+    // Células
+    for(const c of this.cells){
+      ctx.fillStyle = '#f05a7e';
+      ctx.beginPath();
+      ctx.arc(c.x, c.y, c.r*this.pxRatio, 0, Math.PI*2);
+      ctx.fill();
+      c.x += c.vx;
+      c.y += Math.sin((c.x + now/20) / 50) * (0.4*this.pxRatio);
+      if (c.x > W + 10) { c.x = -10; c.y = Math.random()*H; }
+    }
+
+    // Nanobots (brillo azul con estela)
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    for(const p of this.particles){
+      const yOff = Math.sin(p.phase + now/600) * p.amp;
+      const y = p.y + yOff;
+      const r = p.r * this.pxRatio;
+
+      // Estela
+      const g = ctx.createRadialGradient(p.x, y, 0, p.x, y, r*6);
+      g.addColorStop(0, 'rgba(90,209,255,.45)');
+      g.addColorStop(1, 'rgba(90,209,255,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(p.x, y, r*6, 0, Math.PI*2);
+      ctx.fill();
+
+      // Núcleo
+      ctx.fillStyle = '#5ad1ff';
+      ctx.shadowColor = '#5ad1ff';
+      ctx.shadowBlur = 12 * this.pxRatio;
+      ctx.beginPath();
+      ctx.arc(p.x, y, r, 0, Math.PI*2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Movimiento
+      p.x += p.vx * (1 + Math.sin(now/1000)*0.05);
+      p.phase += dt;
+      if (p.x > W + 10) { p.x = -10; p.y = Math.random()*H; }
+    }
+    ctx.restore();
+
+    requestAnimationFrame(this.loop);
+  }
+}
+
 // ===== Edad compacta =====
 function makeLocalDate(y,m,d,hh,mm){const dt=new Date(Date.UTC(y,m-1,d,hh,mm));return new Date(dt.getTime()-3*3600*1000);}
 const birth = makeLocalDate(1976,12,4,0,50);
@@ -14,6 +161,7 @@ function renderAge(){
   const a2=document.getElementById('ov-age'); if(a2) a2.textContent='Edad: '+txt;
 }
 setInterval(renderAge,1000);renderAge();
+
 // ===== Audio minimal (hum + beep) =====
 let audioCtx = null, masterGain = null, humOsc = null, humGain = null;
 let soundOn = true; // estado del botón Sonido
@@ -56,7 +204,6 @@ function stopHum(){
   humOsc.stop(audioCtx.currentTime + 0.25);
   humOsc = null; humGain = null;
 }
-
 
 // ===== Bio extra para bienvenida =====
 const CHINESE=['Rata','Buey','Tigre','Conejo','Dragón','Serpiente','Caballo','Cabra','Mono','Gallo','Perro','Cerdo'];
@@ -123,6 +270,10 @@ const startBtn=document.getElementById('startBtn');
 const powerBtn=document.getElementById('power-btn');
 const led=document.getElementById('led');
 const soundBtn = document.getElementById('sound-btn');
+
+// FX: instancia global (canvas debe existir en el DOM)
+const fx = new BloodstreamFX('fx-bloodstream');
+
 if (soundBtn) {
   soundBtn.addEventListener('click', async () => {
     ensureAudio();
@@ -142,6 +293,7 @@ startBtn.onclick = async () => {
   try { await audioCtx.resume(); } catch {}
   if (!isOn) powerBtn.click();     // enciende
   if (soundOn) startHum();         // arranca hum si sonido ON
+  fx.start();                      // enciende FX al iniciar
 };
 
 powerBtn.onclick = () => {
@@ -152,6 +304,8 @@ powerBtn.onclick = () => {
   if (!audioCtx) return;          // si aún no se habilitó audio, nada
   if (isOn && soundOn) startHum();
   else stopHum();
+  // FX on/off
+  if (isOn) fx.start(); else fx.stop();
 };
 
 // Failsafe 15s
@@ -207,14 +361,20 @@ function createCard(mod){
   card.append(title,status,gauge,controls);
   card._timer=null; card._active=false; card.dataset.current=0;
   const goal=clamp(mod.target??92,70,100);
+
   function start(){ 
-  if(!isOn||card._active) return; 
-  card._active=true; 
-  animateTo(card,goal); 
-  playBeep(); // <- beep suave al activar
-}
+    if(!isOn||card._active) return; 
+    card._active=true; 
+    animateTo(card,goal); 
+    playBeep(); // <- beep suave al activar
+    // Glow neón mientras está activo
+    card.querySelector('.gauge')?.classList.add('neon');
+  }
 
   function stop(){
+    // Quita glow neón
+    card.querySelector('.gauge')?.classList.remove('neon');
+
     clearInterval(card._timer); card._active=false;
     card._timer=setInterval(()=>{
       let cur=Number(card.dataset.current||10);
@@ -223,6 +383,7 @@ function createCard(mod){
       else setVisual(card,cur,false);
     },90);
   }
+
   bStart.addEventListener('click',start);
   bStop.addEventListener('click',stop);
   bStart.disabled=true; bStop.disabled=true;
@@ -234,7 +395,7 @@ function toggleModules(on){
   document.querySelectorAll('.card').forEach(card=>{
     const btns=card.querySelectorAll('.btn.mod');
     btns.forEach(b=> b.disabled=!on);
-    if(!on){ clearInterval(card._timer); setVisual(card,0,false); setStatus(card,'En espera','bad'); card._active=false; }
+    if(!on){ clearInterval(card._timer); setVisual(card,0,false); setStatus(card,'En espera','bad'); card._active=false; card.querySelector('.gauge')?.classList.remove('neon'); }
   });
 }
 
@@ -308,4 +469,3 @@ setTimeout(() => {
     setCheck('depuracion', 12);
   }
 }, 1500);
-
