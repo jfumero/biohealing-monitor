@@ -32,8 +32,10 @@ class BloodstreamFX {
   initField(){
     if (!this.canvas) return;
     const W = this.canvas.width, H = this.canvas.height;
-    const botsCount = this.reduceMotion ? 60 : 120;   // menos partículas que antes
-    const cellsCount = this.reduceMotion ? 15 : 30;
+    const isPhone = window.matchMedia?.('(max-width: 520px)')?.matches ?? false;
+
+    const botsCount  = this.reduceMotion ? 50 : (isPhone ? 90 : 120);
+    const cellsCount = this.reduceMotion ? 12 : (isPhone ? 22 : 30);
 
     // Nanobots (azules, más chicos)
     this.particles = Array.from({length: botsCount}, () => ({
@@ -52,7 +54,7 @@ class BloodstreamFX {
       vx: (0.15 + Math.random()*0.4) * this.pxRatio,
       amp: 6 + Math.random()*10,
       phase: Math.random()*Math.PI*2,
-      r: 1.5 + Math.random()*1.5   // antes ~3-5, ahora más pequeñas
+      r: 1.5 + Math.random()*1.5   // más pequeñas
     }));
   }
 
@@ -206,7 +208,7 @@ function stopHum(){
   humOsc = null; humGain = null;
 }
 
-// ===== Bio extra para bienvenida =====
+// ===== Bio + cálculos overlay =====
 const CHINESE=['Rata','Buey','Tigre','Conejo','Dragón','Serpiente','Caballo','Cabra','Mono','Gallo','Perro','Cerdo'];
 function zodiac(d){const m=d.getMonth()+1,day=d.getDate();
 if((m==3&&day>=21)||(m==4&&day<=19))return'Aries ♈';
@@ -238,35 +240,79 @@ if(h<12)return'Alerta alta';
 if(h<14)return'Bajada posalmuerzo';
 if(h<18)return'Segundo pico de energía';
 return'Desaceleración vespertina';}
+
 function biorr(d){
   const days=Math.floor((new Date(d.getFullYear(),d.getMonth(),d.getDate()) - new Date(birth.getFullYear(),birth.getMonth(),birth.getDate()))/86400000);
-  const val=p=> (Math.round(Math.sin(2*Math.PI*days/p)*100))+'%';
-  // Helper para imprimir valor con color según signo
-function renderBio(elId, label, period, emoji){
+
+  // Helper para imprimir valor con color según signo (Overlay)
+  function renderBio(elId, label, period, emoji){
+    const pct = Math.round(Math.sin(2*Math.PI*days/period) * 100); // -100..+100
+    const cls = pct > 3 ? 'bio-pos' : (pct < -3 ? 'bio-neg' : 'bio-neu'); // margen muerto ±3%
+    const sign = pct > 0 ? '+' : ''; // agrega +
+    const el = document.getElementById(elId);
+    if (el){
+      el.innerHTML = `${label}: <span class="bio-val ${cls}">${sign}${pct}%</span> ${emoji}`;
+    }
+  }
+
+  renderBio('ov-bio-f', 'Físico',      23, '💪');
+  renderBio('ov-bio-e', 'Emocional',   28, '💖');
+  renderBio('ov-bio-i', 'Intelectual', 33, '🧠');
+
+  // Zodiaco / Chino 🐉 / Luna / Circadiano en overlay
+  const cz = chinese(1976);
+  const czTxt = 'Chino: ' + cz + (cz === 'Dragón' ? ' 🐉' : '');
+  const ovZ = document.getElementById('ov-zodiac'); if (ovZ) ovZ.textContent = 'Zodiaco: ' + zodiac(new Date(1976,11,4));
+  const ovC = document.getElementById('ov-czodiac'); if (ovC) ovC.textContent = czTxt;
+  const ovM = document.getElementById('ov-moon'); if (ovM) ovM.textContent = 'Luna: ' + moon(d);
+  const ovCi= document.getElementById('ov-circ'); if (ovCi) ovCi.textContent = 'Circadiano: ' + circadian(d);
+}
+
+// ===== HUD del header: misma info que la bienvenida =====
+function renderHeaderInfo(d = new Date()){
+  // Edad (ya la calculás con renderAge; la repetimos aquí por si acaso)
+  const ageEl = document.getElementById('age');
+  if (ageEl) ageEl.textContent = ageTextCompact();
+
+  // Zodiaco / chino 🐉 / luna / circadiano
+  const z  = zodiac(new Date(1976,11,4));
+  const cz = chinese(1976);
+  const czTxt = 'Chino: ' + cz + (cz === 'Dragón' ? ' 🐉' : '');
+  const m  = 'Luna: ' + moon(d);
+  const c  = 'Circadiano: ' + circadian(d);
+
+  const set = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+  set('hd-zodiac',  'Zodiaco: ' + z);
+  set('hd-czodiac', czTxt);
+  set('hd-moon',    m);
+  set('hd-circ',    c);
+
+  // Biorritmos con color (mismo criterio que overlay)
   const days = Math.floor(
     (new Date(d.getFullYear(),d.getMonth(),d.getDate()) - new Date(birth.getFullYear(),birth.getMonth(),birth.getDate())) / 86400000
   );
-  const pct = Math.round(Math.sin(2*Math.PI*days/period) * 100); // -100..+100
-  const cls = pct > 3 ? 'bio-pos' : (pct < -3 ? 'bio-neg' : 'bio-neu'); // margen muerto ±3%
-  const sign = pct > 0 ? '+' : ''; // agrega +
-  const el = document.getElementById(elId);
-  if (el){
-    el.innerHTML = `${label}: <span class="bio-val ${cls}">${sign}${pct}%</span> ${emoji}`;
-  }
+  const bio = (period)=> Math.round(Math.sin(2*Math.PI*days/period) * 100);
+  const cls = (pct)=> pct > 3 ? 'bio-pos' : (pct < -3 ? 'bio-neg' : 'bio-neu');
+  const sign = (pct)=> pct>0 ? '+' : '';
+
+  const upd = (id, label, p, emoji) => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = `${label}: <span class="bio-val ${cls(p)}">${sign(p)}${p}%</span> ${emoji}`;
+  };
+  upd('hd-bio-f','Físico',      bio(23), '💪');
+  upd('hd-bio-e','Emocional',   bio(28), '💖');
+  upd('hd-bio-i','Intelectual', bio(33), '🧠');
 }
 
-renderBio('ov-bio-f', 'Físico',      23, '💪');
-renderBio('ov-bio-e', 'Emocional',   28, '💖');
-renderBio('ov-bio-i', 'Intelectual', 33, '🧠');
-
-  document.getElementById('ov-zodiac').textContent='Zodiaco: '+zodiac(new Date(1976,11,4));
-  const cz = chinese(1976);
-document.getElementById('ov-czodiac').textContent = 'Chino: ' + cz + (cz === 'Dragón' ? ' 🐉' : '');
-
-  document.getElementById('ov-moon').textContent='Luna: '+moon(d);
-  document.getElementById('ov-circ').textContent='Circadiano: '+circadian(d);
-}
-setInterval(()=>biorr(new Date()),60000);biorr(new Date());
+// Timers de overlay + header
+const _initNow = new Date();
+biorr(_initNow);
+renderHeaderInfo(_initNow);
+setInterval(()=>{
+  const now = new Date();
+  biorr(now);
+  renderHeaderInfo(now);
+}, 60000);
 
 // ===== Bienvenida: contadores =====
 function animateCounter(el,to,ms=3200){
@@ -322,8 +368,8 @@ powerBtn.onclick = () => {
   if (!audioCtx) return;          // si aún no se habilitó audio, nada
   if (isOn && soundOn) startHum();
   else stopHum();
-  // FX on/off
-  if (isOn) fx.start(); else fx.stop();
+  // FX on/off + refresco HUD al encender
+  if (isOn) { fx.start(); renderHeaderInfo(new Date()); } else { fx.stop(); }
 };
 
 // Failsafe 15s
