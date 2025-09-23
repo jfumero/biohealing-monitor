@@ -119,7 +119,7 @@ class BloodstreamFX {
 
       // Estela suave
       const g = ctx.createRadialGradient(p.x, y, 0, p.x, y, r*5);
-      g.addColorStop(0, 'rgba(90,209,255,.25)');
+      g.addColorStop(0, 'rgba(90,209,255,.20)');
       g.addColorStop(1, 'rgba(90,209,255,0)');
       ctx.fillStyle = g;
       ctx.beginPath();
@@ -245,7 +245,9 @@ function biorr(d){
   document.getElementById('ov-bio-e').textContent='Emocional: '+val(28);
   document.getElementById('ov-bio-i').textContent='Intelectual: '+val(33);
   document.getElementById('ov-zodiac').textContent='Zodiaco: '+zodiac(new Date(1976,11,4));
-  document.getElementById('ov-czodiac').textContent='Chino: '+chinese(1976);
+  const cz = chinese(1976);
+document.getElementById('ov-czodiac').textContent = 'Chino: ' + cz + (cz === 'Dragón' ? ' 🐉' : '');
+
   document.getElementById('ov-moon').textContent='Luna: '+moon(d);
   document.getElementById('ov-circ').textContent='Circadiano: '+circadian(d);
 }
