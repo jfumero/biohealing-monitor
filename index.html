@@ -73,19 +73,29 @@
     </div>
   </div>
 
-    <header>
-    <h2>BioHealing Monitor</h2>
-    <div class="patient">
-      <div class="pill">Paciente: <b>Jonathan Fumero Mesa</b></div>
-      <div class="pill">Edad: <span id="age">—</span></div>
-    </div>
-    <div class="header-ctrls">
-      <div id="led" class="led"></div>
-      <button id="power-btn" class="btn">Encender</button>
-      <!-- NUEVO -->
-      <button id="sound-btn" class="btn" aria-pressed="true">Sonido: ON</button>
-    </div>
-  </header>
+<header>
+  <h2>BioHealing Monitor</h2>
+  <div class="patient">
+    <div class="pill">Paciente: <b>Jonathan Fumero Mesa</b></div>
+    <div class="pill">Edad: <span id="age">—</span></div>
+  </div>
+  <div class="header-ctrls">
+    <div id="led" class="led"></div>
+    <button id="power-btn" class="btn">Encender</button>
+    <button id="sound-btn" class="btn" aria-pressed="true">Sonido: ON</button>
+  </div>
+
+  <!-- NUEVO: info extendida minimalista -->
+  <div class="hud">
+    <div class="hud-item" id="hd-zodiac">Zodiaco: —</div>
+    <div class="hud-item" id="hd-czodiac">Chino: —</div>
+    <div class="hud-item" id="hd-moon">Luna: —</div>
+    <div class="hud-item" id="hd-circ">Circadiano: —</div>
+    <div class="hud-item" id="hd-bio-f">Físico: —</div>
+    <div class="hud-item" id="hd-bio-e">Emocional: —</div>
+    <div class="hud-item" id="hd-bio-i">Intelectual: —</div>
+  </div>
+</header>
 
   <main>
     <div class="grid" id="grid"></div>
