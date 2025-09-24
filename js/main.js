@@ -39,22 +39,22 @@ class BloodstreamFX {
 
     // Nanobots (azules, más chicos)
     this.particles = Array.from({length: botsCount}, () => ({
-      x: Math.random()*W, 
+      x: Math.random()*W,
       y: Math.random()*H,
       vx: (0.3 + Math.random()*0.7) * this.pxRatio,
       amp: 8 + Math.random()*14,
       phase: Math.random()*Math.PI*2,
-      r: 0.4 + Math.random()*1.0   // radio reducido
+      r: 0.4 + Math.random()*1.0
     }));
 
-    // Células (rosadas, también más sutiles)
+    // Células (rosadas, más sutiles)
     this.cells = Array.from({length: cellsCount}, () => ({
-      x: Math.random()*W, 
+      x: Math.random()*W,
       y: Math.random()*H,
       vx: (0.15 + Math.random()*0.4) * this.pxRatio,
       amp: 6 + Math.random()*10,
       phase: Math.random()*Math.PI*2,
-      r: 1.5 + Math.random()*1.5   // más pequeñas
+      r: 1.5 + Math.random()*1.5
     }));
   }
 
@@ -173,7 +173,7 @@ function ensureAudio(){
   if (audioCtx) return;
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   masterGain = audioCtx.createGain();
-  masterGain.gain.value = 0.0009; // volumen maestro muy bajo (ambiente suave)
+  masterGain.gain.value = 0.0009; // muy bajo
   masterGain.connect(audioCtx.destination);
 }
 
@@ -195,8 +195,8 @@ function startHum(){
   humOsc = audioCtx.createOscillator();
   humGain = audioCtx.createGain();
   humOsc.type = 'sawtooth';
-  humOsc.frequency.value = 110;   // zumbido grave
-  humGain.gain.value = 0.0005;    // volumen bajito
+  humOsc.frequency.value = 110;   // grave
+  humGain.gain.value = 0.0005;    // bajito
   humOsc.connect(humGain).connect(masterGain);
   humOsc.start();
 }
@@ -248,7 +248,7 @@ function biorr(d){
   function renderBio(elId, label, period, emoji){
     const pct = Math.round(Math.sin(2*Math.PI*days/period) * 100); // -100..+100
     const cls = pct > 3 ? 'bio-pos' : (pct < -3 ? 'bio-neg' : 'bio-neu'); // margen muerto ±3%
-    const sign = pct > 0 ? '+' : ''; // agrega +
+    const sign = pct > 0 ? '+' : '';
     const el = document.getElementById(elId);
     if (el){
       el.innerHTML = `${label}: <span class="bio-val ${cls}">${sign}${pct}%</span> ${emoji}`;
@@ -270,7 +270,7 @@ function biorr(d){
 
 // ===== HUD del header: misma info que la bienvenida =====
 function renderHeaderInfo(d = new Date()){
-  // Edad (ya la calculás con renderAge; la repetimos aquí por si acaso)
+  // Edad (refresco de seguridad)
   const ageEl = document.getElementById('age');
   if (ageEl) ageEl.textContent = ageTextCompact();
 
@@ -352,12 +352,11 @@ if (soundBtn) {
 let isOn=false;
 startBtn.onclick = async () => {
   overlay.style.display = 'none';
-  // habilita audio tras gesto del usuario (requerido en iOS)
   ensureAudio();
   try { await audioCtx.resume(); } catch {}
   if (!isOn) powerBtn.click();     // enciende
   if (soundOn) startHum();         // arranca hum si sonido ON
-  fx.start();                      // enciende FX al iniciar
+  fx.start();                      // FX al iniciar
 };
 
 powerBtn.onclick = () => {
@@ -365,7 +364,7 @@ powerBtn.onclick = () => {
   powerBtn.textContent = isOn ? 'Apagar' : 'Encender';
   led.classList.toggle('on', isOn);
   toggleModules(isOn);
-  if (!audioCtx) return;          // si aún no se habilitó audio, nada
+  if (!audioCtx) return;
   if (isOn && soundOn) startHum();
   else stopHum();
   // FX on/off + refresco HUD al encender
@@ -426,19 +425,16 @@ function createCard(mod){
   card._timer=null; card._active=false; card.dataset.current=0;
   const goal=clamp(mod.target??92,70,100);
 
-  function start(){ 
-    if(!isOn||card._active) return; 
-    card._active=true; 
-    animateTo(card,goal); 
-    playBeep(); // <- beep suave al activar
-    // Glow neón mientras está activo
-    card.querySelector('.gauge')?.classList.add('neon');
+  function start(){
+    if(!isOn||card._active) return;
+    card._active=true;
+    animateTo(card,goal);
+    playBeep();
+    card.querySelector('.gauge')?.classList.add('neon'); // glow
   }
 
   function stop(){
-    // Quita glow neón
     card.querySelector('.gauge')?.classList.remove('neon');
-
     clearInterval(card._timer); card._active=false;
     card._timer=setInterval(()=>{
       let cur=Number(card.dataset.current||10);
@@ -459,11 +455,15 @@ function toggleModules(on){
   document.querySelectorAll('.card').forEach(card=>{
     const btns=card.querySelectorAll('.btn.mod');
     btns.forEach(b=> b.disabled=!on);
-    if(!on){ clearInterval(card._timer); setVisual(card,0,false); setStatus(card,'En espera','bad'); card._active=false; card.querySelector('.gauge')?.classList.remove('neon'); }
+    if(!on){
+      clearInterval(card._timer);
+      setVisual(card,0,false); setStatus(card,'En espera','bad');
+      card._active=false; card.querySelector('.gauge')?.classList.remove('neon');
+    }
   });
 }
 
-// ===== Chequeos simples =====
+// ===== Chequeos (estructura clásica) =====
 const CHECKS = [
   { id:'scan',           label:'Escaneo sistémico' },
   { id:'torrente',       label:'Recuento en torrente sanguíneo' },
@@ -473,51 +473,58 @@ const CHECKS = [
 ];
 
 const checklist = document.getElementById('checklist');
-
-// Construcción sin estilos inline (usa clases CSS)
 CHECKS.forEach(ch => {
-  const row = document.createElement('div');
-  row.className = 'row';
-
-  const head = document.createElement('div');
-  head.className = 'row-head';
-
-  const label = document.createElement('div');
-  label.className = 'row-label';
-  label.textContent = ch.label;
-
-  const perc = document.createElement('div');
-  perc.className = 'perc';
-  perc.id = `p-${ch.id}`;
-  perc.textContent = '0%';
-
+  const row = document.createElement('div'); row.className = 'row';
+  const head = document.createElement('div'); head.className = 'row-head';
+  const label = document.createElement('div'); label.className = 'row-label'; label.textContent = ch.label;
+  const perc = document.createElement('div'); perc.className = 'perc'; perc.id = `p-${ch.id}`; perc.textContent = '0%';
   head.append(label, perc);
-
-  const bar = document.createElement('div');
-  bar.className = 'bar';
-
-  const fill = document.createElement('div');
-  fill.className = 'fill';
-  fill.id = `b-${ch.id}`;
-
-  bar.append(fill);
-  row.append(head, bar);
-
-  checklist.appendChild(row);
+  const bar = document.createElement('div'); bar.className = 'bar';
+  const fill = document.createElement('div'); fill.className = 'fill'; fill.id = `b-${ch.id}`;
+  bar.append(fill); row.append(head, bar); checklist?.appendChild(row);
 });
 
+// ===== Ticker en cabecera =====
+// Estado actual de los chequeos (para el ticker)
+const CHECK_STATE = {}; // { id: pct }
+
+// Render del ticker en cabecera
+function renderSysTicker(){
+  const track = document.getElementById('sys-ticker-track');
+  if (!track) return;
+
+  // Construye items en el orden de CHECKS
+  const parts = CHECKS.map(ch => {
+    const pct = Math.round(CHECK_STATE[ch.id] ?? 0);
+    const cls = pct > 70 ? 'nb-pos' : (pct > 40 ? 'nb-warn' : 'nb-neg');
+    return `<span class="nb-item"><span>${ch.label}:</span> <strong class="${cls}">${pct}%</strong></span>`;
+  });
+
+  // Duplicamos para scroll continuo
+  track.innerHTML =
+    parts.join('<span class="nb-sep">•</span>') +
+    '<span class="nb-sep">•</span>' +
+    parts.join('<span class="nb-sep">•</span>');
+}
+
+// Barra minimalista: la "fill" es máscara que revela el gradiente
 function setCheck(id, pct){
   pct = Math.max(0, Math.min(100, pct));
   const f = document.getElementById(`b-${id}`);
   const p = document.getElementById(`p-${id}`);
+
   if (f) f.style.transform = `scaleX(${pct/100})`;
+
   if (p) {
-    let color = pct > 70 ? '#0f0' : (pct > 40 ? '#ff0' : '#f00');
+    const color = pct > 70 ? '#00ff66' : (pct > 40 ? '#ffe600' : '#ff2a2a');
     p.style.color = color;
     p.textContent = Math.round(pct) + '%';
   }
-}
 
+  // Estado + refresco de ticker
+  CHECK_STATE[id] = pct;
+  renderSysTicker();
+}
 
 // Al iniciar monitoreo, asignamos valores
 document.getElementById('startBtn').addEventListener('click', () => {
@@ -528,7 +535,7 @@ document.getElementById('startBtn').addEventListener('click', () => {
   setCheck('depuracion', 47);
 });
 
-// También asigna algo por defecto si el usuario espera en la bienvenida
+// Valores por defecto en overlay (si no inició)
 setTimeout(() => {
   if (document.getElementById('overlay')?.style.display !== 'none') {
     setCheck('scan', 10);
@@ -536,5 +543,7 @@ setTimeout(() => {
     setCheck('operativos', 25);
     setCheck('autorreparacion', 8);
     setCheck('depuracion', 12);
+  } else {
+    renderSysTicker(); // por si ya estaba iniciado
   }
 }, 1500);
