@@ -136,38 +136,57 @@ function ageTextCompact(){
   return years+" años";
 }
 
-// Edad detallada (años, meses, días, horas)
+// Edad detallada (años, meses, días, horas, minutos, segundos)
 function ageTextDetailed(now = new Date()){
-  let y = now.getFullYear() - birth.getFullYear();
-  let m = now.getMonth() - birth.getMonth();
-  let d = now.getDate() - birth.getDate();
-  let H = now.getHours() - birth.getHours();
+  let y  = now.getFullYear() - birth.getFullYear();
+  let m  = now.getMonth()    - birth.getMonth();
+  let d  = now.getDate()     - birth.getDate();
+  let H  = now.getHours()    - birth.getHours();
+  let Mi = now.getMinutes()  - birth.getMinutes();
+  let S  = now.getSeconds()  - birth.getSeconds();
 
-  if (H < 0) { H += 24; d -= 1; }
-  if (d < 0) {
+  // Normalización por "préstamos"
+  if (S  < 0) { S  += 60; Mi -= 1; }
+  if (Mi < 0) { Mi += 60; H  -= 1; }
+  if (H  < 0) { H  += 24; d  -= 1; }
+  if (d  < 0) {
     const prevMonthDays = new Date(now.getFullYear(), now.getMonth(), 0).getDate();
     d += prevMonthDays; m -= 1;
   }
-  if (m < 0) { m += 12; y -= 1; }
+  if (m  < 0) { m  += 12; y  -= 1; }
 
   const s = (n, sing, plur) => `${n} ${n===1?sing:plur}`;
-  return `${s(y,'año','años')} ${s(m,'mes','meses')} ${s(d,'día','días')} ${s(H,'hora','horas')}`;
+  return [
+    s(y,'año','años'),
+    s(m,'mes','meses'),
+    s(d,'día','días'),
+    s(H,'hora','horas'),
+    s(Mi,'minuto','minutos'),
+    s(S,'segundo','segundos')
+  ].join(' ');
 }
 
-function renderAge(){
-  const txtYears = ageTextCompact();
-  const txtFull  = ageTextDetailed(new Date());
 
-  // Header (segunda página): edad compacta
-  const a1=document.getElementById('age'); 
-  if(a1) a1.textContent=txtYears;
+function renderAge(){
+  const txtFull  = ageTextDetailed(new Date()); // "… años … meses … días … horas … minutos … segundos"
+  const txtYears = ageTextCompact();            // por si todavía usás el fallback en algún lado
+
+  // Header (segunda página): ahora edad detallada
+  const a1 = document.getElementById('age');
+  if (a1) a1.textContent = txtFull;
 
   // Overlay (primera página): junto al título del proyecto
   const meta = document.getElementById('project-meta');
   if (meta){
-    const patientName = 'Jonathan Fumero Mesa';
+    const patientName = 'Jonathan Fumero Mesa'; // si querés, podemos leerlo del DOM
     meta.innerHTML = `Paciente: <b>${patientName}</b> · Edad: ${txtFull}`;
   }
+
+  // Fallback antiguo (si existiera todavía en algún lugar)
+  const a2 = document.getElementById('ov-age');
+  if (a2) a2.textContent = 'Edad: ' + txtYears;
+}
+
 
   // Fallback antiguo si existiera
   const a2=document.getElementById('ov-age'); 
