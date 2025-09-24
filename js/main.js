@@ -136,14 +136,13 @@ function ageTextCompact(){
   return years+" años";
 }
 
-// NUEVO: edad detallada (años, meses, días, horas)
+// Edad detallada (años, meses, días, horas)
 function ageTextDetailed(now = new Date()){
   let y = now.getFullYear() - birth.getFullYear();
   let m = now.getMonth() - birth.getMonth();
   let d = now.getDate() - birth.getDate();
   let H = now.getHours() - birth.getHours();
 
-  // Ajustes por "préstamos"
   if (H < 0) { H += 24; d -= 1; }
   if (d < 0) {
     const prevMonthDays = new Date(now.getFullYear(), now.getMonth(), 0).getDate();
@@ -156,24 +155,21 @@ function ageTextDetailed(now = new Date()){
 }
 
 function renderAge(){
-  const txtYears = ageTextCompact();          // "NN años"
-  const txtFull  = ageTextDetailed(new Date());// "NN años MM meses DD días HH horas"
+  const txtYears = ageTextCompact();
+  const txtFull  = ageTextDetailed(new Date());
 
   // Header (segunda página): edad compacta
   const a1=document.getElementById('age'); 
   if(a1) a1.textContent=txtYears;
 
-  // Overlay (primera página): junto al título del proyecto, si existe
+  // Overlay (primera página): junto al título del proyecto
   const meta = document.getElementById('project-meta');
   if (meta){
-    // IMPORTANTE: editá el HTML para que este contenedor exista y contenga el nombre del paciente
-    // Ejemplo innerHTML final:
-    // "Paciente: <b>Jonathan Fumero Mesa</b> · Edad: NN años MM meses DD días HH horas"
-    const patientName = 'Jonathan Fumero Mesa'; // si querés, podemos leerlo del DOM
+    const patientName = 'Jonathan Fumero Mesa';
     meta.innerHTML = `Paciente: <b>${patientName}</b> · Edad: ${txtFull}`;
   }
 
-  // Fallback antiguo (si aún usás ov-age en algún sitio)
+  // Fallback antiguo si existiera
   const a2=document.getElementById('ov-age'); 
   if(a2) a2.textContent='Edad: '+txtYears;
 }
@@ -261,10 +257,12 @@ function biorr(d){
   // Overlay: zodiaco / chino / luna / circadiano
   const cz = chinese(1976);
   const czTxt = 'Chino: ' + cz + (cz === 'Dragón' ? ' 🐉' : '');
-  const ovZ = document.getElementById('ov-zodiac'); if (ovZ) ovZ.textContent = 'Zodiaco: ' + zodiac(new Date(1976,11,4));
-  const ovC = document.getElementById('ov-czodiac'); if (ovC) ovC.textContent = czTxt;
-  const ovM = document.getElementById('ov-moon'); if (ovM) ovM.textContent = 'Luna: ' + moon(d);
-  const ovCi= document.getElementById('ov-circ'); if (ovCi) ovCi.textContent = 'Circadiano: ' + circadian(d);
+  const ovZ = document.getElementById('ov-zodiac'); if (ovZ) ovText(ovZ, 'Zodiaco: ' + zodiac(new Date(1976,11,4)));
+  const ovC = document.getElementById('ov-czodiac'); if (ovC) ovText(ovC, czTxt);
+  const ovM = document.getElementById('ov-moon'); if (ovM) ovText(ovM, 'Luna: ' + moon(d));
+  const ovCi= document.getElementById('ov-circ'); if (ovCi) ovText(ovCi, 'Circadiano: ' + circadian(d));
+
+  function ovText(el, txt){ el.textContent = txt; }
 }
 
 // HUD: misma info en cabecera
@@ -352,7 +350,7 @@ if (soundBtn) {
 
 let isOn=false;
 startBtn.onclick = async () => {
-  overlay.style.display = 'none';
+  overlay.classList.add('is-hidden');   // fade out suave
   ensureAudio();
   try { await audioCtx.resume(); } catch {}
   if (!isOn) powerBtn.click();     // enciende
@@ -376,7 +374,12 @@ document.addEventListener('visibilitychange', ()=>{
 });
 
 // Failsafe 15s si no clickea
-setTimeout(()=>{ if(overlay.style.display!=='none'){ overlay.style.display='none'; if(!isOn) powerBtn.click(); } },15000);
+setTimeout(()=>{ 
+  if(!overlay.classList.contains('is-hidden')){ 
+    overlay.classList.add('is-hidden'); 
+    if(!isOn) powerBtn.click(); 
+  } 
+},15000);
 
 // ===== Módulos / Gauges =====
 const grid=document.getElementById('grid');
@@ -533,7 +536,7 @@ document.getElementById('startBtn').addEventListener('click', () => {
 
 // Valores por defecto si usuario espera
 setTimeout(() => {
-  if (document.getElementById('overlay')?.style.display !== 'none') {
+  if (!overlay.classList.contains('is-hidden')) {
     setCheck('scan', 10);
     setCheck('torrente', 20);
     setCheck('operativos', 25);
