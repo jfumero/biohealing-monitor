@@ -54,6 +54,59 @@ body::after{
 
 .bar{height:8px; border-radius:6px; background:#1a1b24; overflow:hidden; border:1px solid var(--border)}
 .bar .fill{height:100%; width:0%; background:linear-gradient(90deg,#6ee7ff,#64b5ff,#b087ff); transition:width .6s ease}
+/* Tarjetitas sutiles para los contadores */
+.cardish{
+  border:1px solid var(--border);
+  border-radius: var(--radius);
+  background: rgba(255,255,255,.03);
+  padding: 12px;
+}
+
+/* Contador “grande” (totales) */
+.counter .value.big{
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+  margin-top: 6px;
+}
+
+/* Barra con valor adentro */
+.bar.with-val{
+  position: relative;
+  height: 38px;              /* más alto para alojar el número */
+  border-radius: 10px;
+  background: #121420;
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.bar.with-val .fill{
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg,#6ee7ff,#64b5ff,#b087ff);
+  transition: width .6s ease;
+}
+
+/* El conteo dentro del cuadro */
+.bar.with-val .bar-val{
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  letter-spacing: .3px;
+  text-shadow: 0 1px 0 rgba(0,0,0,.5);
+  /* color adaptable por contraste */
+  color: #e9eef8;
+  mix-blend-mode: lighten;
+}
+
+/* Responsive pequeño */
+@media (max-width: 520px){
+  .bar.with-val{ height: 34px; }
+  .counter .value.big{ font-size: 1.6rem; }
+}
+
 
 /* Bio panel overlay */
 .bio-grid{display:grid; gap:8px; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); margin:16px 0}
