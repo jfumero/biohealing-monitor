@@ -33,24 +33,19 @@ class BloodstreamFX {
     if (!this.canvas) return;
     const W = this.canvas.width, H = this.canvas.height;
     const isPhone = window.matchMedia?.('(max-width: 520px)')?.matches ?? false;
-
     const botsCount  = this.reduceMotion ? 50 : (isPhone ? 90 : 120);
     const cellsCount = this.reduceMotion ? 12 : (isPhone ? 22 : 30);
 
-    // Nanobots (azules, más chicos)
     this.particles = Array.from({length: botsCount}, () => ({
-      x: Math.random()*W,
-      y: Math.random()*H,
+      x: Math.random()*W, y: Math.random()*H,
       vx: (0.3 + Math.random()*0.7) * this.pxRatio,
       amp: 8 + Math.random()*14,
       phase: Math.random()*Math.PI*2,
       r: 0.4 + Math.random()*1.0
     }));
 
-    // Células (rosadas, más sutiles)
     this.cells = Array.from({length: cellsCount}, () => ({
-      x: Math.random()*W,
-      y: Math.random()*H,
+      x: Math.random()*W, y: Math.random()*H,
       vx: (0.15 + Math.random()*0.4) * this.pxRatio,
       amp: 6 + Math.random()*10,
       phase: Math.random()*Math.PI*2,
@@ -60,8 +55,7 @@ class BloodstreamFX {
 
   start(){
     if (!this.ctx || this.running) return;
-    this.running = true;
-    this.t = performance.now();
+    this.running = true; this.t = performance.now();
     requestAnimationFrame(this.loop);
   }
 
@@ -76,23 +70,19 @@ class BloodstreamFX {
     if (!this.running || !this.ctx) return;
     const { ctx, canvas } = this;
     const W = canvas.width, H = canvas.height;
-    const dt = (now - this.t) / 1000;
-    this.t = now;
+    const dt = (now - this.t) / 1000; this.t = now;
 
     // Fondo
     const grd = ctx.createLinearGradient(0,0,0,H);
-    grd.addColorStop(0, '#0b0a12');
-    grd.addColorStop(1, '#110b15');
-    ctx.fillStyle = grd;
-    ctx.fillRect(0,0,W,H);
+    grd.addColorStop(0, '#0b0a12'); grd.addColorStop(1, '#110b15');
+    ctx.fillStyle = grd; ctx.fillRect(0,0,W,H);
 
     // Corrientes
     ctx.lineWidth = 8 * this.pxRatio;
     ctx.strokeStyle = 'rgba(255, 120, 160, .08)';
     for(let i=0;i<3;i++){
       const baseY = (H/4)*(i+1) + Math.sin(now/900 + i)*4*this.pxRatio;
-      ctx.beginPath();
-      ctx.moveTo(0, baseY);
+      ctx.beginPath(); ctx.moveTo(0, baseY);
       for(let x=0; x<=W; x+= 50*this.pxRatio){
         const yy = baseY + Math.sin((x+now/5)/60 + i)*2*this.pxRatio;
         ctx.lineTo(x, yy);
@@ -103,40 +93,27 @@ class BloodstreamFX {
     // Células
     for(const c of this.cells){
       ctx.fillStyle = 'rgba(240,90,126,0.7)';
-      ctx.beginPath();
-      ctx.arc(c.x, c.y, c.r*this.pxRatio, 0, Math.PI*2);
-      ctx.fill();
+      ctx.beginPath(); ctx.arc(c.x, c.y, c.r*this.pxRatio, 0, Math.PI*2); ctx.fill();
       c.x += c.vx;
       c.y += Math.sin((c.x + now/20) / 60) * (0.3*this.pxRatio);
       if (c.x > W + 10) { c.x = -10; c.y = Math.random()*H; }
     }
 
     // Nanobots
-    ctx.save();
-    ctx.globalCompositeOperation = 'lighter';
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
     for(const p of this.particles){
-      const yOff = Math.sin(p.phase + now/600) * p.amp;
-      const y = p.y + yOff;
+      const y = p.y + Math.sin(p.phase + now/600) * p.amp;
       const r = p.r * this.pxRatio;
 
-      // Estela suave
+      // Estela
       const g = ctx.createRadialGradient(p.x, y, 0, p.x, y, r*5);
-      g.addColorStop(0, 'rgba(90,209,255,.20)');
-      g.addColorStop(1, 'rgba(90,209,255,0)');
-      ctx.fillStyle = g;
-      ctx.beginPath();
-      ctx.arc(p.x, y, r*5, 0, Math.PI*2);
-      ctx.fill();
+      g.addColorStop(0, 'rgba(90,209,255,.20)'); g.addColorStop(1, 'rgba(90,209,255,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, y, r*5, 0, Math.PI*2); ctx.fill();
 
-      // Núcleo más discreto
-      ctx.fillStyle = '#5ad1ff';
-      ctx.globalAlpha = 0.7;
-      ctx.beginPath();
-      ctx.arc(p.x, y, r, 0, Math.PI*2);
-      ctx.fill();
-      ctx.globalAlpha = 1;
+      // Núcleo
+      ctx.fillStyle = '#5ad1ff'; ctx.globalAlpha = 0.7;
+      ctx.beginPath(); ctx.arc(p.x, y, r, 0, Math.PI*2); ctx.fill(); ctx.globalAlpha = 1;
 
-      // Movimiento
       p.x += p.vx * (1 + Math.sin(now/1200)*0.04);
       p.phase += dt;
       if (p.x > W + 10) { p.x = -10; p.y = Math.random()*H; }
@@ -146,7 +123,6 @@ class BloodstreamFX {
     requestAnimationFrame(this.loop);
   }
 }
-
 
 // ===== Edad compacta =====
 function makeLocalDate(y,m,d,hh,mm){const dt=new Date(Date.UTC(y,m-1,d,hh,mm));return new Date(dt.getTime()-3*3600*1000);}
@@ -165,50 +141,38 @@ function renderAge(){
 }
 setInterval(renderAge,1000);renderAge();
 
-// ===== Audio minimal (hum + beep) =====
+// ===== Audio (hum + beep) =====
 let audioCtx = null, masterGain = null, humOsc = null, humGain = null;
-let soundOn = true; // estado del botón Sonido
+let soundOn = true;
 
 function ensureAudio(){
   if (audioCtx) return;
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   masterGain = audioCtx.createGain();
-  masterGain.gain.value = 0.0009; // muy bajo
+  masterGain.gain.value = 0.0009;
   masterGain.connect(audioCtx.destination);
 }
-
 function playBeep(){
   if (!audioCtx || !soundOn) return;
-  const o = audioCtx.createOscillator();
-  const g = audioCtx.createGain();
-  o.type = 'sine';
-  o.frequency.value = 880;
-  g.gain.value = 0.001; // beep suave
-  o.connect(g).connect(masterGain);
-  o.start();
+  const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+  o.type = 'sine'; o.frequency.value = 880; g.gain.value = 0.001;
+  o.connect(g).connect(masterGain); o.start();
   g.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.12);
   o.stop(audioCtx.currentTime + 0.14);
 }
-
 function startHum(){
   if (!audioCtx || humOsc || !soundOn) return;
-  humOsc = audioCtx.createOscillator();
-  humGain = audioCtx.createGain();
-  humOsc.type = 'sawtooth';
-  humOsc.frequency.value = 110;   // grave
-  humGain.gain.value = 0.0005;    // bajito
-  humOsc.connect(humGain).connect(masterGain);
-  humOsc.start();
+  humOsc = audioCtx.createOscillator(); humGain = audioCtx.createGain();
+  humOsc.type='sawtooth'; humOsc.frequency.value=110; humGain.gain.value=0.0005;
+  humOsc.connect(humGain).connect(masterGain); humOsc.start();
 }
-
 function stopHum(){
   if (!humOsc) return;
   humGain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.2);
-  humOsc.stop(audioCtx.currentTime + 0.25);
-  humOsc = null; humGain = null;
+  humOsc.stop(audioCtx.currentTime + 0.25); humOsc=null; humGain=null;
 }
 
-// ===== Bio + cálculos overlay =====
+// ===== Bio / astrología / circadiano =====
 const CHINESE=['Rata','Buey','Tigre','Conejo','Dragón','Serpiente','Caballo','Cabra','Mono','Gallo','Perro','Cerdo'];
 function zodiac(d){const m=d.getMonth()+1,day=d.getDate();
 if((m==3&&day>=21)||(m==4&&day<=19))return'Aries ♈';
@@ -244,22 +208,19 @@ return'Desaceleración vespertina';}
 function biorr(d){
   const days=Math.floor((new Date(d.getFullYear(),d.getMonth(),d.getDate()) - new Date(birth.getFullYear(),birth.getMonth(),birth.getDate()))/86400000);
 
-  // Helper para imprimir valor con color según signo (Overlay)
+  // Overlay: biorritmos con colores/emojis
   function renderBio(elId, label, period, emoji){
-    const pct = Math.round(Math.sin(2*Math.PI*days/period) * 100); // -100..+100
-    const cls = pct > 3 ? 'bio-pos' : (pct < -3 ? 'bio-neg' : 'bio-neu'); // margen muerto ±3%
+    const pct = Math.round(Math.sin(2*Math.PI*days/period) * 100);
+    const cls = pct > 3 ? 'bio-pos' : (pct < -3 ? 'bio-neg' : 'bio-neu');
     const sign = pct > 0 ? '+' : '';
     const el = document.getElementById(elId);
-    if (el){
-      el.innerHTML = `${label}: <span class="bio-val ${cls}">${sign}${pct}%</span> ${emoji}`;
-    }
+    if (el) el.innerHTML = `${label}: <span class="bio-val ${cls}">${sign}${pct}%</span> ${emoji}`;
   }
-
-  renderBio('ov-bio-f', 'Físico',      23, '💪');
-  renderBio('ov-bio-e', 'Emocional',   28, '💖');
+  renderBio('ov-bio-f', 'Físico', 23, '💪');
+  renderBio('ov-bio-e', 'Emocional', 28, '💖');
   renderBio('ov-bio-i', 'Intelectual', 33, '🧠');
 
-  // Zodiaco / Chino 🐉 / Luna / Circadiano en overlay
+  // Overlay: zodiaco / chino / luna / circadiano
   const cz = chinese(1976);
   const czTxt = 'Chino: ' + cz + (cz === 'Dragón' ? ' 🐉' : '');
   const ovZ = document.getElementById('ov-zodiac'); if (ovZ) ovZ.textContent = 'Zodiaco: ' + zodiac(new Date(1976,11,4));
@@ -268,35 +229,27 @@ function biorr(d){
   const ovCi= document.getElementById('ov-circ'); if (ovCi) ovCi.textContent = 'Circadiano: ' + circadian(d);
 }
 
-// ===== HUD del header: misma info que la bienvenida =====
+// HUD: misma info en cabecera
 function renderHeaderInfo(d = new Date()){
-  // Edad (refresco de seguridad)
-  const ageEl = document.getElementById('age');
-  if (ageEl) ageEl.textContent = ageTextCompact();
+  const ageEl = document.getElementById('age'); if (ageEl) ageEl.textContent = ageTextCompact();
 
-  // Zodiaco / chino 🐉 / luna / circadiano
   const z  = zodiac(new Date(1976,11,4));
   const cz = chinese(1976);
   const czTxt = 'Chino: ' + cz + (cz === 'Dragón' ? ' 🐉' : '');
   const m  = 'Luna: ' + moon(d);
   const c  = 'Circadiano: ' + circadian(d);
-
-  const set = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+  const set = (id, txt) => { const el=document.getElementById(id); if(el) el.textContent = txt; };
   set('hd-zodiac',  'Zodiaco: ' + z);
   set('hd-czodiac', czTxt);
   set('hd-moon',    m);
   set('hd-circ',    c);
 
-  // Biorritmos con color (mismo criterio que overlay)
-  const days = Math.floor(
-    (new Date(d.getFullYear(),d.getMonth(),d.getDate()) - new Date(birth.getFullYear(),birth.getMonth(),birth.getDate())) / 86400000
-  );
+  const days = Math.floor((new Date(d.getFullYear(),d.getMonth(),d.getDate()) - new Date(birth.getFullYear(),birth.getMonth(),birth.getDate()))/86400000);
   const bio = (period)=> Math.round(Math.sin(2*Math.PI*days/period) * 100);
   const cls = (pct)=> pct > 3 ? 'bio-pos' : (pct < -3 ? 'bio-neg' : 'bio-neu');
   const sign = (pct)=> pct>0 ? '+' : '';
-
   const upd = (id, label, p, emoji) => {
-    const el = document.getElementById(id);
+    const el=document.getElementById(id);
     if (el) el.innerHTML = `${label}: <span class="bio-val ${cls(p)}">${sign(p)}${p}%</span> ${emoji}`;
   };
   upd('hd-bio-f','Físico',      bio(23), '💪');
@@ -304,20 +257,18 @@ function renderHeaderInfo(d = new Date()){
   upd('hd-bio-i','Intelectual', bio(33), '🧠');
 }
 
-// Timers de overlay + header
+// Timers overlay + header
 const _initNow = new Date();
-biorr(_initNow);
-renderHeaderInfo(_initNow);
-setInterval(()=>{
-  const now = new Date();
-  biorr(now);
-  renderHeaderInfo(now);
-}, 60000);
+biorr(_initNow); renderHeaderInfo(_initNow);
+setInterval(()=>{ const now=new Date(); biorr(now); renderHeaderInfo(now); }, 60000);
 
-// ===== Bienvenida: contadores =====
+// ===== Overlay: contadores =====
 function animateCounter(el,to,ms=3200){
-  const start=0;const t0=performance.now();
-  function step(t){const k=Math.min(1,(t-t0)/ms);const eased=0.5-0.5*Math.cos(Math.PI*k);el.textContent=Math.round(start+(to-start)*eased).toLocaleString('es-UY');if(k<1)requestAnimationFrame(step);}
+  const start=0; const t0=performance.now();
+  function step(t){const k=Math.min(1,(t-t0)/ms); const eased=0.5-0.5*Math.cos(Math.PI*k);
+    el.textContent=Math.round(start+(to-start)*eased).toLocaleString('es-UY');
+    if(k<1) requestAnimationFrame(step);
+  }
   requestAnimationFrame(step);
 }
 function initWelcome(){
@@ -335,9 +286,10 @@ const powerBtn=document.getElementById('power-btn');
 const led=document.getElementById('led');
 const soundBtn = document.getElementById('sound-btn');
 
-// FX: instancia global (canvas debe existir en el DOM)
+// FX global
 const fx = new BloodstreamFX('fx-bloodstream');
 
+// sonido ON/OFF
 if (soundBtn) {
   soundBtn.addEventListener('click', async () => {
     ensureAudio();
@@ -355,7 +307,7 @@ startBtn.onclick = async () => {
   ensureAudio();
   try { await audioCtx.resume(); } catch {}
   if (!isOn) powerBtn.click();     // enciende
-  if (soundOn) startHum();         // arranca hum si sonido ON
+  if (soundOn) startHum();         // hum si sonido ON
   fx.start();                      // FX al iniciar
 };
 
@@ -365,16 +317,19 @@ powerBtn.onclick = () => {
   led.classList.toggle('on', isOn);
   toggleModules(isOn);
   if (!audioCtx) return;
-  if (isOn && soundOn) startHum();
-  else stopHum();
-  // FX on/off + refresco HUD al encender
+  if (isOn && soundOn) startHum(); else stopHum();
   if (isOn) { fx.start(); renderHeaderInfo(new Date()); } else { fx.stop(); }
 };
 
-// Failsafe 15s
-setTimeout(()=>{if(overlay.style.display!=='none'){overlay.style.display='none';if(!isOn)powerBtn.click();}},15000);
+// (Opcional) pausa FX si pestaña oculta
+document.addEventListener('visibilitychange', ()=>{
+  if (document.hidden) fx.stop(); else if (isOn) fx.start();
+});
 
-// ===== Monitores (gauges) =====
+// Failsafe 15s si no clickea
+setTimeout(()=>{ if(overlay.style.display!=='none'){ overlay.style.display='none'; if(!isOn) powerBtn.click(); } },15000);
+
+// ===== Módulos / Gauges =====
 const grid=document.getElementById('grid');
 const MODULES=[
   { id:'org-internos',   title:'Rejuvenecimiento — Órganos internos', target:95 },
@@ -386,10 +341,13 @@ const MODULES=[
 ];
 function clamp(n,min,max){return Math.max(min,Math.min(max,n));}
 function toAngle(v){return -120 + (clamp(v,0,100)*2.4);}
-function setStatus(card,text,level){const dot=card.querySelector('.dot');const st=card.querySelector('.status span');dot.className='dot '+level;st.textContent=text;}
+function setStatus(card,text,level){
+  const dot=card.querySelector('.dot'); const st=card.querySelector('.status span');
+  if (dot) dot.className='dot '+level; if (st) st.textContent=text;
+}
 function setVisual(card,v,active){
   const needle=card.querySelector('.needle'), value=card.querySelector('.value');
-  card.dataset.current=v; needle.style.transform=`rotate(${toAngle(v)}deg)`; value.textContent=`${Math.round(v)}%`;
+  card.dataset.current=v; if(needle) needle.style.transform=`rotate(${toAngle(v)}deg)`; if(value) value.textContent=`${Math.round(v)}%`;
   if(v<40) setStatus(card, active?'Calibrando':'En espera', 'bad');
   else if(v<75) setStatus(card, active?'Calibrando':'Ajustando', 'warn');
   else setStatus(card, 'Estable', 'good');
@@ -406,7 +364,8 @@ function animateTo(card,goal){
 function createCard(mod){
   const card=document.createElement('section'); card.className='card';
   const title=document.createElement('div'); title.className='title-sm'; title.textContent=mod.title;
-  const status=document.createElement('div'); status.className='status'; const dot=document.createElement('i'); dot.className='dot bad';
+  const status=document.createElement('div'); status.className='status';
+  const dot=document.createElement('i'); dot.className='dot bad';
   const stText=document.createElement('span'); stText.textContent='En espera'; status.append(dot,stText);
 
   const gauge=document.createElement('div'); gauge.className='gauge';
@@ -425,16 +384,13 @@ function createCard(mod){
   card._timer=null; card._active=false; card.dataset.current=0;
   const goal=clamp(mod.target??92,70,100);
 
-  function start(){
-    if(!isOn||card._active) return;
-    card._active=true;
-    animateTo(card,goal);
-    playBeep();
-    card.querySelector('.gauge')?.classList.add('neon'); // glow
+  function start(){ 
+    if(!isOn||card._active) return; 
+    card._active=true; animateTo(card,goal); playBeep(); 
+    gauge.classList.add('neon');
   }
-
   function stop(){
-    card.querySelector('.gauge')?.classList.remove('neon');
+    gauge.classList.remove('neon');
     clearInterval(card._timer); card._active=false;
     card._timer=setInterval(()=>{
       let cur=Number(card.dataset.current||10);
@@ -443,7 +399,6 @@ function createCard(mod){
       else setVisual(card,cur,false);
     },90);
   }
-
   bStart.addEventListener('click',start);
   bStop.addEventListener('click',stop);
   bStart.disabled=true; bStop.disabled=true;
@@ -456,14 +411,13 @@ function toggleModules(on){
     const btns=card.querySelectorAll('.btn.mod');
     btns.forEach(b=> b.disabled=!on);
     if(!on){
-      clearInterval(card._timer);
-      setVisual(card,0,false); setStatus(card,'En espera','bad');
+      clearInterval(card._timer); setVisual(card,0,false); setStatus(card,'En espera','bad');
       card._active=false; card.querySelector('.gauge')?.classList.remove('neon');
     }
   });
 }
 
-// ===== Chequeos (estructura clásica) =====
+// ===== Chequeos + Ticker =====
 const CHECKS = [
   { id:'scan',           label:'Escaneo sistémico' },
   { id:'torrente',       label:'Recuento en torrente sanguíneo' },
@@ -484,49 +438,42 @@ CHECKS.forEach(ch => {
   bar.append(fill); row.append(head, bar); checklist?.appendChild(row);
 });
 
-// ===== Ticker en cabecera =====
-// Estado actual de los chequeos (para el ticker)
+// Estado para ticker
 const CHECK_STATE = {}; // { id: pct }
 
-// Render del ticker en cabecera
+// Render del ticker
 function renderSysTicker(){
   const track = document.getElementById('sys-ticker-track');
   if (!track) return;
 
-  // Construye items en el orden de CHECKS
   const parts = CHECKS.map(ch => {
     const pct = Math.round(CHECK_STATE[ch.id] ?? 0);
     const cls = pct > 70 ? 'nb-pos' : (pct > 40 ? 'nb-warn' : 'nb-neg');
     return `<span class="nb-item"><span>${ch.label}:</span> <strong class="${cls}">${pct}%</strong></span>`;
   });
 
-  // Duplicamos para scroll continuo
-  track.innerHTML =
-    parts.join('<span class="nb-sep">•</span>') +
-    '<span class="nb-sep">•</span>' +
-    parts.join('<span class="nb-sep">•</span>');
+  track.innerHTML = parts.join('<span class="nb-sep">•</span>') +
+                    '<span class="nb-sep">•</span>' +
+                    parts.join('<span class="nb-sep">•</span>');
 }
 
-// Barra minimalista: la "fill" es máscara que revela el gradiente
+// Setea valor de un chequeo (barra fina + ticker)
 function setCheck(id, pct){
   pct = Math.max(0, Math.min(100, pct));
   const f = document.getElementById(`b-${id}`);
   const p = document.getElementById(`p-${id}`);
 
   if (f) f.style.transform = `scaleX(${pct/100})`;
-
   if (p) {
     const color = pct > 70 ? '#00ff66' : (pct > 40 ? '#ffe600' : '#ff2a2a');
-    p.style.color = color;
-    p.textContent = Math.round(pct) + '%';
+    p.style.color = color; p.textContent = Math.round(pct) + '%';
   }
 
-  // Estado + refresco de ticker
   CHECK_STATE[id] = pct;
   renderSysTicker();
 }
 
-// Al iniciar monitoreo, asignamos valores
+// Valores al iniciar monitoreo
 document.getElementById('startBtn').addEventListener('click', () => {
   setCheck('scan', 28);
   setCheck('torrente', 84);
@@ -535,7 +482,7 @@ document.getElementById('startBtn').addEventListener('click', () => {
   setCheck('depuracion', 47);
 });
 
-// Valores por defecto en overlay (si no inició)
+// Valores por defecto si usuario espera
 setTimeout(() => {
   if (document.getElementById('overlay')?.style.display !== 'none') {
     setCheck('scan', 10);
@@ -544,6 +491,6 @@ setTimeout(() => {
     setCheck('autorreparacion', 8);
     setCheck('depuracion', 12);
   } else {
-    renderSysTicker(); // por si ya estaba iniciado
+    renderSysTicker();
   }
 }, 1500);
