@@ -510,9 +510,14 @@ function setCheck(id, pct){
   pct = Math.max(0, Math.min(100, pct));
   const f = document.getElementById(`b-${id}`);
   const p = document.getElementById(`p-${id}`);
-  if (f) f.style.width = pct + '%';
-  if (p) p.textContent = Math.round(pct) + '%';
+  if (f) f.style.transform = `scaleX(${pct/100})`;
+  if (p) {
+    let color = pct > 70 ? '#0f0' : (pct > 40 ? '#ff0' : '#f00');
+    p.style.color = color;
+    p.textContent = Math.round(pct) + '%';
+  }
 }
+
 
 // Al iniciar monitoreo, asignamos valores
 document.getElementById('startBtn').addEventListener('click', () => {
