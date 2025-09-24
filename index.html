@@ -23,15 +23,18 @@
         <div class="pill" id="ov-age">Edad: —</div>
       </div>
 
-     <!-- Contadores (nuevo) -->
+    <!-- Contadores (dos barras con valor adentro) -->
 <div class="counters">
-  <!-- Nanobots totales (sin barra) -->
+  <!-- Nanobots totales (arriba) -->
   <div class="counter cardish">
     <div class="label">Nanobots totales</div>
-    <div class="value big" id="n-total">0</div>
+    <div class="bar with-val" aria-label="Nanobots totales">
+      <div class="fill" id="swarm-total-bar" style="width:0%"></div>
+      <div class="bar-val" id="n-total">0</div>
+    </div>
   </div>
 
-  <!-- Operativos (número dentro de la barra) -->
+  <!-- Operativos (abajo) -->
   <div class="counter cardish">
     <div class="label">Operativos</div>
     <div class="bar with-val" aria-label="Operativos">
@@ -40,6 +43,7 @@
     </div>
   </div>
 </div>
+
 
 
       <!-- Bio panel -->
