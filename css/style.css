@@ -231,3 +231,49 @@ body::after{
   box-shadow: 0 0 10px rgba(255,255,255,.08) inset;
   pointer-events:none;
 }
+/* ===== News Ticker de sistema (cabecera) ===== */
+.sys-ticker{
+  margin-top:10px;
+  border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+  overflow:hidden;
+  padding:6px 0;
+  position:relative;
+}
+.sys-ticker .track{
+  display:inline-block;
+  white-space:nowrap;
+  will-change: transform;
+  animation: nb-ticker 28s linear infinite;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+@keyframes nb-ticker{
+  0%{ transform: translateX(100%); }
+  100%{ transform: translateX(-100%); }
+}
+/* Pausa al pasar el mouse */
+.sys-ticker:hover .track { animation-play-state: paused; }
+
+/* Píldoras y separadores */
+.nb-item{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:2px 10px; margin-right:18px;
+  border:1px solid var(--border);
+  border-radius:999px;
+  background:rgba(255,255,255,0.03);
+}
+.nb-sep{ opacity:.6; margin-right:18px }
+
+/* Colores por nivel */
+.nb-pos{ color:#00ff66; }
+.nb-warn{ color:#ffe600; }
+.nb-neg{ color:#ff2a2a; }
+
+/* Respeto de reduce motion */
+@media (prefers-reduced-motion: reduce){
+  .sys-ticker .track{ animation:none; }
+}
+
+/* (Opcional) Ocultar el checklist viejo del main */
+.hide-checklist #checklist{ display:none; }
