@@ -61,49 +61,55 @@
 
   <!-- Cabecera (segunda pantalla) -->
   <header>
-    <h2>BioHealing Monitor</h2>
+  <h2>BioHealing Monitor</h2>
 
-    <div class="patient">
-      <div class="pill">Paciente: <b>Jonathan Fumero Mesa</b></div>
-      <div class="pill">Edad: <span id="age">—</span></div>
-    </div>
+  <div class="patient">
+    <div class="pill">Paciente: <b>Jonathan Fumero Mesa</b></div>
+    <div class="pill">Edad: <span id="age">—</span></div>
+  </div>
 
-    <div class="header-ctrls">
-      <div id="led" class="led" aria-hidden="true"></div>
-      <button id="power-btn" class="btn" aria-label="Encender o apagar">Encender</button>
-      <button id="sound-btn" class="btn" aria-pressed="true" aria-label="Activar o desactivar sonido">Sonido: ON</button>
-    </div>
+  <div class="header-ctrls">
+    <div id="led" class="led" aria-hidden="true"></div>
+    <button id="power-btn" class="btn" aria-label="Encender o apagar">Encender</button>
+    <button id="sound-btn" class="btn" aria-pressed="true" aria-label="Activar o desactivar sonido">Sonido: ON</button>
+  </div>
 
-    <!-- Ticker de sistema dentro del header -->
-    <div class="sys-ticker" id="sys-ticker" aria-live="polite">
-      <div class="track" id="sys-ticker-track"></div>
-    </div>
+  <div class="sys-ticker" id="sys-ticker" aria-live="polite">
+    <div class="track" id="sys-ticker-track"></div>
+  </div>
 
-    <!-- HUD de info compacta -->
-    <div class="hud">
-      <div class="hud-item" id="hd-zodiac">Zodiaco: —</div>
-      <div class="hud-item" id="hd-czodiac">Chino: —</div>
-      <div class="hud-item" id="hd-moon">Luna: —</div>
-      <div class="hud-item" id="hd-circ">Circadiano: —</div>
-      <div class="hud-item" id="hd-bio-f">Físico: —</div>
-      <div class="hud-item" id="hd-bio-e">Emocional: —</div>
-      <div class="hud-item" id="hd-bio-i">Intelectual: —</div>
-    </div>
-  </header>
+  <div class="hud">
+    <div class="hud-item" id="hd-zodiac">Zodiaco: —</div>
+    <div class="hud-item" id="hd-czodiac">Chino: —</div>
+    <div class="hud-item" id="hd-moon">Luna: —</div>
+    <div class="hud-item" id="hd-circ">Circadiano: —</div>
+    <div class="hud-item" id="hd-bio-f">Físico: —</div>
+    <div class="hud-item" id="hd-bio-e">Emocional: —</div>
+    <div class="hud-item" id="hd-bio-i">Intelectual: —</div>
+  </div>
+</header>
+
 
   <main>
-    <!-- Módulos con gauges -->
-    <section>
-      <h3>Módulos</h3>
-      <div id="grid" class="grid"></div>
-    </section>
+  <!-- Módulos con gauges -->
+  <section class="section">
+    <div class="section-head">
+      <h3 class="section-title">Módulos</h3>
+      <div class="section-line"></div>
+    </div>
+    <div id="grid" class="grid"></div>
+  </section>
 
-    <!-- Chequeo de sistema (podés ocultarlo con .hide-checklist en <body>) -->
-    <section>
-      <h3>Chequeo de sistema</h3>
-      <div id="checklist"></div>
-    </section>
-  </main>
+  <!-- Chequeo de sistema -->
+  <section class="section">
+    <div class="section-head">
+      <h3 class="section-title">Chequeo de sistema</h3>
+      <div class="section-line"></div>
+    </div>
+    <div id="checklist" class="checklist"></div>
+  </section>
+</main>
+
 
   <script src="js/main.js" defer></script>
 </body>
