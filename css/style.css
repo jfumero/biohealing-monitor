@@ -175,3 +175,59 @@ body::after{
 .hud .bio-pos { color: var(--good); }
 .hud .bio-neg { color: var(--bad); }
 .hud .bio-neu { color: var(--warn); }
+/* ===== Chequeos minimalistas (Opción 1) ===== */
+#checklist {
+  margin-top: 1.5rem;
+}
+
+#checklist .row {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+}
+
+#checklist .row-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+  color: #ccc;
+  margin-bottom: 0.3rem;
+}
+
+#checklist .row-label {
+  opacity: .9;
+}
+
+#checklist .perc {
+  font-weight: 700;
+  min-width: 3rem;
+  text-align: right;
+  font-size: 0.9rem;
+}
+
+/* Barra delgada con gradiente verde → amarillo → rojo */
+#checklist .bar {
+  position: relative;
+  width: 100%;
+  height: 4px;                /* delgadita */
+  border-radius: 2px;
+  background: linear-gradient(to right, #00ff66, #ffe600, #ff2a2a);
+  overflow: hidden;
+}
+
+/* La "fill" funciona como máscara: revela el gradiente hasta el % */
+#checklist .fill {
+  height: 100%;
+  background: rgba(0,0,0,0.6); /* tapa lo no-revelado */
+  transform-origin: left center;
+  transform: scaleX(0);        /* se ajusta con JS */
+  transition: transform 0.4s ease;
+}
+
+/* (Opcional) Efecto glow muy sutil en la barra */
+#checklist .bar::after{
+  content:""; position:absolute; inset:0;
+  box-shadow: 0 0 10px rgba(255,255,255,.08) inset;
+  pointer-events:none;
+}
