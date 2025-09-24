@@ -2,117 +2,101 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>BioHealing Monitor — Jonathan Fumero Mesa</title>
-  <meta name="description" content="Panel personal de monitoreo de nanorobots — BioHealing Monitor." />
-  <meta name="theme-color" content="#0a0f1a" />
-  <!-- CSS: ruta absoluta funciona, pero si tu sitio usa subcarpeta probá cambiar a href="css/style.css" -->
-  <link rel="stylesheet" href="/css/style.css">
-  <!-- TICKER DE SISTEMA (en la cabecera) -->
-<div class="sys-ticker" id="sys-ticker" aria-live="polite">
-  <div class="track" id="sys-ticker-track"></div>
-</div>
-
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BioHealing Monitor</title>
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-<!-- FX: fondo futurista (torrente + partículas) -->
-<canvas id="fx-bloodstream" class="fx-canvas" aria-hidden="true"></canvas>
-<div class="fx-vignette" aria-hidden="true"></div>
+  <!-- Fondo FX -->
+  <canvas id="fx-bloodstream" class="fx-canvas"></canvas>
+  <div class="fx-vignette"></div>
+
   <!-- Overlay de bienvenida -->
   <div id="overlay" class="overlay">
     <div class="welcome">
-      <div class="title"><div class="logo"></div> BIOHEALING MONITOR</div>
-      <h2>Bienvenido al centro de monitoreo de nanorobots</h2>
-      <p>Inicializando protocolo de verificación…</p>
+      <h1>BioHealing Monitor</h1>
+      <p class="subtitle">Inyección de nanorobots en torrente sanguíneo — Sesión de calibración</p>
 
       <!-- Datos paciente -->
-      <div class="cols">
-        <div class="metric">
-          <div class="mini">Paciente</div>
-          <div class="big">Jonathan Fumero Mesa</div>
-          <div class="mini" id="ov-age">Edad: —</div>
-          <div class="mini">Zona: America/Montevideo</div>
+      <div class="pill-row">
+        <div class="pill">Paciente: <b>Jonathan Fumero Mesa</b></div>
+        <div class="pill" id="ov-age">Edad: —</div>
+      </div>
+
+      <!-- Contadores -->
+      <div class="counters">
+        <div class="counter">
+          <div class="label">Nanobots totales</div>
+          <div class="value" id="n-total">0</div>
         </div>
-        <div class="metric">
-          <div class="mini">Identificador</div>
-          <div class="big" id="ov-id">JFM-19761204</div>
-          <div class="mini">Nacimiento: 04/12/1976 — 00:50</div>
-          <div class="mini">Uruguay</div>
+        <div class="counter">
+          <div class="label">Operativos</div>
+          <div class="value" id="n-op">0</div>
+          <div class="bar"><div class="fill" id="swarm-bar" style="width:0%"></div></div>
         </div>
       </div>
 
-      <!-- Recuento nanorobots -->
-      <div class="cols">
-        <div class="metric">
-          <div class="mini">Nanorobots en torrente</div>
-          <div id="n-total" class="big">—</div>
-        </div>
-        <div class="metric">
-          <div class="mini">Operativos</div>
-          <div id="n-op" class="big">—</div>
-        </div>
+      <!-- Bio panel -->
+      <div class="bio-grid">
+        <div class="bio-item" id="ov-bio-f">Físico: —</div>
+        <div class="bio-item" id="ov-bio-e">Emocional: —</div>
+        <div class="bio-item" id="ov-bio-i">Intelectual: —</div>
+        <div class="bio-item" id="ov-zodiac">Zodiaco: —</div>
+        <div class="bio-item" id="ov-czodiac">Chino: —</div>
+        <div class="bio-item" id="ov-moon">Luna: —</div>
+        <div class="bio-item" id="ov-circ">Circadiano: —</div>
       </div>
-      <div class="mini">Integridad del enjambre</div>
-      <div class="bar bar--swarm"><div id="swarm-bar" class="fill"></div></div>
 
-     <!-- Bio panel -->
-<div class="cols">
-  <div class="metric">
-    <div class="section-title">Biorritmo del día</div>
-    <div class="mini" id="ov-bio-f">Físico: —</div>
-    <div class="mini" id="ov-bio-e">Emocional: —</div>
-    <div class="mini" id="ov-bio-i">Intelectual: —</div>
-  </div>
-  <div class="metric">
-    <div class="section-title">Astrología & Energía</div>
-    <div class="mini" id="ov-zodiac">Zodiaco: —</div>
-    <div class="mini" id="ov-czodiac">Chino: —</div>
-    <div class="mini" id="ov-moon">Luna: —</div>
-    <div class="mini" id="ov-circ">Circadiano: —</div>
-  </div>
-</div>
-
-
-
-      <button id="startBtn" class="btn">Iniciar monitoreo</button>
+      <button id="startBtn" class="btn primary">Iniciar monitoreo</button>
     </div>
   </div>
 
-<header>
-  <h2>BioHealing Monitor</h2>
-  <div class="patient">
-    <div class="pill">Paciente: <b>Jonathan Fumero Mesa</b></div>
-    <div class="pill">Edad: <span id="age">—</span></div>
-  </div>
-  <div class="header-ctrls">
-    <div id="led" class="led"></div>
-    <button id="power-btn" class="btn">Encender</button>
-    <button id="sound-btn" class="btn" aria-pressed="true">Sonido: ON</button>
-  </div>
+  <!-- Cabecera (segunda pantalla) -->
+  <header>
+    <h2>BioHealing Monitor</h2>
 
-  <!-- NUEVO: info extendida minimalista -->
-  <div class="hud">
-    <div class="hud-item" id="hd-zodiac">Zodiaco: —</div>
-    <div class="hud-item" id="hd-czodiac">Chino: —</div>
-    <div class="hud-item" id="hd-moon">Luna: —</div>
-    <div class="hud-item" id="hd-circ">Circadiano: —</div>
-    <div class="hud-item" id="hd-bio-f">Físico: —</div>
-    <div class="hud-item" id="hd-bio-e">Emocional: —</div>
-    <div class="hud-item" id="hd-bio-i">Intelectual: —</div>
-  </div>
-</header>
+    <div class="patient">
+      <div class="pill">Paciente: <b>Jonathan Fumero Mesa</b></div>
+      <div class="pill">Edad: <span id="age">—</span></div>
+    </div>
+
+    <div class="header-ctrls">
+      <div id="led" class="led" aria-hidden="true"></div>
+      <button id="power-btn" class="btn" aria-label="Encender o apagar">Encender</button>
+      <button id="sound-btn" class="btn" aria-pressed="true" aria-label="Activar o desactivar sonido">Sonido: ON</button>
+    </div>
+
+    <!-- Ticker de sistema dentro del header -->
+    <div class="sys-ticker" id="sys-ticker" aria-live="polite">
+      <div class="track" id="sys-ticker-track"></div>
+    </div>
+
+    <!-- HUD de info compacta -->
+    <div class="hud">
+      <div class="hud-item" id="hd-zodiac">Zodiaco: —</div>
+      <div class="hud-item" id="hd-czodiac">Chino: —</div>
+      <div class="hud-item" id="hd-moon">Luna: —</div>
+      <div class="hud-item" id="hd-circ">Circadiano: —</div>
+      <div class="hud-item" id="hd-bio-f">Físico: —</div>
+      <div class="hud-item" id="hd-bio-e">Emocional: —</div>
+      <div class="hud-item" id="hd-bio-i">Intelectual: —</div>
+    </div>
+  </header>
 
   <main>
-    <div class="grid" id="grid"></div>
+    <!-- Módulos con gauges -->
+    <section>
+      <h3>Módulos</h3>
+      <div id="grid" class="grid"></div>
+    </section>
 
-    <section class="card" id="checks">
-      <div class="title-sm">Chequeos del sistema</div>
-      <div class="checklist" id="checklist"></div>
+    <!-- Chequeo de sistema (podés ocultarlo con .hide-checklist en <body>) -->
+    <section>
+      <h3>Chequeo de sistema</h3>
+      <div id="checklist"></div>
     </section>
   </main>
 
-  <!-- JS: usa RUTA RELATIVA si la absoluta falla en tu dominio -->
-  <!-- Si /js/main.js devuelve 404, cambia a js/main.js -->
   <script src="js/main.js" defer></script>
 </body>
 </html>
