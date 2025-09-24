@@ -124,9 +124,10 @@ class BloodstreamFX {
   }
 }
 
-// ===== Edad compacta =====
+// ===== Edad: compacta + detallada =====
 function makeLocalDate(y,m,d,hh,mm){const dt=new Date(Date.UTC(y,m-1,d,hh,mm));return new Date(dt.getTime()-3*3600*1000);}
 const birth = makeLocalDate(1976,12,4,0,50);
+
 function ageTextCompact(){
   const now=new Date();
   let years = now.getFullYear() - birth.getFullYear();
@@ -134,10 +135,47 @@ function ageTextCompact(){
   if(!afterBirthday) years--;
   return years+" años";
 }
+
+// NUEVO: edad detallada (años, meses, días, horas)
+function ageTextDetailed(now = new Date()){
+  let y = now.getFullYear() - birth.getFullYear();
+  let m = now.getMonth() - birth.getMonth();
+  let d = now.getDate() - birth.getDate();
+  let H = now.getHours() - birth.getHours();
+
+  // Ajustes por "préstamos"
+  if (H < 0) { H += 24; d -= 1; }
+  if (d < 0) {
+    const prevMonthDays = new Date(now.getFullYear(), now.getMonth(), 0).getDate();
+    d += prevMonthDays; m -= 1;
+  }
+  if (m < 0) { m += 12; y -= 1; }
+
+  const s = (n, sing, plur) => `${n} ${n===1?sing:plur}`;
+  return `${s(y,'año','años')} ${s(m,'mes','meses')} ${s(d,'día','días')} ${s(H,'hora','horas')}`;
+}
+
 function renderAge(){
-  const txt = ageTextCompact();
-  const a1=document.getElementById('age'); if(a1) a1.textContent=txt;
-  const a2=document.getElementById('ov-age'); if(a2) a2.textContent='Edad: '+txt;
+  const txtYears = ageTextCompact();          // "NN años"
+  const txtFull  = ageTextDetailed(new Date());// "NN años MM meses DD días HH horas"
+
+  // Header (segunda página): edad compacta
+  const a1=document.getElementById('age'); 
+  if(a1) a1.textContent=txtYears;
+
+  // Overlay (primera página): junto al título del proyecto, si existe
+  const meta = document.getElementById('project-meta');
+  if (meta){
+    // IMPORTANTE: editá el HTML para que este contenedor exista y contenga el nombre del paciente
+    // Ejemplo innerHTML final:
+    // "Paciente: <b>Jonathan Fumero Mesa</b> · Edad: NN años MM meses DD días HH horas"
+    const patientName = 'Jonathan Fumero Mesa'; // si querés, podemos leerlo del DOM
+    meta.innerHTML = `Paciente: <b>${patientName}</b> · Edad: ${txtFull}`;
+  }
+
+  // Fallback antiguo (si aún usás ov-age en algún sitio)
+  const a2=document.getElementById('ov-age'); 
+  if(a2) a2.textContent='Edad: '+txtYears;
 }
 setInterval(renderAge,1000);renderAge();
 
@@ -260,7 +298,7 @@ function renderHeaderInfo(d = new Date()){
 // Timers overlay + header
 const _initNow = new Date();
 biorr(_initNow); renderHeaderInfo(_initNow);
-setInterval(()=>{ const now=new Date(); biorr(now); renderHeaderInfo(now); }, 60000);
+setInterval(()=>{ const now=new Date(); biorr(now); renderHeaderInfo(now); renderAge(); }, 60000);
 
 // ===== Overlay: contadores =====
 function animateCounter(el,to,ms=3200){
@@ -274,21 +312,20 @@ function animateCounter(el,to,ms=3200){
 function initWelcome(){
   const base=12_000_000, ops=Math.floor(base*(0.90+Math.random()*0.06));
 
-  // Animaciones de números (ya las tenías)
+  // Animaciones de números
   animateCounter(document.getElementById('n-total'),base,3200);
   animateCounter(document.getElementById('n-op'),ops,3400);
 
-  // NUEVO: barra de Totales al 100%
+  // Barra de Totales al 100%
   const totalBar = document.getElementById('swarm-total-bar');
   if (totalBar) totalBar.style.width = '100%';
 
-  // Barra de Operativos según % (como ya tenías)
+  // Barra de Operativos según %
   setTimeout(()=>{
     const sb = document.getElementById('swarm-bar');
     if (sb) sb.style.width = Math.round(ops/base*100) + '%';
   },700);
 }
-
 initWelcome();
 
 // ===== Power & overlay =====
@@ -333,7 +370,7 @@ powerBtn.onclick = () => {
   if (isOn) { fx.start(); renderHeaderInfo(new Date()); } else { fx.stop(); }
 };
 
-// (Opcional) pausa FX si pestaña oculta
+// Pausa FX si pestaña oculta
 document.addEventListener('visibilitychange', ()=>{
   if (document.hidden) fx.stop(); else if (isOn) fx.start();
 });
