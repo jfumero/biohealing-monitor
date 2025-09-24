@@ -273,10 +273,22 @@ function animateCounter(el,to,ms=3200){
 }
 function initWelcome(){
   const base=12_000_000, ops=Math.floor(base*(0.90+Math.random()*0.06));
+
+  // Animaciones de números (ya las tenías)
   animateCounter(document.getElementById('n-total'),base,3200);
   animateCounter(document.getElementById('n-op'),ops,3400);
-  setTimeout(()=>{document.getElementById('swarm-bar').style.width=Math.round(ops/base*100)+'%'},700);
+
+  // NUEVO: barra de Totales al 100%
+  const totalBar = document.getElementById('swarm-total-bar');
+  if (totalBar) totalBar.style.width = '100%';
+
+  // Barra de Operativos según % (como ya tenías)
+  setTimeout(()=>{
+    const sb = document.getElementById('swarm-bar');
+    if (sb) sb.style.width = Math.round(ops/base*100) + '%';
+  },700);
 }
+
 initWelcome();
 
 // ===== Power & overlay =====
