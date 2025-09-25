@@ -36,6 +36,7 @@ class BloodstreamFX {
     const botsCount  = this.reduceMotion ? 50 : (isPhone ? 90 : 120);
     const cellsCount = this.reduceMotion ? 12 : (isPhone ? 22 : 30);
 
+    // Nanobots
     this.particles = Array.from({length: botsCount}, () => ({
       x: Math.random()*W, y: Math.random()*H,
       vx: (0.3 + Math.random()*0.7) * this.pxRatio,
@@ -44,6 +45,7 @@ class BloodstreamFX {
       r: 0.4 + Math.random()*1.0
     }));
 
+    // Células
     this.cells = Array.from({length: cellsCount}, () => ({
       x: Math.random()*W, y: Math.random()*H,
       vx: (0.15 + Math.random()*0.4) * this.pxRatio,
@@ -166,33 +168,27 @@ function ageTextDetailed(now = new Date()){
   ].join(' ');
 }
 
-
 function renderAge(){
-  const txtFull  = ageTextDetailed(new Date()); // "… años … meses … días … horas … minutos … segundos"
-  const txtYears = ageTextCompact();            // por si todavía usás el fallback en algún lado
+  const txtFull  = ageTextDetailed(new Date()); // años, meses, días, horas, min, seg
+  const txtYears = ageTextCompact();
 
-  // Header (segunda página): ahora edad detallada
+  // Header (segunda página): edad detallada
   const a1 = document.getElementById('age');
   if (a1) a1.textContent = txtFull;
 
   // Overlay (primera página): junto al título del proyecto
   const meta = document.getElementById('project-meta');
   if (meta){
-    const patientName = 'Jonathan Fumero Mesa'; // si querés, podemos leerlo del DOM
+    const patientName = 'Jonathan Fumero Mesa';
     meta.innerHTML = `Paciente: <b>${patientName}</b> · Edad: ${txtFull}`;
   }
 
-  // Fallback antiguo (si existiera todavía en algún lugar)
+  // Fallback antiguo (si existiera)
   const a2 = document.getElementById('ov-age');
   if (a2) a2.textContent = 'Edad: ' + txtYears;
 }
-
-
-  // Fallback antiguo si existiera
-  const a2=document.getElementById('ov-age'); 
-  if(a2) a2.textContent='Edad: '+txtYears;
-}
-setInterval(renderAge,1000);renderAge();
+setInterval(renderAge, 1000);
+renderAge();
 
 // ===== Audio (hum + beep) =====
 let audioCtx = null, masterGain = null, humOsc = null, humGain = null;
@@ -276,18 +272,14 @@ function biorr(d){
   // Overlay: zodiaco / chino / luna / circadiano
   const cz = chinese(1976);
   const czTxt = 'Chino: ' + cz + (cz === 'Dragón' ? ' 🐉' : '');
-  const ovZ = document.getElementById('ov-zodiac'); if (ovZ) ovText(ovZ, 'Zodiaco: ' + zodiac(new Date(1976,11,4)));
-  const ovC = document.getElementById('ov-czodiac'); if (ovC) ovText(ovC, czTxt);
-  const ovM = document.getElementById('ov-moon'); if (ovM) ovText(ovM, 'Luna: ' + moon(d));
-  const ovCi= document.getElementById('ov-circ'); if (ovCi) ovText(ovCi, 'Circadiano: ' + circadian(d));
-
-  function ovText(el, txt){ el.textContent = txt; }
+  const ovZ = document.getElementById('ov-zodiac'); if (ovZ) ovZ.textContent = 'Zodiaco: ' + zodiac(new Date(1976,11,4));
+  const ovC = document.getElementById('ov-czodiac'); if (ovC) ovC.textContent = czTxt;
+  const ovM = document.getElementById('ov-moon'); if (ovM) ovM.textContent = 'Luna: ' + moon(d);
+  const ovCi= document.getElementById('ov-circ'); if (ovCi) ovCi.textContent = 'Circadiano: ' + circadian(d);
 }
 
-// HUD: misma info en cabecera
+// HUD: misma info en cabecera (sin tocar la edad, que la maneja renderAge)
 function renderHeaderInfo(d = new Date()){
-  const ageEl = document.getElementById('age'); if (ageEl) ageEl.textContent = ageTextCompact();
-
   const z  = zodiac(new Date(1976,11,4));
   const cz = chinese(1976);
   const czTxt = 'Chino: ' + cz + (cz === 'Dragón' ? ' 🐉' : '');
@@ -315,7 +307,7 @@ function renderHeaderInfo(d = new Date()){
 // Timers overlay + header
 const _initNow = new Date();
 biorr(_initNow); renderHeaderInfo(_initNow);
-setInterval(()=>{ const now=new Date(); biorr(now); renderHeaderInfo(now); renderAge(); }, 60000);
+setInterval(()=>{ const now=new Date(); biorr(now); renderHeaderInfo(now); }, 60000);
 
 // ===== Overlay: contadores =====
 function animateCounter(el,to,ms=3200){
