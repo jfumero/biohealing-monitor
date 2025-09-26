@@ -1,7 +1,6 @@
 :root{
   --bg:#0b0a12;
   --panel:#14141e;
-  --panel-2:#1b1b28;
   --fg:#e7e7ea;
   --muted:#9aa0a6;
   --accent:#5ad1ff;
@@ -23,9 +22,7 @@ body{
 
 /* Canvas fondo */
 #fx-bloodstream{
-  position:fixed;inset:0;
-  width:100%;height:100%;
-  z-index:-1;
+  position:fixed;inset:0;width:100%;height:100%;z-index:-1;
 }
 
 /* Overlay bienvenida */
@@ -40,12 +37,7 @@ body{
 
 /* Swarm (contador + barras) */
 .swarm{display:grid;gap:.8rem;min-width:min(92vw,560px)}
-.swarm-box{
-  background:var(--card);
-  border:1px solid #2a2a37;
-  border-radius:10px;
-  padding:.7rem .8rem;
-}
+.swarm-box{background:var(--card);border:1px solid #2a2a37;border-radius:10px;padding:.7rem .8rem}
 .swarm-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem}
 .swarm-row strong{font-size:1.15rem}
 .swarm-bar{height:8px;background:#20212a;border-radius:999px;overflow:hidden}
@@ -71,15 +63,8 @@ header{
 .header-ctrls{display:flex;gap:.5rem;align-items:center}
 
 /* KPI cards */
-.dashboard{
-  display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
-  gap:.7rem;padding:.8rem 1rem;
-}
-.pill-card{
-  background:var(--card);
-  border:1px solid #2a2a37;border-radius:10px;padding:.65rem .8rem;text-align:center;
-  font-size:.95rem
-}
+.dashboard{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.7rem;padding:.8rem 1rem}
+.pill-card{background:var(--card);border:1px solid #2a2a37;border-radius:10px;padding:.65rem .8rem;text-align:center;font-size:.95rem}
 .pill-card b{font-weight:700}
 
 /* Ticker */
@@ -101,13 +86,8 @@ header{
 .fill{height:100%;background:linear-gradient(90deg,var(--accent),#9be7ff);transform:scaleX(0);transform-origin:left;transition:transform .6s ease}
 
 /* Grid de módulos (gauges) */
-.grid{
-  padding:1rem;display:grid;gap:1rem;
-  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
-}
-.card{
-  background:var(--card);border:1px solid #2a2a37;border-radius:12px;padding:1rem
-}
+.grid{padding:1rem;display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.card{background:var(--card);border:1px solid #2a2a37;border-radius:12px;padding:1rem}
 .title-sm{font-size:.95rem;margin-bottom:.35rem}
 .status{display:flex;align-items:center;gap:.45rem;font-size:.86rem;color:var(--muted);margin-bottom:.5rem}
 .dot{width:10px;height:10px;border-radius:50%;background:#666}
