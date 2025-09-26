@@ -4,8 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>BioHealing Monitor</title>
-  <link rel="preload" href="./main.js" as="script" />
-  <link rel="stylesheet" href="./style.css" type="text/css" />
+  <!-- Preload del JS para acelerar -->
+  <link rel="preload" href="/main.js" as="script" />
+  <!-- CSS principal -->
+  <link rel="stylesheet" href="/style.css" type="text/css" />
 </head>
 <body>
   <!-- Fondo animado -->
@@ -16,6 +18,7 @@
     <h1 id="welcomeTitle" class="brand">BioHealing Monitor</h1>
     <p id="project-meta" class="meta">Paciente: <b>—</b> · Edad: —</p>
 
+    <!-- Swarm counters -->
     <div class="swarm">
       <div class="swarm-box">
         <div class="swarm-row">
@@ -41,7 +44,7 @@
     <button id="startBtn" class="btn big">Iniciar</button>
   </div>
 
-  <!-- Cabecera (HUD) -->
+  <!-- Cabecera -->
   <header>
     <div class="brand-row">
       <h2 class="brand">BioHealing Monitor</h2>
@@ -65,18 +68,18 @@
     <div class="pill-card" id="kpi-recovery">Recuperación: <b>—</b></div>
   </section>
 
-  <!-- Ticker del sistema -->
+  <!-- Ticker -->
   <div class="sys-ticker" aria-live="polite">
     <div id="sys-ticker-track" class="sys-ticker-track"></div>
   </div>
 
-  <!-- Checklist simple (barras finas) -->
+  <!-- Checklist simple -->
   <section id="checklist" class="checklist"></section>
 
-  <!-- Grid de gauges / módulos -->
+  <!-- Módulos / Gauges -->
   <main id="grid" class="grid"></main>
 
-  <!-- Info adicional (overlay mirror) -->
+  <!-- Info adicional -->
   <footer>
     <p id="ov-age"></p>
     <p id="ov-zodiac"></p>
@@ -88,12 +91,11 @@
     <p id="ov-bio-i"></p>
   </footer>
 
-  <script src="./main.js" defer></script>
+  <!-- JS principal -->
+  <script src="/main.js" defer></script>
+
   <noscript>
-    <style>
-      .overlay{display:none!important}
-      body{padding:1rem}
-    </style>
+    <style>.overlay{display:none!important} body{padding:1rem}</style>
     <p>Necesitas habilitar JavaScript para ver las animaciones y gauges.</p>
   </noscript>
 </body>
