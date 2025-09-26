@@ -1,114 +1,100 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>BioHealing Monitor</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="preload" href="./main.js" as="script" />
+  <link rel="stylesheet" href="./style.css" type="text/css" />
 </head>
 <body>
-  <!-- Fondo FX -->
-  <canvas id="fx-bloodstream" class="fx-canvas"></canvas>
-  <div class="fx-vignette"></div>
+  <!-- Fondo animado -->
+  <canvas id="fx-bloodstream" aria-hidden="true"></canvas>
 
-  <!-- Overlay de bienvenida (visible por defecto) -->
-  <div id="overlay" class="overlay">
-    <div class="welcome">
-      <div class="welcome-head">
-        <h1>BioHealing Monitor</h1>
-        <div class="project-meta" id="project-meta">
-          Paciente: <b>Jonathan Fumero Mesa</b> · Edad: —
+  <!-- Pantalla de bienvenida -->
+  <div id="overlay" class="overlay" role="dialog" aria-labelledby="welcomeTitle">
+    <h1 id="welcomeTitle" class="brand">BioHealing Monitor</h1>
+    <p id="project-meta" class="meta">Paciente: <b>—</b> · Edad: —</p>
+
+    <div class="swarm">
+      <div class="swarm-box">
+        <div class="swarm-row">
+          <span>Total nanorobots</span>
+          <strong id="n-total">0</strong>
+        </div>
+        <div class="swarm-bar">
+          <div id="swarm-total-bar" class="swarm-fill"></div>
         </div>
       </div>
 
-      <p class="subtitle">Inyección de nanorobots en torrente sanguíneo — Sesión de calibración</p>
-
-      <!-- Contadores (dos barras con valor adentro) -->
-      <div class="counters">
-        <!-- Nanobots totales (arriba) -->
-        <div class="counter cardish">
-          <div class="label">Nanobots totales</div>
-          <div class="bar with-val" aria-label="Nanobots totales">
-            <div class="fill" id="swarm-total-bar" style="width:0%"></div>
-            <div class="bar-val" id="n-total">0</div>
-          </div>
+      <div class="swarm-box">
+        <div class="swarm-row">
+          <span>Operativos</span>
+          <strong id="n-op">0</strong>
         </div>
-
-        <!-- Operativos (abajo) -->
-        <div class="counter cardish">
-          <div class="label">Operativos</div>
-          <div class="bar with-val" aria-label="Operativos">
-            <div class="fill" id="swarm-bar" style="width:0%"></div>
-            <div class="bar-val" id="n-op">0</div>
-          </div>
+        <div class="swarm-bar alt">
+          <div id="swarm-bar" class="swarm-fill"></div>
         </div>
       </div>
-
-      <!-- Bio panel -->
-      <div class="bio-grid">
-        <div class="bio-item" id="ov-bio-f">Físico: —</div>
-        <div class="bio-item" id="ov-bio-e">Emocional: —</div>
-        <div class="bio-item" id="ov-bio-i">Intelectual: —</div>
-        <div class="bio-item" id="ov-zodiac">Zodiaco: —</div>
-        <div class="bio-item" id="ov-czodiac">Chino: —</div>
-        <div class="bio-item" id="ov-moon">Luna: —</div>
-        <div class="bio-item" id="ov-circ">Circadiano: —</div>
-      </div>
-
-      <button id="startBtn" class="btn primary">Iniciar monitoreo</button>
     </div>
+
+    <button id="startBtn" class="btn big">Iniciar</button>
   </div>
 
-  <!-- Cabecera (segunda pantalla) -->
+  <!-- Cabecera (HUD) -->
   <header>
-    <h2>BioHealing Monitor</h2>
-
-    <div class="patient">
-      <div class="pill">Paciente: <b>Jonathan Fumero Mesa</b></div>
-      <div class="pill">Edad: <span id="age">—</span></div>
+    <div class="brand-row">
+      <h2 class="brand">BioHealing Monitor</h2>
+      <div class="line-info">
+        <span class="pill">Paciente: <b id="patient-name">Jonathan Fumero Mesa</b></span>
+        <span class="pill">Edad: <span id="age">—</span></span>
+      </div>
     </div>
-
     <div class="header-ctrls">
-      <div id="led" class="led" aria-hidden="true"></div>
-      <button id="power-btn" class="btn" aria-label="Encender o apagar">Encender</button>
-      <button id="sound-btn" class="btn" aria-pressed="true" aria-label="Activar o desactivar sonido">Sonido: ON</button>
-    </div>
-
-    <div class="sys-ticker" id="sys-ticker" aria-live="polite">
-      <div class="track" id="sys-ticker-track"></div>
-    </div>
-
-    <div class="hud">
-      <div class="hud-item" id="hd-zodiac">Zodiaco: —</div>
-      <div class="hud-item" id="hd-czodiac">Chino: —</div>
-      <div class="hud-item" id="hd-moon">Luna: —</div>
-      <div class="hud-item" id="hd-circ">Circadiano: —</div>
-      <div class="hud-item" id="hd-bio-f">Físico: —</div>
-      <div class="hud-item" id="hd-bio-e">Emocional: —</div>
-      <div class="hud-item" id="hd-bio-i">Intelectual: —</div>
+      <div id="led" class="led" aria-label="Estado de energía"></div>
+      <button id="power-btn" class="btn">Encender</button>
+      <button id="sound-btn" class="btn" aria-pressed="true">Sonido: ON</button>
     </div>
   </header>
 
-  <main>
-    <!-- Módulos con gauges -->
-    <section class="section">
-      <div class="section-head">
-        <h3 class="section-title">Módulos</h3>
-        <div class="section-line"></div>
-      </div>
-      <div id="grid" class="grid"></div>
-    </section>
+  <!-- KPIs superiores -->
+  <section class="dashboard">
+    <div class="pill-card" id="kpi-vital">Vitalidad: <b>—</b></div>
+    <div class="pill-card" id="kpi-mind">Mente: <b>—</b></div>
+    <div class="pill-card" id="kpi-structure">Estructura: <b>—</b></div>
+    <div class="pill-card" id="kpi-recovery">Recuperación: <b>—</b></div>
+  </section>
 
-    <!-- Chequeo de sistema -->
-    <section class="section">
-      <div class="section-head">
-        <h3 class="section-title">Chequeo de sistema</h3>
-        <div class="section-line"></div>
-      </div>
-      <div id="checklist" class="checklist"></div>
-    </section>
-  </main>
+  <!-- Ticker del sistema -->
+  <div class="sys-ticker" aria-live="polite">
+    <div id="sys-ticker-track" class="sys-ticker-track"></div>
+  </div>
 
-  <script src="js/main.js" defer></script>
+  <!-- Checklist simple (barras finas) -->
+  <section id="checklist" class="checklist"></section>
+
+  <!-- Grid de gauges / módulos -->
+  <main id="grid" class="grid"></main>
+
+  <!-- Info adicional (overlay mirror) -->
+  <footer>
+    <p id="ov-age"></p>
+    <p id="ov-zodiac"></p>
+    <p id="ov-czodiac"></p>
+    <p id="ov-moon"></p>
+    <p id="ov-circ"></p>
+    <p id="ov-bio-f"></p>
+    <p id="ov-bio-e"></p>
+    <p id="ov-bio-i"></p>
+  </footer>
+
+  <script src="./main.js" defer></script>
+  <noscript>
+    <style>
+      .overlay{display:none!important}
+      body{padding:1rem}
+    </style>
+    <p>Necesitas habilitar JavaScript para ver las animaciones y gauges.</p>
+  </noscript>
 </body>
 </html>
