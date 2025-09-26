@@ -1,114 +1,251 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>BioHealing Monitor</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
-  <!-- Fondo FX -->
-  <canvas id="fx-bloodstream" class="fx-canvas"></canvas>
-  <div class="fx-vignette"></div>
+  <!-- FX fondo -->
+  <canvas id="fx-bloodstream" aria-hidden="true"></canvas>
 
-  <!-- Overlay de bienvenida (visible por defecto) -->
-  <div id="overlay" class="overlay">
-    <div class="welcome">
-      <div class="welcome-head">
-        <h1>BioHealing Monitor</h1>
-        <div class="project-meta" id="project-meta">
-          Paciente: <b>Jonathan Fumero Mesa</b> · Edad: —
+  <!-- Overlay / Bienvenida -->
+  <section id="overlay" class="overlay">
+    <div class="ov-wrap">
+      <h1 class="brand">BioHealing Monitor</h1>
+      <div id="project-meta" class="project-meta">Paciente: <b>Jonathan Fumero Mesa</b> · Edad: —</div>
+
+      <div class="ov-counters">
+        <div class="ov-card">
+          <div class="ov-title">Nanorobots Totales</div>
+          <div class="ov-num" id="n-total">0</div>
+          <div class="ov-bar"><i id="swarm-total-bar"></i></div>
+        </div>
+        <div class="ov-card">
+          <div class="ov-title">Nanorobots Operativos</div>
+          <div class="ov-num" id="n-op">0</div>
+          <div class="ov-bar"><i id="swarm-bar"></i></div>
         </div>
       </div>
 
-      <p class="subtitle">Inyección de nanorobots en torrente sanguíneo — Sesión de calibración</p>
+      <div class="ov-bio">
+        <div id="ov-age" class="ov-line">Edad: —</div>
+        <div id="ov-zodiac" class="ov-line">Zodiaco: —</div>
+        <div id="ov-czodiac" class="ov-line">Chino: —</div>
+        <div id="ov-moon" class="ov-line">Luna: —</div>
+        <div id="ov-circ" class="ov-line">Circadiano: —</div>
+        <div class="ov-line" id="ov-bio-f">Físico: —</div>
+        <div class="ov-line" id="ov-bio-e">Emocional: —</div>
+        <div class="ov-line" id="ov-bio-i">Intelectual: —</div>
+      </div>
 
-      <!-- Contadores (dos barras con valor adentro) -->
-      <div class="counters">
-        <!-- Nanobots totales (arriba) -->
-        <div class="counter cardish">
-          <div class="label">Nanobots totales</div>
-          <div class="bar with-val" aria-label="Nanobots totales">
-            <div class="fill" id="swarm-total-bar" style="width:0%"></div>
-            <div class="bar-val" id="n-total">0</div>
-          </div>
+      <button id="startBtn" class="btn big">Iniciar</button>
+    </div>
+  </section>
+
+  <main class="app">
+    <!-- Ticker superior de chequeos -->
+    <div id="sys-ticker" class="sys-ticker">
+      <div id="sys-ticker-track" class="sys-ticker-track"></div>
+    </div>
+
+    <!-- Header principal -->
+    <header class="app-header">
+      <div class="left">
+        <h2 class="app-title">BioHealing Monitor</h2>
+        <div class="patient-line">
+          <div class="pill">Paciente: <b>Jonathan Fumero Mesa</b></div>
+          <div class="pill">Edad: <span id="age">—</span></div>
         </div>
-
-        <!-- Operativos (abajo) -->
-        <div class="counter cardish">
-          <div class="label">Operativos</div>
-          <div class="bar with-val" aria-label="Operativos">
-            <div class="fill" id="swarm-bar" style="width:0%"></div>
-            <div class="bar-val" id="n-op">0</div>
-          </div>
-        </div>
       </div>
-
-      <!-- Bio panel -->
-      <div class="bio-grid">
-        <div class="bio-item" id="ov-bio-f">Físico: —</div>
-        <div class="bio-item" id="ov-bio-e">Emocional: —</div>
-        <div class="bio-item" id="ov-bio-i">Intelectual: —</div>
-        <div class="bio-item" id="ov-zodiac">Zodiaco: —</div>
-        <div class="bio-item" id="ov-czodiac">Chino: —</div>
-        <div class="bio-item" id="ov-moon">Luna: —</div>
-        <div class="bio-item" id="ov-circ">Circadiano: —</div>
+      <div class="header-ctrls">
+        <div id="led" class="led" aria-hidden="true"></div>
+        <button id="power-btn" class="btn">Encender</button>
+        <button id="sound-btn" class="btn" aria-pressed="true">Sonido: ON</button>
       </div>
+    </header>
 
-      <button id="startBtn" class="btn primary">Iniciar monitoreo</button>
-    </div>
-  </div>
-
-  <!-- Cabecera (segunda pantalla) -->
-  <header>
-    <h2>BioHealing Monitor</h2>
-
-    <div class="patient">
-      <div class="pill">Paciente: <b>Jonathan Fumero Mesa</b></div>
-      <div class="pill">Edad: <span id="age">—</span></div>
-    </div>
-
-    <div class="header-ctrls">
-      <div id="led" class="led" aria-hidden="true"></div>
-      <button id="power-btn" class="btn" aria-label="Encender o apagar">Encender</button>
-      <button id="sound-btn" class="btn" aria-pressed="true" aria-label="Activar o desactivar sonido">Sonido: ON</button>
-    </div>
-
-    <div class="sys-ticker" id="sys-ticker" aria-live="polite">
-      <div class="track" id="sys-ticker-track"></div>
-    </div>
-
-    <div class="hud">
-      <div class="hud-item" id="hd-zodiac">Zodiaco: —</div>
-      <div class="hud-item" id="hd-czodiac">Chino: —</div>
-      <div class="hud-item" id="hd-moon">Luna: —</div>
-      <div class="hud-item" id="hd-circ">Circadiano: —</div>
-      <div class="hud-item" id="hd-bio-f">Físico: —</div>
-      <div class="hud-item" id="hd-bio-e">Emocional: —</div>
-      <div class="hud-item" id="hd-bio-i">Intelectual: —</div>
-    </div>
-  </header>
-
-  <main>
-    <!-- Módulos con gauges -->
-    <section class="section">
-      <div class="section-head">
-        <h3 class="section-title">Módulos</h3>
-        <div class="section-line"></div>
-      </div>
-      <div id="grid" class="grid"></div>
+    <!-- Info compacta (zodiaco, luna, biorritmo) -->
+    <section class="mini-info">
+      <span id="hd-zodiac">Zodiaco: —</span>
+      <span id="hd-czodiac">Chino: —</span>
+      <span id="hd-moon">Luna: —</span>
+      <span id="hd-circ">Circadiano: —</span>
+      <span id="hd-bio-f">Físico: —</span>
+      <span id="hd-bio-e">Emocional: —</span>
+      <span id="hd-bio-i">Intelectual: —</span>
     </section>
 
-    <!-- Chequeo de sistema -->
-    <section class="section">
-      <div class="section-head">
-        <h3 class="section-title">Chequeo de sistema</h3>
-        <div class="section-line"></div>
+    <!-- KPIs -->
+    <section id="kpis" class="kpi-row">
+      <button class="kpi" data-target="#sec-entradas">
+        <span class="kpi-title">Vitalidad</span><span class="kpi-val" id="kpi-vital">—%</span>
+      </button>
+      <button class="kpi" data-target="#sec-regulacion">
+        <span class="kpi-title">Mente</span><span class="kpi-val" id="kpi-mente">—%</span>
+      </button>
+      <button class="kpi" data-target="#sec-soporte">
+        <span class="kpi-title">Recuperación</span><span class="kpi-val" id="kpi-recup">—%</span>
+      </button>
+      <button class="kpi" data-target="#sec-nucleo">
+        <span class="kpi-title">Estructura</span><span class="kpi-val" id="kpi-estruct">—%</span>
+      </button>
+    </section>
+
+    <!-- Tabs -->
+    <nav class="sections-nav">
+      <button class="tab is-active" data-tab="entradas">Entradas</button>
+      <button class="tab" data-tab="regulacion">Regulación</button>
+      <button class="tab" data-tab="soporte">Soporte</button>
+      <button class="tab" data-tab="estilo">Estilo de Vida</button>
+      <button class="tab" data-tab="habitos">Hábitos & Ambiente</button>
+      <button class="tab" data-tab="nucleo">Núcleo Celular</button>
+    </nav>
+
+    <!-- Secciones -->
+
+    <!-- 1) Entradas -->
+    <section id="sec-entradas" class="section is-active" data-tab="entradas">
+      <div class="grid">
+        <!-- Hidratación -->
+        <section class="card cardL" id="card-hidratacion">
+          <div class="title-sm">Hidratación</div>
+          <div class="status"><i class="dot bad"></i><span>En espera</span></div>
+          <div class="gauge">
+            <div class="dial"></div><div class="needle"></div><div class="hub"></div><div class="value">0%</div>
+          </div>
+          <div class="controls">
+            <button class="btn mod" id="hidra-start">Activar</button>
+            <button class="btn alt mod" id="hidra-stop">Detener</button>
+          </div>
+        </section>
+
+        <!-- Oxígeno (ya integrado) -->
+        <section class="card cardL" id="card-o2">
+          <div class="title-sm">Saturación O₂</div>
+          <div class="status"><i class="dot bad"></i><span>En espera</span></div>
+          <div class="gauge">
+            <div class="dial"></div><div class="needle"></div><div class="hub"></div><div class="value">0%</div>
+          </div>
+          <div class="controls">
+            <button class="btn mod" id="o2-start">Activar</button>
+            <button class="btn alt mod" id="o2-stop">Detener</button>
+          </div>
+        </section>
+
+        <!-- Macros -->
+        <section class="panel mini" id="panel-macros">
+          <div class="panel-head"><div class="title-sm">Energía (Macros)</div></div>
+          <div class="mini-bars">
+            <div class="mini-line"><span>Carbohidratos</span><div class="mini-bar"><div class="mini-fill" id="mb-carb"></div></div><b id="mv-carb">0%</b></div>
+            <div class="mini-line"><span>Grasas</span><div class="mini-bar"><div class="mini-fill" id="mb-fat"></div></div><b id="mv-fat">0%</b></div>
+            <div class="mini-line"><span>Proteínas</span><div class="mini-bar"><div class="mini-fill" id="mb-prot"></div></div><b id="mv-prot">0%</b></div>
+          </div>
+        </section>
+
+        <!-- Minerales -->
+        <section class="panel mini" id="panel-minerales">
+          <div class="panel-head"><div class="title-sm">Minerales</div></div>
+          <div class="chip-grid" id="grid-minerales"></div>
+        </section>
+
+        <!-- Vitaminas -->
+        <section class="panel mini" id="panel-vitaminas">
+          <div class="panel-head"><div class="title-sm">Vitaminas</div></div>
+          <div class="chip-grid" id="grid-vitaminas"></div>
+        </section>
       </div>
-      <div id="checklist" class="checklist"></div>
+    </section>
+
+    <!-- 2) Regulación -->
+    <section id="sec-regulacion" class="section" data-tab="regulacion">
+      <div class="grid">
+        <!-- Neuro (el panel se completa desde JS) -->
+        <section class="panel neuro" id="neuro-panel">
+          <div class="panel-head">
+            <div class="title-sm">Neurotransmisores</div>
+            <div class="sub">Balance mental (modo demo)</div>
+          </div>
+          <div class="neuro-grid">
+            <div class="mini-g" id="g-dopa">
+              <div class="mini-meter"><div class="mini-needle"></div></div>
+              <div class="mini-label">Dopamina ⚙️</div>
+              <div class="mini-val">0%</div>
+            </div>
+            <div class="mini-g" id="g-sero">
+              <div class="mini-meter"><div class="mini-needle"></div></div>
+              <div class="mini-label">Serotonina 💖</div>
+              <div class="mini-val">0%</div>
+            </div>
+            <div class="mini-g" id="g-nora">
+              <div class="mini-meter"><div class="mini-needle"></div></div>
+              <div class="mini-label">Noradrenalina ⚡</div>
+              <div class="mini-val">0%</div>
+            </div>
+          </div>
+
+          <div class="balance">
+            <div class="balance-head">Balance GABA 😌 ↔ Glutamato 🔥</div>
+            <div class="balance-bar"><div class="balance-fill" id="gaba-glu-fill"></div></div>
+            <div class="balance-legend"><span>Calma</span><span>Excitación</span></div>
+          </div>
+        </section>
+
+        <!-- Hormonas: Metabólicas -->
+        <section class="panel mini" id="panel-hormonas-met">
+          <div class="panel-head"><div class="title-sm">Hormonas metabólicas</div></div>
+          <div class="mini-grid" id="grid-h-met"></div>
+        </section>
+
+        <!-- Hormonas: Estrés & Sueño -->
+        <section class="panel mini" id="panel-hormonas-es">
+          <div class="panel-head"><div class="title-sm">Estrés & Sueño</div></div>
+          <div class="mini-grid" id="grid-h-st"></div>
+        </section>
+      </div>
+    </section>
+
+    <!-- 3) Soporte: aquí va tu grid original de módulos -->
+    <section id="sec-soporte" class="section" data-tab="soporte">
+      <div class="grid">
+        <section class="panel mini">
+          <div class="panel-head"><div class="title-sm">Chequeos (barras finas)</div></div>
+          <div id="checklist" class="checklist"></div>
+        </section>
+
+        <section class="panel mini full">
+          <div class="panel-head"><div class="title-sm">Módulos de Soporte</div></div>
+          <div id="grid" class="modules-grid"></div>
+        </section>
+      </div>
+    </section>
+
+    <!-- 4) Estilo de Vida (placeholder visual por ahora) -->
+    <section id="sec-estilo" class="section" data-tab="estilo">
+      <div class="grid">
+        <section class="panel mini"><div class="panel-head"><div class="title-sm">Movimiento físico</div></div><p class="muted">Próximamente</p></section>
+        <section class="panel mini"><div class="panel-head"><div class="title-sm">Sueño / Ritmos</div></div><p class="muted">Próximamente</p></section>
+        <section class="panel mini"><div class="panel-head"><div class="title-sm">Estrés & Emociones</div></div><p class="muted">Próximamente</p></section>
+        <section class="panel mini"><div class="panel-head"><div class="title-sm">Conexión social</div></div><p class="muted">Próximamente</p></section>
+      </div>
+    </section>
+
+    <!-- 5) Hábitos & Ambiente (placeholder) -->
+    <section id="sec-habitos" class="section" data-tab="habitos">
+      <div class="grid">
+        <section class="panel mini full"><div class="panel-head"><div class="title-sm">Checklist semanal</div></div><p class="muted">Próximamente</p></section>
+      </div>
+    </section>
+
+    <!-- 6) Núcleo Celular (placeholder) -->
+    <section id="sec-nucleo" class="section" data-tab="nucleo">
+      <div class="grid">
+        <section class="panel mini full"><div class="panel-head"><div class="title-sm">Integridad & Renovación Celular</div></div><p class="muted">Próximamente</p></section>
+      </div>
     </section>
   </main>
 
-  <script src="js/main.js" defer></script>
+  <script src="main.js"></script>
 </body>
 </html>
