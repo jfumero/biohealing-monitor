@@ -126,7 +126,7 @@ class BloodstreamFX {
   }
 }
 
-// ===== Edad: compacta + detallada =====
+// ===== Edad: compacta + detallada (años, meses, días, horas, min, seg) =====
 function makeLocalDate(y,m,d,hh,mm){const dt=new Date(Date.UTC(y,m-1,d,hh,mm));return new Date(dt.getTime()-3*3600*1000);}
 const birth = makeLocalDate(1976,12,4,0,50);
 
@@ -137,8 +137,6 @@ function ageTextCompact(){
   if(!afterBirthday) years--;
   return years+" años";
 }
-
-// Edad detallada (años, meses, días, horas, minutos, segundos)
 function ageTextDetailed(now = new Date()){
   let y  = now.getFullYear() - birth.getFullYear();
   let m  = now.getMonth()    - birth.getMonth();
@@ -146,46 +144,30 @@ function ageTextDetailed(now = new Date()){
   let H  = now.getHours()    - birth.getHours();
   let Mi = now.getMinutes()  - birth.getMinutes();
   let S  = now.getSeconds()  - birth.getSeconds();
-
-  // Normalización por "préstamos"
   if (S  < 0) { S  += 60; Mi -= 1; }
   if (Mi < 0) { Mi += 60; H  -= 1; }
   if (H  < 0) { H  += 24; d  -= 1; }
-  if (d  < 0) {
-    const prevMonthDays = new Date(now.getFullYear(), now.getMonth(), 0).getDate();
-    d += prevMonthDays; m -= 1;
-  }
+  if (d  < 0) { const prevMonthDays = new Date(now.getFullYear(), now.getMonth(), 0).getDate(); d += prevMonthDays; m -= 1; }
   if (m  < 0) { m  += 12; y  -= 1; }
-
   const s = (n, sing, plur) => `${n} ${n===1?sing:plur}`;
-  return [
-    s(y,'año','años'),
-    s(m,'mes','meses'),
-    s(d,'día','días'),
-    s(H,'hora','horas'),
-    s(Mi,'minuto','minutos'),
-    s(S,'segundo','segundos')
-  ].join(' ');
+  return [s(y,'año','años'), s(m,'mes','meses'), s(d,'día','días'), s(H,'hora','horas'), s(Mi,'minuto','minutos'), s(S,'segundo','segundos')].join(' ');
 }
-
 function renderAge(){
-  const txtFull  = ageTextDetailed(new Date()); // años, meses, días, horas, min, seg
+  const txtFull  = ageTextDetailed(new Date());
   const txtYears = ageTextCompact();
 
-  // Header (segunda página): edad detallada
-  const a1 = document.getElementById('age');
-  if (a1) a1.textContent = txtFull;
+  // Header (segunda página)
+  const a1 = document.getElementById('age'); if (a1) a1.textContent = txtFull;
 
-  // Overlay (primera página): junto al título del proyecto
+  // Overlay (primera página)
   const meta = document.getElementById('project-meta');
   if (meta){
     const patientName = 'Jonathan Fumero Mesa';
     meta.innerHTML = `Paciente: <b>${patientName}</b> · Edad: ${txtFull}`;
   }
 
-  // Fallback antiguo (si existiera)
-  const a2 = document.getElementById('ov-age');
-  if (a2) a2.textContent = 'Edad: ' + txtYears;
+  // Fallback overlay
+  const a2 = document.getElementById('ov-age'); if (a2) a2.textContent = 'Edad: ' + txtYears;
 }
 setInterval(renderAge, 1000);
 renderAge();
@@ -193,7 +175,6 @@ renderAge();
 // ===== Audio (hum + beep) =====
 let audioCtx = null, masterGain = null, humOsc = null, humGain = null;
 let soundOn = true;
-
 function ensureAudio(){
   if (audioCtx) return;
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -253,11 +234,8 @@ if(h<12)return'Alerta alta';
 if(h<14)return'Bajada posalmuerzo';
 if(h<18)return'Segundo pico de energía';
 return'Desaceleración vespertina';}
-
 function biorr(d){
   const days=Math.floor((new Date(d.getFullYear(),d.getMonth(),d.getDate()) - new Date(birth.getFullYear(),birth.getMonth(),birth.getDate()))/86400000);
-
-  // Overlay: biorritmos con colores/emojis
   function renderBio(elId, label, period, emoji){
     const pct = Math.round(Math.sin(2*Math.PI*days/period) * 100);
     const cls = pct > 3 ? 'bio-pos' : (pct < -3 ? 'bio-neg' : 'bio-neu');
@@ -269,7 +247,6 @@ function biorr(d){
   renderBio('ov-bio-e', 'Emocional', 28, '💖');
   renderBio('ov-bio-i', 'Intelectual', 33, '🧠');
 
-  // Overlay: zodiaco / chino / luna / circadiano
   const cz = chinese(1976);
   const czTxt = 'Chino: ' + cz + (cz === 'Dragón' ? ' 🐉' : '');
   const ovZ = document.getElementById('ov-zodiac'); if (ovZ) ovZ.textContent = 'Zodiaco: ' + zodiac(new Date(1976,11,4));
@@ -277,8 +254,6 @@ function biorr(d){
   const ovM = document.getElementById('ov-moon'); if (ovM) ovM.textContent = 'Luna: ' + moon(d);
   const ovCi= document.getElementById('ov-circ'); if (ovCi) ovCi.textContent = 'Circadiano: ' + circadian(d);
 }
-
-// HUD: misma info en cabecera (sin tocar la edad, que la maneja renderAge)
 function renderHeaderInfo(d = new Date()){
   const z  = zodiac(new Date(1976,11,4));
   const cz = chinese(1976);
@@ -303,8 +278,6 @@ function renderHeaderInfo(d = new Date()){
   upd('hd-bio-e','Emocional',   bio(28), '💖');
   upd('hd-bio-i','Intelectual', bio(33), '🧠');
 }
-
-// Timers overlay + header
 const _initNow = new Date();
 biorr(_initNow); renderHeaderInfo(_initNow);
 setInterval(()=>{ const now=new Date(); biorr(now); renderHeaderInfo(now); }, 60000);
@@ -320,20 +293,10 @@ function animateCounter(el,to,ms=3200){
 }
 function initWelcome(){
   const base=12_000_000, ops=Math.floor(base*(0.90+Math.random()*0.06));
-
-  // Animaciones de números
   animateCounter(document.getElementById('n-total'),base,3200);
   animateCounter(document.getElementById('n-op'),ops,3400);
-
-  // Barra de Totales al 100%
-  const totalBar = document.getElementById('swarm-total-bar');
-  if (totalBar) totalBar.style.width = '100%';
-
-  // Barra de Operativos según %
-  setTimeout(()=>{
-    const sb = document.getElementById('swarm-bar');
-    if (sb) sb.style.width = Math.round(ops/base*100) + '%';
-  },700);
+  const totalBar = document.getElementById('swarm-total-bar'); if (totalBar) totalBar.style.width = '100%';
+  setTimeout(()=>{ const sb = document.getElementById('swarm-bar'); if (sb) sb.style.width = Math.round(ops/base*100) + '%'; },700);
 }
 initWelcome();
 
@@ -361,12 +324,12 @@ if (soundBtn) {
 
 let isOn=false;
 startBtn.onclick = async () => {
-  overlay.classList.add('is-hidden');   // fade out suave
+  overlay.classList.add('is-hidden');
   ensureAudio();
   try { await audioCtx.resume(); } catch {}
-  if (!isOn) powerBtn.click();     // enciende
-  if (soundOn) startHum();         // hum si sonido ON
-  fx.start();                      // FX al iniciar
+  if (!isOn) powerBtn.click();
+  if (soundOn) startHum();
+  fx.start();
 };
 
 powerBtn.onclick = () => {
@@ -379,20 +342,10 @@ powerBtn.onclick = () => {
   if (isOn) { fx.start(); renderHeaderInfo(new Date()); } else { fx.stop(); }
 };
 
-// Pausa FX si pestaña oculta
-document.addEventListener('visibilitychange', ()=>{
-  if (document.hidden) fx.stop(); else if (isOn) fx.start();
-});
+document.addEventListener('visibilitychange', ()=>{ if (document.hidden) fx.stop(); else if (isOn) fx.start(); });
+setTimeout(()=>{ if(!overlay.classList.contains('is-hidden')){ overlay.classList.add('is-hidden'); if(!isOn) powerBtn.click(); } },15000);
 
-// Failsafe 15s si no clickea
-setTimeout(()=>{ 
-  if(!overlay.classList.contains('is-hidden')){ 
-    overlay.classList.add('is-hidden'); 
-    if(!isOn) powerBtn.click(); 
-  } 
-},15000);
-
-// ===== Módulos / Gauges =====
+// ===== Módulos / Gauges (Soporte) =====
 const grid=document.getElementById('grid');
 const MODULES=[
   { id:'org-internos',   title:'Rejuvenecimiento — Órganos internos', target:95 },
@@ -404,10 +357,7 @@ const MODULES=[
 ];
 function clamp(n,min,max){return Math.max(min,Math.min(max,n));}
 function toAngle(v){return -120 + (clamp(v,0,100)*2.4);}
-function setStatus(card,text,level){
-  const dot=card.querySelector('.dot'); const st=card.querySelector('.status span');
-  if (dot) dot.className='dot '+level; if (st) st.textContent=text;
-}
+function setStatus(card,text,level){const dot=card.querySelector('.dot');const st=card.querySelector('.status span'); if(dot) dot.className='dot '+level; if(st) st.textContent=text;}
 function setVisual(card,v,active){
   const needle=card.querySelector('.needle'), value=card.querySelector('.value');
   card.dataset.current=v; if(needle) needle.style.transform=`rotate(${toAngle(v)}deg)`; if(value) value.textContent=`${Math.round(v)}%`;
@@ -425,7 +375,7 @@ function animateTo(card,goal){
   },100);
 }
 function createCard(mod){
-  const card=document.createElement('section'); card.className='card';
+  const card=document.createElement('section'); card.className='card'; card.id = `card-${mod.id}`;
   const title=document.createElement('div'); title.className='title-sm'; title.textContent=mod.title;
   const status=document.createElement('div'); status.className='status';
   const dot=document.createElement('i'); dot.className='dot bad';
@@ -447,11 +397,7 @@ function createCard(mod){
   card._timer=null; card._active=false; card.dataset.current=0;
   const goal=clamp(mod.target??92,70,100);
 
-  function start(){ 
-    if(!isOn||card._active) return; 
-    card._active=true; animateTo(card,goal); playBeep(); 
-    gauge.classList.add('neon');
-  }
+  function start(){ if(!isOn||card._active) return; card._active=true; animateTo(card,goal); playBeep(); gauge.classList.add('neon'); }
   function stop(){
     gauge.classList.remove('neon');
     clearInterval(card._timer); card._active=false;
@@ -473,10 +419,7 @@ function toggleModules(on){
   document.querySelectorAll('.card').forEach(card=>{
     const btns=card.querySelectorAll('.btn.mod');
     btns.forEach(b=> b.disabled=!on);
-    if(!on){
-      clearInterval(card._timer); setVisual(card,0,false); setStatus(card,'En espera','bad');
-      card._active=false; card.querySelector('.gauge')?.classList.remove('neon');
-    }
+    if(!on){ clearInterval(card._timer); setVisual(card,0,false); setStatus(card,'En espera','bad'); card._active=false; card.querySelector('.gauge')?.classList.remove('neon'); }
   });
 }
 
@@ -488,7 +431,6 @@ const CHECKS = [
   { id:'autorreparacion',label:'Autorreparación celular' },
   { id:'depuracion',     label:'Depuración de toxinas' },
 ];
-
 const checklist = document.getElementById('checklist');
 CHECKS.forEach(ch => {
   const row = document.createElement('div'); row.className = 'row';
@@ -500,60 +442,246 @@ CHECKS.forEach(ch => {
   const fill = document.createElement('div'); fill.className = 'fill'; fill.id = `b-${ch.id}`;
   bar.append(fill); row.append(head, bar); checklist?.appendChild(row);
 });
-
-// Estado para ticker
-const CHECK_STATE = {}; // { id: pct }
-
-// Render del ticker
+const CHECK_STATE = {};
 function renderSysTicker(){
   const track = document.getElementById('sys-ticker-track');
   if (!track) return;
-
   const parts = CHECKS.map(ch => {
     const pct = Math.round(CHECK_STATE[ch.id] ?? 0);
     const cls = pct > 70 ? 'nb-pos' : (pct > 40 ? 'nb-warn' : 'nb-neg');
     return `<span class="nb-item"><span>${ch.label}:</span> <strong class="${cls}">${pct}%</strong></span>`;
   });
-
-  track.innerHTML = parts.join('<span class="nb-sep">•</span>') +
-                    '<span class="nb-sep">•</span>' +
-                    parts.join('<span class="nb-sep">•</span>');
+  track.innerHTML = parts.join('<span class="nb-sep">•</span>') + '<span class="nb-sep">•</span>' + parts.join('<span class="nb-sep">•</span>');
 }
-
-// Setea valor de un chequeo (barra fina + ticker)
 function setCheck(id, pct){
   pct = Math.max(0, Math.min(100, pct));
   const f = document.getElementById(`b-${id}`);
   const p = document.getElementById(`p-${id}`);
-
   if (f) f.style.transform = `scaleX(${pct/100})`;
   if (p) {
     const color = pct > 70 ? '#00ff66' : (pct > 40 ? '#ffe600' : '#ff2a2a');
     p.style.color = color; p.textContent = Math.round(pct) + '%';
   }
-
   CHECK_STATE[id] = pct;
   renderSysTicker();
 }
-
-// Valores al iniciar monitoreo
 document.getElementById('startBtn').addEventListener('click', () => {
-  setCheck('scan', 28);
-  setCheck('torrente', 84);
-  setCheck('operativos', 92);
-  setCheck('autorreparacion', 31);
-  setCheck('depuracion', 47);
+  setCheck('scan', 28); setCheck('torrente', 84); setCheck('operativos', 92); setCheck('autorreparacion', 31); setCheck('depuracion', 47);
 });
-
-// Valores por defecto si usuario espera
 setTimeout(() => {
-  if (!overlay.classList.contains('is-hidden')) {
-    setCheck('scan', 10);
-    setCheck('torrente', 20);
-    setCheck('operativos', 25);
-    setCheck('autorreparacion', 8);
-    setCheck('depuracion', 12);
-  } else {
-    renderSysTicker();
-  }
+  if (!overlay.classList.contains('is-hidden')) { setCheck('scan', 10); setCheck('torrente', 20); setCheck('operativos', 25); setCheck('autorreparacion', 8); setCheck('depuracion', 12); }
+  else { renderSysTicker(); }
 }, 1500);
+
+// ===== Oxígeno (card-o2) =====
+(function initOxygenGauge(){
+  const card = document.getElementById('card-o2');
+  if (!card) return;
+
+  const setStatus = (text, level)=>{
+    const dot=card.querySelector('.dot'); const st=card.querySelector('.status span');
+    if (dot) dot.className='dot '+level; if (st) st.textContent=text;
+  };
+  const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
+  const toAngle=(v)=> -120 + (clamp(v,0,100)*2.4);
+
+  const needle = card.querySelector('.needle');
+  const value  = card.querySelector('.value');
+  const gauge  = card.querySelector('.gauge');
+  let _timer=null, _active=false, _cur=0;
+
+  function setVisual(v, active){
+    _cur = v;
+    if (needle) needle.style.transform=`rotate(${toAngle(v)}deg)`;
+    if (value)  value.textContent = `${Math.round(v)}%`;
+    if(v<90) setStatus(active?'Calibrando':'En espera','bad');
+    else if(v<95) setStatus(active?'Ajustando':'Monitoreo','warn');
+    else setStatus('Estable','good');
+  }
+  function animateTo(goal){
+    clearInterval(_timer);
+    _timer=setInterval(()=>{
+      let cur=_cur;
+      cur += (goal-cur)*0.12 + 0.4;
+      if (Math.abs(goal-cur)<0.5){
+        cur=goal; setVisual(cur,true);
+        clearInterval(_timer); _active=false;
+      } else setVisual(cur,true);
+    }, 100);
+  }
+
+  const bStart = document.getElementById('o2-start');
+  const bStop  = document.getElementById('o2-stop');
+  function start(){ if(!_active && isOn){ _active=true; const goal = 96 + Math.random()*4; animateTo(goal); playBeep(); gauge.classList.add('neon'); } }
+  function stop(){
+    gauge.classList.remove('neon'); clearInterval(_timer); _active=false;
+    _timer=setInterval(()=>{ let cur=_cur; cur -= Math.max(0.6,(cur-10)*0.06); if(cur<=10){ cur=10; setVisual(cur,false); clearInterval(_timer); } else setVisual(cur,false); },90);
+  }
+  bStart?.addEventListener('click', start);
+  bStop?.addEventListener('click', stop);
+
+  function syncEnabled(){
+    const disabled = !isOn;
+    bStart.disabled = disabled; bStop.disabled  = disabled;
+    if (disabled){ clearInterval(_timer); setVisual(0,false); gauge.classList.remove('neon'); }
+  }
+  syncEnabled();
+  const _origToggle = toggleModules;
+  window.toggleModules = function(on){ _origToggle(on); syncEnabled(); };
+})();
+
+// ===== Hidratación (card-hidratacion) demo =====
+(function initHydra(){
+  const card = document.getElementById('card-hidratacion');
+  if (!card) return;
+  const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
+  const toAngle=(v)=> -120 + (clamp(v,0,100)*2.4);
+  const needle = card.querySelector('.needle');
+  const value  = card.querySelector('.value');
+  const gauge  = card.querySelector('.gauge');
+  const setStatus = (text, level)=>{ const dot=card.querySelector('.dot'); const st=card.querySelector('.status span'); if (dot) dot.className='dot '+level; if (st) st.textContent=text; };
+  let _timer=null, _active=false, _cur=0;
+
+  function setVisual(v, active){
+    _cur = v;
+    if (needle) needle.style.transform=`rotate(${toAngle(v)}deg)`;
+    if (value)  value.textContent = `${Math.round(v)}%`;
+    if(v<40) setStatus(active?'Calibrando':'Baja','bad');
+    else if(v<75) setStatus(active?'Ajustando':'Media','warn');
+    else setStatus('Óptima','good');
+  }
+  function animateTo(goal){ clearInterval(_timer); _timer=setInterval(()=>{ let cur=_cur; cur += (goal-cur)*0.12 + 0.4; if (Math.abs(goal-cur)<0.5){cur=goal; setVisual(cur,true); clearInterval(_timer); _active=false;} else setVisual(cur,true); }, 100); }
+
+  const bStart=document.getElementById('hidra-start'); const bStop=document.getElementById('hidra-stop');
+  function start(){ if(!_active && isOn){ _active=true; const goal = 70 + Math.random()*20; animateTo(goal); gauge.classList.add('neon'); } }
+  function stop(){ gauge.classList.remove('neon'); clearInterval(_timer); _active=false; _timer=setInterval(()=>{ let cur=_cur; cur -= Math.max(0.6,(cur-10)*0.06); if(cur<=10){ cur=10; setVisual(cur,false); clearInterval(_timer);} else setVisual(cur,false); },90); }
+  bStart?.addEventListener('click', start); bStop?.addEventListener('click', stop);
+})();
+
+// ===== Neuro Panel =====
+(function initNeuroPanel(){
+  const root = document.getElementById('neuro-panel');
+  if (!root) return;
+
+  const els = {
+    dopa: { wrap: document.getElementById('g-dopa') },
+    sero: { wrap: document.getElementById('g-sero') },
+    nora: { wrap: document.getElementById('g-nora') },
+    barFill: document.getElementById('gaba-glu-fill')
+  };
+  for (const key of ['dopa','sero','nora']){
+    const w = els[key].wrap;
+    els[key].needle = w?.querySelector('.mini-needle');
+    els[key].val    = w?.querySelector('.mini-val');
+  }
+
+  const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
+  const toAngle=(pct)=> -120 + (clamp(pct,0,100)*2.4);
+
+  function sample(){
+    const dopa = 55 + Math.sin(Date.now()/19000)*15 + (Math.random()*6-3);
+    const sero = 60 + Math.sin(Date.now()/27000 + 1.2)*18 + (Math.random()*6-3);
+    const nora = 50 + Math.sin(Date.now()/15000 + 0.6)*20 + (Math.random()*8-4);
+    let balance = 50 + Math.sin(Date.now()/21000)*12 + (Math.random()*6-3);
+    return { dopa: clamp(Math.round(dopa),0,100), sero: clamp(Math.round(sero),0,100), nora: clamp(Math.round(nora),0,100), balance: clamp(Math.round(balance),0,100) };
+  }
+
+  function paint(){
+    const { dopa, sero, nora, balance } = sample();
+    const apply = (o,pct)=>{ if (o.needle) o.needle.style.transform = `translate(-50%,-90%) rotate(${toAngle(pct)}deg)`; if (o.val) o.val.textContent = `${pct}%`; };
+    apply(els.dopa, dopa); apply(els.sero, sero); apply(els.nora, nora);
+    if (els.barFill){ const left = clamp( balance - 25, 5, 70 ); els.barFill.style.left = `${left}%`; els.barFill.style.width = `50%`; }
+  }
+
+  let timer = null;
+  function start(){ if (timer) return; timer = setInterval(paint, 800); }
+  function stop(){ if (!timer) return; clearInterval(timer); timer=null; }
+
+  if (typeof isOn !== 'undefined' && isOn) start();
+  document.addEventListener('visibilitychange', ()=>{ if (document.hidden) stop(); else if (isOn) start(); });
+  const _powerHandler = powerBtn.onclick;
+  powerBtn.onclick = (e)=>{ _powerHandler?.(e); setTimeout(()=>{ if (isOn) start(); else stop(); }, 0); };
+})();
+
+// ===== Entradas: Macros, Minerales, Vitaminas (demo) =====
+const MACROS = { carb: 65, fat: 48, prot: 72 };
+const MINERALES = [
+  { id:'Na', name:'Sodio' , val: 60 }, { id:'K' , name:'Potasio', val: 70 },
+  { id:'Ca', name:'Calcio', val: 55 }, { id:'Mg', name:'Magnesio', val: 68 },
+  { id:'Fe', name:'Hierro', val: 52 }, { id:'Zn', name:'Zinc', val: 66 },
+  { id:'I' , name:'Yodo',  val: 59 }, { id:'Se', name:'Selenio', val: 61 },
+];
+const VITAMINAS = [
+  { id:'A', name:'Vit A', val: 62 }, { id:'D', name:'Vit D', val: 48 },
+  { id:'E', name:'Vit E', val: 71 }, { id:'K', name:'Vit K', val: 69 },
+  { id:'C', name:'Vit C', val: 75 }, { id:'B', name:'B-complex', val: 58 },
+];
+function renderMacros(){
+  const set = (id,val)=>{ const f=document.getElementById(id); if(f) f.style.width = val+'%'; };
+  const setv= (id,val)=>{ const v=document.getElementById(id); if(v) v.textContent = val+'%'; };
+  set('mb-carb', MACROS.carb); setv('mv-carb', MACROS.carb);
+  set('mb-fat' , MACROS.fat ); setv('mv-fat' , MACROS.fat );
+  set('mb-prot', MACROS.prot); setv('mv-prot', MACROS.prot);
+}
+function gridChips(rootId, data){
+  const root = document.getElementById(rootId); if (!root) return;
+  root.innerHTML = data.map(d=>(
+    `<div class="chip"><b>${d.id}</b><small>${d.name}</small><div class="meter"><i style="width:${d.val}%"></i></div></div>`
+  )).join('');
+}
+renderMacros();
+gridChips('grid-minerales', MINERALES);
+gridChips('grid-vitaminas', VITAMINAS);
+
+// ===== Tabs + KPIs =====
+document.querySelectorAll('.tab').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const tab = btn.dataset.tab;
+    document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('is-active', b===btn));
+    document.querySelectorAll('.section').forEach(s=> s.classList.toggle('is-active', s.dataset.tab===tab));
+    try{ localStorage.setItem('activeTab', tab); }catch{}
+  });
+});
+(function(){
+  try{
+    const last = localStorage.getItem('activeTab');
+    if (!last) return;
+    const btn = document.querySelector(`.tab[data-tab="${last}"]`);
+    const sec = document.querySelector(`.section[data-tab="${last}"]`);
+    if (btn && sec){
+      document.querySelectorAll('.tab').forEach(b=>b.classList.remove('is-active')); btn.classList.add('is-active');
+      document.querySelectorAll('.section').forEach(s=>s.classList.remove('is-active')); sec.classList.add('is-active');
+    }
+  }catch{}
+})();
+function safeNum(n){ return isFinite(n)? n : 0; }
+function setKPI(id, val){ const el=document.getElementById(id); if(el) el.textContent = Math.round(val)+'%'; }
+function readGaugePercent(selector){
+  const el = document.querySelector(selector + ' .value'); if (!el) return NaN;
+  const m = el.textContent.match(/(\d+)\s*%/); return m ? Number(m[1]) : NaN;
+}
+setInterval(()=>{
+  const o2   = readGaugePercent('#card-o2');
+  const pres = readGaugePercent('#card-presion');
+  const gluc = readGaugePercent('#card-glucosa');
+  const hidr = readGaugePercent('#card-hidratacion');
+  const vital = [o2,pres,gluc,hidr].map(safeNum).filter(n=>!isNaN(n));
+  setKPI('kpi-vital', vital.length ? vital.reduce((a,b)=>a+b)/vital.length : 0);
+
+  const dopa = parseInt(document.querySelector('#g-dopa .mini-val')?.textContent)||NaN;
+  const sero = parseInt(document.querySelector('#g-sero .mini-val')?.textContent)||NaN;
+  const nora = parseInt(document.querySelector('#g-nora .mini-val')?.textContent)||NaN;
+  const mente = [dopa,sero,nora].map(safeNum).filter(n=>!isNaN(n));
+  setKPI('kpi-mente', mente.length ? mente.reduce((a,b)=>a+b)/mente.length : 0);
+
+  const detox = readGaugePercent('#card-detox');
+  const glob  = readGaugePercent('#card-globulos');
+  const suenio = NaN;
+  const recup = [suenio,detox,glob].map(safeNum).filter(n=>!isNaN(n));
+  setKPI('kpi-recup', recup.length ? recup.reduce((a,b)=>a+b)/recup.length : 0);
+
+  const estruct = []; // futuro: músculo/hueso/tejidos
+  setKPI('kpi-estruct', estruct.length ? estruct.reduce((a,b)=>a+b)/estruct.length : 0);
+}, 2000);
+
+// ===== Fin =====
