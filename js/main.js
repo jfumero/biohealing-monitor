@@ -3,7 +3,7 @@ const patientName = 'Jonathan Fumero Mesa';
 function makeLocalDate(y,m,d,hh,mm){ const dt=new Date(Date.UTC(y,m-1,d,hh,mm)); return new Date(dt.getTime()-3*3600*1000); }
 const birth = makeLocalDate(1976,12,4,0,50);
 
-// ===== FX Futurista: Fondo de "torrente sanguíneo" con partículas =====
+// ===== FX Futurista: Fondo "torrente sanguíneo" =====
 class BloodstreamFX{
   constructor(canvasId){
     this.canvas = document.getElementById(canvasId);
@@ -11,7 +11,7 @@ class BloodstreamFX{
     this.pxRatio = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
     this.running=false; this.particles=[]; this.cells=[]; this.t=0;
     this.reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ?? false;
-    this.resize = this.resize.bind(this); this.loop = this.loop.bind(this);
+    this.resize=this.resize.bind(this); this.loop=this.loop.bind(this);
     if(this.canvas && this.ctx){ window.addEventListener('resize', this.resize, {passive:true}); this.resize(); this.initField(); }
   }
   resize(){
@@ -25,7 +25,6 @@ class BloodstreamFX{
     const isPhone = window.matchMedia?.('(max-width: 520px)')?.matches ?? false;
     const botsCount  = this.reduceMotion ? 50 : (isPhone ? 90 : 120);
     const cellsCount = this.reduceMotion ? 12 : (isPhone ? 22 : 30);
-
     this.particles = Array.from({length:botsCount},()=>({
       x:Math.random()*W, y:Math.random()*H,
       vx:(0.3+Math.random()*0.7)*this.pxRatio,
@@ -37,37 +36,29 @@ class BloodstreamFX{
       amp:6+Math.random()*10, phase:Math.random()*Math.PI*2, r:1.5+Math.random()*1.5
     }));
   }
-  start(){ if(!this.ctx || this.running) return; this.running=true; this.t=performance.now(); requestAnimationFrame(this.loop); }
+  start(){ if(!this.ctx||this.running) return; this.running=true; this.t=performance.now(); requestAnimationFrame(this.loop); }
   stop(){ if(!this.ctx) return; this.running=false; this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height); }
   loop(now){
     if(!this.running||!this.ctx) return;
     const {ctx,canvas}=this; const W=canvas.width, H=canvas.height; const dt=(now-this.t)/1000; this.t=now;
-
-    const grd=ctx.createLinearGradient(0,0,0,H);
-    grd.addColorStop(0,'#0b0a12'); grd.addColorStop(1,'#110b15'); ctx.fillStyle=grd; ctx.fillRect(0,0,W,H);
-
+    const grd=ctx.createLinearGradient(0,0,0,H); grd.addColorStop(0,'#0b0a12'); grd.addColorStop(1,'#110b15'); ctx.fillStyle=grd; ctx.fillRect(0,0,W,H);
     ctx.lineWidth=8*this.pxRatio; ctx.strokeStyle='rgba(255,120,160,.08)';
     for(let i=0;i<3;i++){ const baseY=(H/4)*(i+1)+Math.sin(now/900+i)*4*this.pxRatio;
       ctx.beginPath(); ctx.moveTo(0,baseY);
       for(let x=0;x<=W;x+=50*this.pxRatio){ const yy=baseY+Math.sin((x+now/5)/60+i)*2*this.pxRatio; ctx.lineTo(x,yy); }
       ctx.stroke();
     }
-
     for(const c of this.cells){
       ctx.fillStyle='rgba(240,90,126,0.7)'; ctx.beginPath(); ctx.arc(c.x,c.y,c.r*this.pxRatio,0,Math.PI*2); ctx.fill();
-      c.x+=c.vx; c.y+=Math.sin((c.x+now/20)/60)*(0.3*this.pxRatio);
-      if(c.x>W+10){c.x=-10; c.y=Math.random()*H;}
+      c.x+=c.vx; c.y+=Math.sin((c.x+now/20)/60)*(0.3*this.pxRatio); if(c.x>W+10){c.x=-10; c.y=Math.random()*H;}
     }
-
     ctx.save(); ctx.globalCompositeOperation='lighter';
     for(const p of this.particles){
       const y=p.y+Math.sin(p.phase+now/600)*p.amp, r=p.r*this.pxRatio;
       const g=ctx.createRadialGradient(p.x,y,0,p.x,y,r*5);
       g.addColorStop(0,'rgba(90,209,255,.20)'); g.addColorStop(1,'rgba(90,209,255,0)');
       ctx.fillStyle=g; ctx.beginPath(); ctx.arc(p.x,y,r*5,0,Math.PI*2); ctx.fill();
-
       ctx.fillStyle='#5ad1ff'; ctx.globalAlpha=.7; ctx.beginPath(); ctx.arc(p.x,y,r,0,Math.PI*2); ctx.fill(); ctx.globalAlpha=1;
-
       p.x+=p.vx*(1+Math.sin(now/1200)*.04); p.phase+=dt; if(p.x>W+10){p.x=-10; p.y=Math.random()*H;}
     }
     ctx.restore();
@@ -75,7 +66,7 @@ class BloodstreamFX{
   }
 }
 
-// ===== Edad: compacta + detallada (años, meses, días, horas, minutos, segundos) =====
+// ===== Edad: detallada (años, meses, días, horas, minutos, segundos) =====
 function ageTextCompact(){
   const now=new Date(); let years=now.getFullYear()-birth.getFullYear();
   const after=(now.getMonth()>birth.getMonth())||(now.getMonth()==birth.getMonth()&&now.getDate()>=birth.getDate());
@@ -88,7 +79,6 @@ function ageTextDetailed(now=new Date()){
   let H=now.getHours()-birth.getHours();
   let Mi=now.getMinutes()-birth.getMinutes();
   let S=now.getSeconds()-birth.getSeconds();
-
   if(S<0){S+=60;Mi--} if(Mi<0){Mi+=60;H--} if(H<0){H+=24;d--}
   if(d<0){const prevDays=new Date(now.getFullYear(),now.getMonth(),0).getDate(); d+=prevDays; m--}
   if(m<0){m+=12;y--}
@@ -199,7 +189,6 @@ if (soundBtn){
     if(isOn && soundOn) startHum(); else stopHum();
   });
 }
-
 let isOn=false;
 startBtn.onclick = async ()=>{
   overlay.classList.add('is-hidden');
@@ -220,7 +209,7 @@ powerBtn.onclick = ()=>{
 document.addEventListener('visibilitychange', ()=>{ if(document.hidden) fx.stop(); else if(isOn) fx.start(); });
 setTimeout(()=>{ if(!overlay.classList.contains('is-hidden')){ overlay.classList.add('is-hidden'); if(!isOn) powerBtn.click(); } },15000);
 
-// ===== Monitores (gauges) =====
+// ===== Módulos / Gauges =====
 const grid=document.getElementById('grid');
 const MODULES=[
   { id:'oxigeno',        title:'Oxígeno — Saturación O₂', target:97 },
@@ -329,7 +318,7 @@ document.getElementById('startBtn').addEventListener('click',()=>{
 });
 setTimeout(()=>{ if(!overlay.classList.contains('is-hidden')){ setCheck('scan',10); setCheck('torrente',20); setCheck('operativos',25); setCheck('autorreparacion',8); setCheck('depuracion',12); } else { renderSysTicker(); } },1500);
 
-// ===== KPIs superiores (simulación suave) =====
+// ===== KPIs superiores (simulación) =====
 function rndRange(min,max){return Math.round(min+(max-min)*Math.random());}
 function updateKPIs(){
   const vital = rndRange(82,97), mind=rndRange(75,95), structure=rndRange(78,93), recovery=rndRange(70,92);
@@ -343,5 +332,6 @@ setInterval(updateKPIs, 2200);
   document.getElementById('patient-name').textContent = patientName;
   initWelcome();
   const now=new Date(); biorr(now); renderHeaderInfo(now); renderAge(); updateKPIs();
+  // reloj de edad/bio cada segundo
   setInterval(()=>{ const t=new Date(); biorr(t); renderHeaderInfo(t); renderAge(); }, 1000);
 })();
