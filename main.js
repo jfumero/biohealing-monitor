@@ -6,6 +6,105 @@ function makeLocalDate(y,m,d,hh,mm){const dt=new Date(Date.UTC(y,m-1,d,hh,mm));r
 const birth=makeLocalDate(1976,12,4,0,50);
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 
+/* Registro de componentes visibles para actualización en vivo */
+const CURRENT_BINDINGS = Object.create(null); // { label: {type:'gauge'|'meter', ...refs } }
+function clearBindings(){ for(const k of Object.keys(CURRENT_BINDINGS)) delete CURRENT_BINDINGS[k]; }
+function bindGauge(label, needleEl, valueEl){
+  CURRENT_BINDINGS[label] = { type:'gauge', needle:needleEl, value:valueEl };
+}
+function bindMeter(label, fillEl, percEl){
+  CURRENT_BINDINGS[label] = { type:'meter', fill:fillEl, perc:percEl };
+}
+function setGaugeValue(binding, pct){
+  const v = clamp(pct,0,100);
+  const toAngle = x => -120 + (clamp(x,0,100)*2.4);
+  if (binding.value) binding.value.textContent = `${Math.round(v)}%`;
+  if (binding.needle) binding.needle.style.transform = `rotate(${toAngle(v)}deg)`;
+}
+function setMeterValue(binding, pct){
+  const v = clamp(pct,0,100);
+  if (binding.fill) binding.fill.style.transform = `scaleX(${v/100})`;
+  if (binding.perc) binding.perc.textContent = `${Math.round(v)}%`;
+}
+
+/* Alias: nombres del optimizador -> etiquetas reales visibles en UI */
+const OPT_ALIAS = {
+  'Agua': ['Hidratación — Ingesta', 'Litros/día','Electrolitos','Sensación de sed','Hidratación — Hábito'],
+  'Oxígeno': ['Saturación O₂','Respiración'],
+  'Energía': ['Energía — Metabolismo','Carbohidratos','Grasas saludables','Proteínas'],
+  'Carbohidratos': ['Carbohidratos'],
+  'Grasas saludables': ['Grasas saludables'],
+  'Proteínas': ['Proteínas'],
+  'Minerales: Na, K, Ca, Mg, Fe, Zn, Cu, I, Se': ['Na','K','Ca','Mg','Fe','Zn','Cu','I','Se'],
+  'Vitaminas: A, D, E, K, C, complejo B (B1, B2, B3, B6, B9, B12)': ['A','D','E','K','C','B1','B2','B3','B6','B9','B12'],
+
+  'Dopamina': ['Dopamina'], 'Serotonina': ['Serotonina'], 'GABA': ['GABA'], 'Glutamato': ['Glutamato'],
+  'Acetilcolina': ['Acetilcolina'], 'Insulina': ['Insulina'], 'Glucagón': ['Glucagón'],
+  'T3/T4': ['T3/T4'], 'GH': ['GH'], 'Cortisol': ['Cortisol'], 'Melatonina': ['Melatonina'],
+  'Testosterona': ['Testosterona'], 'Estrógeno': ['Estrógeno'], 'Progesterona': ['Progesterona'],
+  'Leptina': ['Leptina'], 'Grelina': ['Grelina'],
+
+  'Sistema Inmune': ['Estatus inmune','Leucocitos','Inflamación','Vitamina D','Zinc'],
+  'Microbiota intestinal': ['Diversidad microbiana','Fibra','Probióticos','Prebióticos'],
+  'Sodio (Na⁺)': ['Na⁺','Na'], 'Potasio (K⁺)': ['K⁺','K'], 'Calcio (Ca²⁺)': ['Ca²⁺','Ca'],
+  'Músculos': ['Músculo'], 'Huesos': ['Hueso'], 'Tejido conectivo': ['Tejido conectivo'],
+
+  'Movimiento físico': ['Cardio semanal','Fuerza semanal'],
+  'Sueño / Ritmos circadianos': ['Sueño / Ritmo','Duración','Regularidad','Profundidad'],
+  'Gestión emocional y estrés': ['Estrés','Ánimo','Relajación'],
+  'Conexión social y mental': ['Vínculos','Actividades','Propósito'],
+
+  'Alimentación equilibrada': ['Calidad','Balance','Regularidad'],
+  'Hidratación suficiente': ['Hidratación — Hábito','Litros/día','Electrolitos','Sensación de sed'],
+  'Exposición solar': ['Vitamina D','Ritmo circadiano','Exposición segura'],
+  'Aire limpio / respiración adecuada': ['Calidad del aire','Respiración nasal','Ventilación'],
+  'Higiene y prevención médica': ['Prevención','Controles','Hábitos diarios'],
+
+  'Salud del ADN': ['Salud del ADN'],
+  'Reparación celular (enzimas)': ['Reparación celular'],
+  'Médula ósea': ['Médula ósea'],
+  'Células madre': ['Células madre'],
+  'Telómeros': ['Telómeros'],
+  'Autofagia': ['Autofagia'],
+};
+/* Auto navegación durante la Optimización */
+const AUTO_NAV = true;
+
+function findCatTitle(catId){
+  const cat = MODEL_ROOT.find(c => c.id === catId);
+  return cat ? cat.title : '';
+}
+
+function findPathForOptimName(name){
+  // targets posibles: alias o el propio nombre
+  const targets = (OPT_ALIAS[name] || [name]).map(t => t.toLowerCase());
+
+  // recorre todas las categorías y sub-items buscando coincidencias
+  for (const cat of MODEL_ROOT){
+    const list = MODEL[cat.id] || [];
+    for (const item of list){
+      // match por título del item
+      if (targets.some(t => (item.title || '').toLowerCase().includes(t))){
+        return { catId: cat.id, catTitle: cat.title, item };
+      }
+      // match por subs/etiquetas internas
+      if (Array.isArray(item.subs) && item.subs.some(s => targets.some(t => (s || '').toLowerCase().includes(t)))){
+        return { catId: cat.id, catTitle: cat.title, item };
+      }
+    }
+  }
+  return null;
+}
+
+/* Abre la vista adecuada si existe para ese nombre */
+function ensureViewFor(name){
+  const path = findPathForOptimName(name);
+  if (!path) return false;
+  renderSubmenu(path.catId, findCatTitle(path.catId));
+  renderContent(path.catId, path.item.id, path.item.title);
+  return true;
+}
+
 /* =========================
    FX FONDO (torrente)
 ========================= */
@@ -115,7 +214,7 @@ function setCatCrumb(t){crumbCat.textContent=t;crumbSub.textContent='';}
 function setSubCrumb(t){crumbSub.textContent=t;}
 
 function renderRoot(){
-  clearCrumbs(); app.innerHTML='';
+  clearCrumbs(); app.innerHTML=''; clearBindings();
   const grid=document.createElement('div'); grid.className='grid-categories';
   MODEL_ROOT.forEach(cat=>{
     const el=document.createElement('div'); el.className='cat'; el.onclick=()=>renderSubmenu(cat.id,cat.title);
@@ -125,7 +224,7 @@ function renderRoot(){
   app.appendChild(grid);
 }
 function renderSubmenu(catId,catTitle){
-  setCatCrumb(catTitle); app.innerHTML='';
+  setCatCrumb(catTitle); app.innerHTML=''; clearBindings();
   const grid=document.createElement('div'); grid.className='grid-sub';
   (MODEL[catId]||[]).forEach(item=>{
     const el=document.createElement('div'); el.className='sub'; el.onclick=()=>renderContent(catId,item.id,item.title);
@@ -137,17 +236,21 @@ function renderSubmenu(catId,catTitle){
 function createGaugeCard(title,target=90){
   const wrap=document.createElement('section'); wrap.className='card';
   wrap.innerHTML=`<div class="title-sm">${title}</div><div class="status"><i class="dot good"></i><span>Estable</span></div><div class="gauge"><div class="dial"></div><div class="needle"></div><div class="hub"></div><div class="value">${target}%</div></div>`;
-  // posiciona aguja
-  const needle=wrap.querySelector('.needle'); const toAngle=v=>-120+(clamp(v,0,100)*2.4);
-  needle.style.transform=`rotate(${toAngle(target)}deg)`; return wrap;
+  // posiciona aguja y hace binding
+  const needle=wrap.querySelector('.needle'); const value=wrap.querySelector('.value');
+  const toAngle=v=>-120+(clamp(v,0,100)*2.4); needle.style.transform=`rotate(${toAngle(target)}deg)`;
+  bindGauge(title, needle, value);
+  return wrap;
 }
 function createMiniMeter(label,value){
   const el=document.createElement('div'); el.className='meter';
   el.innerHTML=`<div class="label"><span>${label}</span><b class="perc">${value}%</b></div><div class="line"><div class="fill" style="transform:scaleX(${value/100})"></div></div>`;
+  // binding
+  bindMeter(label, el.querySelector('.fill'), el.querySelector('.perc'));
   return el;
 }
 function renderContent(catId,subId,subTitle){
-  setSubCrumb(subTitle); app.innerHTML='';
+  setSubCrumb(subTitle); app.innerHTML=''; clearBindings();
   const grid=document.createElement('div'); grid.className='grid-panels';
   switch(subId){
     case 'agua': grid.appendChild(createGaugeCard('Hidratación — Ingesta',88)); grid.appendChild(createMiniMeter('Meta 2 L',90)); break;
@@ -190,25 +293,17 @@ function setCheck(id,pct){pct=clamp(pct,0,100);const f=document.getElementById(`
 /* =========================
    OPTIMIZADOR SECUENCIAL
 ========================= */
-/* Cola completa en el orden que pediste */
 const OPT_QUEUE = [
-  // 1. Entradas
   'Agua','Oxígeno','Carbohidratos','Grasas saludables','Proteínas',
   'Minerales: Na, K, Ca, Mg, Fe, Zn, Cu, I, Se',
   'Vitaminas: A, D, E, K, C, complejo B (B1, B2, B3, B6, B9, B12)',
-  // 2. Regulación
   'Dopamina','Serotonina','GABA','Glutamato','Acetilcolina',
   'Insulina','Glucagón','T3/T4','GH','Cortisol','Melatonina','Testosterona','Estrógeno','Progesterona','Leptina','Grelina',
-  // 3. Soporte
   'Sistema Inmune','Microbiota intestinal','Sodio (Na⁺)','Potasio (K⁺)','Calcio (Ca²⁺)','Músculos','Huesos','Tejido conectivo',
-  // 4. Estilo de vida
   'Movimiento físico','Sueño / Ritmos circadianos','Gestión emocional y estrés','Conexión social y mental',
-  // 5. Hábitos y ambiente
   'Alimentación equilibrada','Hidratación suficiente','Exposición solar','Aire limpio / respiración adecuada','Higiene y prevención médica',
-  // 6. Núcleo celular
   'Salud del ADN','Reparación celular (enzimas)', 'Médula ósea','Células madre','Telómeros','Autofagia'
 ];
-
 const optPanel = document.getElementById('optimizer');
 const optList  = document.getElementById('opt-list');
 const optBtn   = document.getElementById('opt-btn');
@@ -227,8 +322,18 @@ function createOptItem(name, fromPct, toPct){
   `;
   return item;
 }
-
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
+/* Aplica cambio a componentes visibles usando alias */
+function applyLiveUpdate(name, toPct){
+  const targets = OPT_ALIAS[name] || [name];
+  for(const label of targets){
+    const b = CURRENT_BINDINGS[label];
+    if(!b) continue;
+    if (b.type === 'gauge') setGaugeValue(b, toPct);
+    else if (b.type === 'meter') setMeterValue(b, toPct);
+  }
+}
 
 async function runOptimizer(){
   if(optRunning) return;
@@ -237,37 +342,79 @@ async function runOptimizer(){
   optList.innerHTML='';
   optPanel.classList.remove('hidden');
   optBtn.disabled = true;
+  async function runOptimizer(){
+  if(optRunning) return;
+  optRunning = true;
+  optAbort = new AbortController();
+  optList.innerHTML='';
+  optPanel.classList.remove('hidden');
+  optBtn.disabled = true;
 
-  // animación por ítem
   for(const name of OPT_QUEUE){
     if(optAbort.signal.aborted) break;
 
-    // valores aleatorios “bajos” y “óptimos”
     const from = Math.max(10, Math.round(30 + Math.random()*25)); // 30–55%
     const to   = Math.min(100, Math.round(85 + Math.random()*12)); // 85–97%
 
     const row = createOptItem(name, from, to);
-    optList.prepend(row); // aparece arriba
+    optList.prepend(row);
 
-    // animar barra del from -> to
+    // ⬇️ NUEVO: navega a la vista del ítem (si existe)
+    if (AUTO_NAV) {
+      ensureViewFor(name);
+    }
+
     await sleep(150);
     const fill = row.querySelector('.opt-fill');
     fill.style.transform = `scaleX(${to/100})`;
 
-    // actualizar ticker global con un “eco” (opcional)
-    // elegimos uno a uno pseudo-azar para dar sensación sistémica
+    // Actualización en vivo de gauges/metros visibles
+    applyLiveUpdate(name, to);
+
+    // eco visual al ticker
     const keys = ['scan','torrente','operativos','autorreparacion','depuracion'];
     const k = keys[Math.floor(Math.random()*keys.length)];
     setCheck(k, Math.round(60 + Math.random()*40));
 
-    // esperar y borrar
     await sleep(900);
     row.classList.add('removing');
     await sleep(400);
     row.remove();
   }
 
-  // fin
+  optPanel.classList.add('hidden');
+  optRunning = false;
+  optBtn.disabled = false;
+}
+
+
+  for(const name of OPT_QUEUE){
+    if(optAbort.signal.aborted) break;
+
+    const from = Math.max(10, Math.round(30 + Math.random()*25)); // 30–55%
+    const to   = Math.min(100, Math.round(85 + Math.random()*12)); // 85–97%
+
+    const row = createOptItem(name, from, to);
+    optList.prepend(row);
+
+    await sleep(150);
+    const fill = row.querySelector('.opt-fill');
+    fill.style.transform = `scaleX(${to/100})`;
+
+    // Actualización en vivo de gauges/metros visibles
+    applyLiveUpdate(name, to);
+
+    // eco visual al ticker
+    const keys = ['scan','torrente','operativos','autorreparacion','depuracion'];
+    const k = keys[Math.floor(Math.random()*keys.length)];
+    setCheck(k, Math.round(60 + Math.random()*40));
+
+    await sleep(900);
+    row.classList.add('removing');
+    await sleep(400);
+    row.remove();
+  }
+
   optPanel.classList.add('hidden');
   optRunning = false;
   optBtn.disabled = false;
@@ -277,7 +424,6 @@ optBtn?.addEventListener('click', async ()=>{
   playBeep();
   await runOptimizer();
 });
-
 optCancel?.addEventListener('click', ()=>{
   if(!optRunning) { optPanel.classList.add('hidden'); return; }
   optAbort.abort();
