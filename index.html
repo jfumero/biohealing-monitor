@@ -42,10 +42,12 @@
       <div id="led" class="led"></div>
       <button id="power-btn" class="btn">Encender</button>
       <button id="sound-btn" class="btn" aria-pressed="true">Sonido: ON</button>
+      <!-- NUEVO: botón optimización -->
+      <button id="opt-btn" class="btn alt">Optimización del cuerpo humano</button>
     </div>
   </header>
 
-  <!-- Breadcrumb / ruta -->
+  <!-- Breadcrumb -->
   <nav id="breadcrumb" class="breadcrumb">
     <button class="crumb" data-level="root">Cuerpo Humano Óptimo</button>
     <span id="crumb-cat"></span>
@@ -55,13 +57,22 @@
   <!-- Contenido dinámico -->
   <main id="app" class="app"></main>
 
-  <!-- Ticker + checklist (opc: se mostrará en algunas vistas) -->
+  <!-- Ticker + checklist -->
   <div class="sys-ticker">
     <div id="sys-ticker-track" class="sys-ticker-track"></div>
   </div>
   <section id="checklist" class="checklist"></section>
 
-  <!-- Info adicional (igual que antes) -->
+  <!-- Optimizer panel (cola visual) -->
+  <aside id="optimizer" class="optimizer hidden" aria-live="polite">
+    <div class="opt-head">
+      <strong>Optimización en progreso</strong>
+      <button id="opt-cancel" class="btn alt sm">Cancelar</button>
+    </div>
+    <div id="opt-list" class="opt-list"></div>
+  </aside>
+
+  <!-- Info adicional -->
   <footer>
     <p id="ov-age"></p>
     <p id="ov-zodiac"></p>
