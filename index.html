@@ -2,93 +2,94 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>BioHealing Monitor</title>
-  <link rel="stylesheet" href="/style.css" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- Fondo animado -->
-  <canvas id="fx-bloodstream" aria-hidden="true"></canvas>
+  <!-- Overlay de bienvenida -->
+  <div id="overlay" class="overlay">
+    <div class="welcome card-glass">
+      <h1>BioHealing Monitor</h1>
+      <p id="project-meta">Paciente: <b>Jonathan Fumero Mesa</b> · Edad: —</p>
 
-  <!-- Overlay bienvenida -->
-  <div id="overlay" class="overlay" role="dialog" aria-labelledby="welcomeTitle">
-    <h1 id="welcomeTitle" class="brand">BioHealing Monitor</h1>
-    <p id="project-meta" class="meta">Paciente: <b>—</b> · Edad: —</p>
-
-    <div class="swarm">
-      <div class="swarm-box">
-        <div class="swarm-row"><span>Total nanorobots</span><strong id="n-total">0</strong></div>
-        <div class="swarm-bar"><div id="swarm-total-bar" class="swarm-fill"></div></div>
+      <!-- Panel de nanorobots (Totales + Operativos) -->
+      <div class="swarm">
+        <div class="swarm-row">
+          <div class="swarm-head">
+            <span class="swarm-k">Nanorobots totales</span>
+            <span class="swarm-v" id="n-total">—</span>
+          </div>
+          <div class="swarm-bar">
+            <div id="swarm-total-bar" class="swarm-fill"></div>
+          </div>
+        </div>
+        <div class="swarm-row">
+          <div class="swarm-head">
+            <span class="swarm-k">Nanorobots operativos</span>
+            <span class="swarm-v" id="n-op">—</span>
+          </div>
+          <div class="swarm-bar">
+            <div id="swarm-bar" class="swarm-fill alt"></div>
+          </div>
+        </div>
       </div>
-      <div class="swarm-box">
-        <div class="swarm-row"><span>Operativos</span><strong id="n-op">0</strong></div>
-        <div class="swarm-bar alt"><div id="swarm-bar" class="swarm-fill"></div></div>
+
+      <div class="welcome-ctas">
+        <button id="startBtn" class="btn">Comenzar</button>
+        <button id="opt-start-btn" class="btn alt">Optimizar ahora</button>
       </div>
     </div>
-
-    <button id="startBtn" class="btn big">Iniciar</button>
   </div>
 
-  <!-- Header -->
-  <header>
-    <div class="brand-row">
-      <h2 class="brand">BioHealing Monitor</h2>
-      <div class="line-info">
-        <span class="pill">Paciente: <b id="patient-name">Jonathan Fumero Mesa</b></span>
-        <span class="pill">Edad: <span id="age">—</span></span>
-      </div>
+  <!-- Cabecera (segunda web) -->
+  <header class="header">
+    <h2 class="brand">BioHealing Monitor</h2>
+
+    <div class="patient">
+      <div class="pill">Paciente: <b>Jonathan Fumero Mesa</b></div>
+      <div class="pill">Edad: <span id="age">—</span></div>
     </div>
+
     <div class="header-ctrls">
-      <div id="led" class="led"></div>
+      <div id="led" class="led" title="Estado"></div>
       <button id="power-btn" class="btn">Encender</button>
       <button id="sound-btn" class="btn" aria-pressed="true">Sonido: ON</button>
-      <!-- NUEVO: botón optimización -->
-      <button id="opt-btn" class="btn alt">Optimización del cuerpo humano</button>
+      <button id="opt-btn" class="btn alt" aria-controls="optimizer">Optimizar cuerpo humano</button>
+    </div>
+
+    <!-- HUD con datos bio/astro -->
+    <div class="hud">
+      <div class="hud-item"><span class="k">Zodiaco</span><span class="v" id="hd-zodiac">—</span></div>
+      <div class="hud-item"><span class="k">Chino</span><span class="v" id="hd-czodiac">—</span></div>
+      <div class="hud-item"><span class="k">Luna</span><span class="v" id="hd-moon">—</span></div>
+      <div class="hud-item"><span class="k">Circadiano</span><span class="v" id="hd-circ">—</span></div>
+      <div class="hud-item"><span class="k">Físico</span><span class="v" id="hd-bio-f">—</span></div>
+      <div class="hud-item"><span class="k">Emocional</span><span class="v" id="hd-bio-e">—</span></div>
+      <div class="hud-item"><span class="k">Intelectual</span><span class="v" id="hd-bio-i">—</span></div>
     </div>
   </header>
 
-  <!-- Breadcrumb -->
-  <nav id="breadcrumb" class="breadcrumb">
-    <button class="crumb" data-level="root">Cuerpo Humano Óptimo</button>
-    <span id="crumb-cat"></span>
-    <span id="crumb-sub"></span>
-  </nav>
+  <!-- Módulos/Gauges -->
+  <main>
+    <div id="grid" class="grid"></div>
+  </main>
 
-  <!-- Contenido dinámico -->
-  <main id="app" class="app"></main>
+  <!-- Panel Optimización -->
+  <section id="optimizer" class="optimizer hidden card-glass">
+    <h3>Optimización del cuerpo humano</h3>
+    <div id="opt-list" class="opt-list"></div>
+    <button id="opt-cancel" class="btn alt">Cancelar</button>
+  </section>
 
-  <!-- Ticker + checklist -->
-  <div class="sys-ticker">
+  <!-- Ticker inferior -->
+  <div id="sys-ticker" class="sys-ticker">
     <div id="sys-ticker-track" class="sys-ticker-track"></div>
   </div>
-  <section id="checklist" class="checklist"></section>
 
-  <!-- Optimizer panel (cola visual) -->
-  <aside id="optimizer" class="optimizer hidden" aria-live="polite">
-    <div class="opt-head">
-      <strong>Optimización en progreso</strong>
-      <button id="opt-cancel" class="btn alt sm">Cancelar</button>
-    </div>
-    <div id="opt-list" class="opt-list"></div>
-  </aside>
+  <!-- Canvas FX de fondo -->
+  <canvas id="fx-bloodstream"></canvas>
 
-  <!-- Info adicional -->
-  <footer>
-    <p id="ov-age"></p>
-    <p id="ov-zodiac"></p>
-    <p id="ov-czodiac"></p>
-    <p id="ov-moon"></p>
-    <p id="ov-circ"></p>
-    <p id="ov-bio-f"></p>
-    <p id="ov-bio-e"></p>
-    <p id="ov-bio-i"></p>
-  </footer>
-
-  <script src="/main.js" defer></script>
-
-  <noscript>
-    <style>.overlay{display:none!important} body{padding:1rem}</style>
-    <p>Necesitas habilitar JavaScript para ver las animaciones y gauges.</p>
-  </noscript>
+  <script src="main.js"></script>
 </body>
 </html>
