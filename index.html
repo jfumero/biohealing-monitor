@@ -4,47 +4,32 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>BioHealing Monitor</title>
-  <!-- Preload del JS para acelerar -->
-  <link rel="preload" href="/main.js" as="script" />
-  <!-- CSS principal -->
-  <link rel="stylesheet" href="/style.css" type="text/css" />
+  <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
   <!-- Fondo animado -->
   <canvas id="fx-bloodstream" aria-hidden="true"></canvas>
 
-  <!-- Pantalla de bienvenida -->
+  <!-- Overlay bienvenida -->
   <div id="overlay" class="overlay" role="dialog" aria-labelledby="welcomeTitle">
     <h1 id="welcomeTitle" class="brand">BioHealing Monitor</h1>
     <p id="project-meta" class="meta">Paciente: <b>—</b> · Edad: —</p>
 
-    <!-- Swarm counters -->
     <div class="swarm">
       <div class="swarm-box">
-        <div class="swarm-row">
-          <span>Total nanorobots</span>
-          <strong id="n-total">0</strong>
-        </div>
-        <div class="swarm-bar">
-          <div id="swarm-total-bar" class="swarm-fill"></div>
-        </div>
+        <div class="swarm-row"><span>Total nanorobots</span><strong id="n-total">0</strong></div>
+        <div class="swarm-bar"><div id="swarm-total-bar" class="swarm-fill"></div></div>
       </div>
-
       <div class="swarm-box">
-        <div class="swarm-row">
-          <span>Operativos</span>
-          <strong id="n-op">0</strong>
-        </div>
-        <div class="swarm-bar alt">
-          <div id="swarm-bar" class="swarm-fill"></div>
-        </div>
+        <div class="swarm-row"><span>Operativos</span><strong id="n-op">0</strong></div>
+        <div class="swarm-bar alt"><div id="swarm-bar" class="swarm-fill"></div></div>
       </div>
     </div>
 
     <button id="startBtn" class="btn big">Iniciar</button>
   </div>
 
-  <!-- Cabecera -->
+  <!-- Header -->
   <header>
     <div class="brand-row">
       <h2 class="brand">BioHealing Monitor</h2>
@@ -54,32 +39,29 @@
       </div>
     </div>
     <div class="header-ctrls">
-      <div id="led" class="led" aria-label="Estado de energía"></div>
+      <div id="led" class="led"></div>
       <button id="power-btn" class="btn">Encender</button>
       <button id="sound-btn" class="btn" aria-pressed="true">Sonido: ON</button>
     </div>
   </header>
 
-  <!-- KPIs superiores -->
-  <section class="dashboard">
-    <div class="pill-card" id="kpi-vital">Vitalidad: <b>—</b></div>
-    <div class="pill-card" id="kpi-mind">Mente: <b>—</b></div>
-    <div class="pill-card" id="kpi-structure">Estructura: <b>—</b></div>
-    <div class="pill-card" id="kpi-recovery">Recuperación: <b>—</b></div>
-  </section>
+  <!-- Breadcrumb / ruta -->
+  <nav id="breadcrumb" class="breadcrumb">
+    <button class="crumb" data-level="root">Cuerpo Humano Óptimo</button>
+    <span id="crumb-cat"></span>
+    <span id="crumb-sub"></span>
+  </nav>
 
-  <!-- Ticker -->
-  <div class="sys-ticker" aria-live="polite">
+  <!-- Contenido dinámico -->
+  <main id="app" class="app"></main>
+
+  <!-- Ticker + checklist (opc: se mostrará en algunas vistas) -->
+  <div class="sys-ticker">
     <div id="sys-ticker-track" class="sys-ticker-track"></div>
   </div>
-
-  <!-- Checklist simple -->
   <section id="checklist" class="checklist"></section>
 
-  <!-- Módulos / Gauges -->
-  <main id="grid" class="grid"></main>
-
-  <!-- Info adicional -->
+  <!-- Info adicional (igual que antes) -->
   <footer>
     <p id="ov-age"></p>
     <p id="ov-zodiac"></p>
@@ -91,7 +73,6 @@
     <p id="ov-bio-i"></p>
   </footer>
 
-  <!-- JS principal -->
   <script src="/main.js" defer></script>
 
   <noscript>
