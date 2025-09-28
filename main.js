@@ -1,10 +1,10 @@
-/* === Paciente por querystring === */
+/* === Parámetros de paciente (opcionales por querystring) === */
 const qs = new URLSearchParams(location.search);
 const patientName = qs.get('name') || 'Jonathan Fumero Mesa';
 const dob = qs.get('dob');
 const birth = dob ? new Date(dob) : new Date(1976,11,4,0,50,0);
 
-/* === Estado órganos (localStorage) === */
+/* === Estado órganos (persistencia) === */
 const ORGANS = [
   "Cerebro","Corazón","Pulmones","Hígado","Riñones",
   "Páncreas","Intestino","Sistema Inmune","Piel","Músculos",
@@ -44,18 +44,6 @@ const o2Val = document.getElementById('o2-val');
 const stressVal = document.getElementById('stress-val');
 const energyVal = document.getElementById('energy-val');
 
-/* Respiración */
-const breathPanel = document.getElementById('breath-panel');
-const breathCard  = document.getElementById('breath-card');
-const breathVisual = document.getElementById('breath-visual');
-const breathStepEl = document.getElementById('breath-step');
-const breathCountEl = document.getElementById('breath-count');
-const breathBtn = document.getElementById('breath-btn');
-const breathToggle = document.getElementById('breath-toggle');
-const breathClose = document.getElementById('breath-close');
-const breathTimeEl = document.getElementById('breath-time');
-const breathCyclesEl = document.getElementById('breath-cycles');
-
 /* === Audio (OFF por defecto) === */
 let audioCtx, masterGain, humOsc;
 let soundOn = false;
@@ -89,7 +77,7 @@ function beep(ms=120, freq=440){
   setTimeout(()=>{ try{o.stop();}catch{} }, ms);
 }
 
-/* === Canvas efecto === */
+/* === Canvas: nanorobots === */
 const FX = (()=> {
   const cvs = document.getElementById('bloodstream-canvas');
   const ctx = cvs.getContext('2d', { alpha:true });
@@ -148,7 +136,7 @@ const FX = (()=> {
     for(const b of bots){
       b.x+=b.vx; b.y+=b.vy;
       if (b.x<0||b.x>W) b.vx*=-1;
-      if (b.y<0||b.y>H) b.vy*=-1;
+      if (b.y<0||b>H) b.vy*=-1;
       ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
       ctx.fillStyle='rgba(52,211,153,.9)'; ctx.fill();
     }
@@ -162,12 +150,11 @@ const FX = (()=> {
 
   return { start, stop };
 })();
-
 document.addEventListener('visibilitychange', ()=>{
   if (document.hidden) FX.stop(); else if (isOn) FX.start();
 });
 
-/* === Paciente === */
+/* === Datos del paciente === */
 function computeAge(date){
   const now = new Date();
   let y = now.getFullYear() - date.getFullYear();
@@ -183,7 +170,7 @@ function renderPatient(){
 }
 renderPatient();
 
-/* === Organs banner === */
+/* === Banner de órganos === */
 function renderOrgans(){
   if (!organsGrid) return;
   organsGrid.innerHTML = '';
@@ -294,97 +281,120 @@ function runInjectionNonBlocking(){
   }, 400);
 }
 
-/* === Respiración guiada (5:00, contador de ciclos) === */
-let breathing=false, breathTimer=null, phase=0, count=4;
-let sessionTimer=null, sessionSecondsLeft=300, cycles=0;
-const PHASES = ['Inhala','Mantén','Exhala','Mantén'];
+/* === Respiración guiada (módulo sin colisiones) === */
+(function(){
+  const breathPanel = document.getElementById('breath-panel');
+  const breathCard  = document.getElementById('breath-card');
+  const breathVisual= document.getElementById('breath-visual');
+  const breathStepEl= document.getElementById('breath-step');
+  const breathCountEl=document.getElementById('breath-count');
+  const breathTimeEl= document.getElementById('breath-time');
+  const breathCyclesEl=document.getElementById('breath-cycles');
+  const breathToggle= document.getElementById('breath-toggle');
+  const breathClose = document.getElementById('breath-close');
+  const breathBtn   = document.getElementById('breath-btn');
 
-function mmss(s){
-  const m = Math.floor(s/60).toString().padStart(2,'0');
-  const sec = (s%60).toString().padStart(2,'0');
-  return `${m}:${sec}`;
-}
-function renderSessionStatus(){
-  if (breathTimeEl) breathTimeEl.textContent = mmss(sessionSecondsLeft);
-  if (breathCyclesEl) breathCyclesEl.textContent = cycles;
-}
-function renderBreath(){
-  breathStepEl.textContent = PHASES[phase];
-  breathCountEl.textContent = count;
-  let scale = 1;
-  if (PHASES[phase]==='Inhala') scale = 1.18;
-  else if (PHASES[phase]==='Exhala') scale = 0.92;
-  else scale = 1.05;
-  breathVisual.style.transform = `scale(${scale})`;
-}
-function tickBreath(){
-  if (!breathing) return;
-  count--;
-  if (count<=0){
-    const prev = phase;
-    phase = (phase+1)%4;
-    count = 4;
-    if (prev === 3) { cycles++; renderSessionStatus(); }
+  if (!breathPanel) return;
+
+  let breathing=false, phase=0, count=4, cycles=0;
+  let tickTimer=null, sessionTimer=null, secondsLeft=300;
+  const PHASES = ['Inhala','Mantén','Exhala','Mantén'];
+
+  const mmss = s => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+  function renderSession(){ breathTimeEl.textContent=mmss(secondsLeft); breathCyclesEl.textContent=cycles; }
+  function renderPhase(){
+    breathStepEl.textContent = PHASES[phase];
+    breathCountEl.textContent = count;
+    const scale = PHASES[phase]==='Inhala' ? 1.18 : (PHASES[phase]==='Exhala' ? 0.92 : 1.05);
+    breathVisual.style.transform = `scale(${scale})`;
   }
-  renderBreath();
-}
 
-function openBreath(){
-  breathPanel.hidden = false;
-  phase=0; count=4; cycles=0;
-  sessionSecondsLeft = 300;
-  renderBreath();
-  renderSessionStatus();
-}
-function startBreathing(){
-  breathing = true;
-  breathToggle.textContent = 'Pausar';
-  clearInterval(breathTimer);
-  breathTimer = setInterval(tickBreath, 1000);
+  function tick(){
+    if (!breathing) return;
+    count--;
+    if (count<=0){
+      const prev=phase;
+      phase = (phase+1) % 4;
+      count = 4;
+      if (prev===3) { cycles++; renderSession(); }
+    }
+    renderPhase();
+  }
 
-  clearInterval(sessionTimer);
-  sessionTimer = setInterval(()=>{
-    sessionSecondsLeft--;
-    renderSessionStatus();
-    if (sessionSecondsLeft<=0){ closeBreath(); }
-  }, 1000);
-  beep(40, 500);
-}
-function pauseBreathing(){
-  breathing = false;
-  breathToggle.textContent = 'Iniciar';
-  clearInterval(breathTimer);
-}
-function closeBreath(){
-  breathing = false;
-  clearInterval(breathTimer);
-  clearInterval(sessionTimer);
-  breathToggle.textContent = 'Iniciar';
-  breathPanel.hidden = true;
-}
+  function start(){
+    if (breathing) return;
+    breathing = true;
+    breathToggle.textContent = 'Pausar';
+    clearInterval(tickTimer); clearInterval(sessionTimer);
+    tickTimer = setInterval(tick, 1000);
+    sessionTimer = setInterval(() => {
+      secondsLeft--;
+      renderSession();
+      if (secondsLeft<=0) close();
+    }, 1000);
+    beep(40, 500);
+  }
 
-/* Eventos del panel */
-breathBtn?.addEventListener('click', openBreath);
-breathToggle?.addEventListener('click', ()=>{ (!breathing) ? startBreathing() : pauseBreathing(); });
-breathClose?.addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); closeBreath(); });
-document.addEventListener('click', (e)=>{
-  if (e.target && e.target.id === 'breath-close') { e.preventDefault(); e.stopPropagation(); closeBreath(); }
-});
-breathPanel?.addEventListener('click', ()=> closeBreath());
-breathCard?.addEventListener('click', (e)=> e.stopPropagation());
-document.addEventListener('keydown', (e)=>{ if (!breathPanel.hidden && e.key==='Escape') closeBreath(); });
+  function pause(){
+    if (!breathing) return;
+    breathing = false;
+    breathToggle.textContent = 'Iniciar';
+    clearInterval(tickTimer);
+  }
 
-/* === Eventos generales (robustos) === */
+  function resetState(){
+    breathing=false; phase=0; count=4; cycles=0; secondsLeft=300;
+    clearInterval(tickTimer); clearInterval(sessionTimer);
+    breathToggle.textContent = 'Iniciar';
+    renderSession(); renderPhase();
+  }
+
+  function open(){
+    breathPanel.hidden = false;
+    resetState();
+  }
+
+  function close(){
+    resetState();
+    breathPanel.hidden = true;
+  }
+
+  // Listeners dedicados (sin delegación global)
+  breathBtn?.addEventListener('click', open);
+
+  // Cerrar al hacer clic en el fondo
+  breathPanel.addEventListener('click', close);
+  // No cerrar si clic dentro de la tarjeta
+  breathCard.addEventListener('click', e => e.stopPropagation());
+
+  // Toggle: iniciar/pausar (evita que burbujee y “pausa” otra cosa)
+  breathToggle.addEventListener('click', e => {
+    e.preventDefault(); e.stopPropagation();
+    breathing ? pause() : start();
+  });
+
+  // Cerrar botón (sin burbujeo)
+  breathClose.addEventListener('click', e => {
+    e.preventDefault(); e.stopPropagation();
+    close();
+  });
+
+  // Esc para cerrar
+  document.addEventListener('keydown', e => {
+    if (!breathPanel.hidden && e.key === 'Escape') close();
+  });
+
+  // Exponer helpers por si los querés invocar desde consola
+  window.__breath__ = { open, close, start, pause };
+})();
+
+/* === Eventos generales === */
 startBtn?.addEventListener('click', async ()=>{
-  // Failsafe para que NUNCA quede trabado
+  // Failsafe para que JAMÁS quede trabado en la pantalla 1
   const forceHide = setTimeout(()=> overlay?.classList.add('is-hidden'), 2000);
-
   try { await ensureAudio(); } catch {}
-  // correr inyección sin bloquear
-  runInjectionNonBlocking();
-
-  // salir del overlay ya mismo
-  overlay.classList.add('is-hidden');
+  runInjectionNonBlocking();                  // corre animación, pero no bloquea
+  overlay.classList.add('is-hidden');         // se oculta de inmediato
   setPower(true);
   burstOptimization(3);
   clearTimeout(forceHide);
