@@ -46,12 +46,15 @@ const energyVal = document.getElementById('energy-val');
 
 /* Respiración */
 const breathPanel = document.getElementById('breath-panel');
+const breathCard  = document.getElementById('breath-card');
 const breathVisual = document.getElementById('breath-visual');
 const breathStepEl = document.getElementById('breath-step');
 const breathCountEl = document.getElementById('breath-count');
 const breathBtn = document.getElementById('breath-btn');
 const breathToggle = document.getElementById('breath-toggle');
 const breathClose = document.getElementById('breath-close');
+const breathTimeEl = document.getElementById('breath-time');
+const breathCyclesEl = document.getElementById('breath-cycles');
 
 /* === Audio (OFF por defecto) === */
 let audioCtx, masterGain, humOsc;
@@ -281,11 +284,20 @@ async function runInjection(){
   setTimeout(()=> injectSeq.hidden = true, 380);
 }
 
-/* === Respiración guiada (con autocierre a 5 min) === */
+/* === Respiración guiada (5:00, contador de ciclos) === */
 let breathing=false, breathTimer=null, phase=0, count=4;
-let autoCloseTimer=null; // cierra el panel a los 5 minutos
+let sessionTimer=null, sessionSecondsLeft=300, cycles=0;
 const PHASES = ['Inhala','Mantén','Exhala','Mantén'];
 
+function mmss(s){
+  const m = Math.floor(s/60).toString().padStart(2,'0');
+  const sec = (s%60).toString().padStart(2,'0');
+  return `${m}:${sec}`;
+}
+function renderSessionStatus(){
+  if (breathTimeEl) breathTimeEl.textContent = mmss(sessionSecondsLeft);
+  if (breathCyclesEl) breathCyclesEl.textContent = cycles;
+}
 function renderBreath(){
   breathStepEl.textContent = PHASES[phase];
   breathCountEl.textContent = count;
@@ -298,44 +310,68 @@ function renderBreath(){
 function tickBreath(){
   if (!breathing) return;
   count--;
-  if (count<=0){ phase=(phase+1)%4; count=4; }
+  if (count<=0){
+    const prev = phase;
+    phase = (phase+1)%4;
+    count = 4;
+    if (prev === 3) { // completó un ciclo (Inhala->Mantén->Exhala->Mantén)
+      cycles++;
+      renderSessionStatus();
+    }
+  }
   renderBreath();
 }
 
 function openBreath(){
   breathPanel.hidden = false;
-  phase=0; count=4; renderBreath();
-  // no arrancamos automáticamente; el usuario toca "Iniciar"
-  clearTimeout(autoCloseTimer);
+  phase=0; count=4; cycles=0;
+  sessionSecondsLeft = 300;
+  renderBreath();
+  renderSessionStatus();
 }
 function startBreathing(){
   breathing = true;
   breathToggle.textContent = 'Pausar';
   clearInterval(breathTimer);
   breathTimer = setInterval(tickBreath, 1000);
-  // Programa cierre automático a 5 minutos (300000 ms)
-  clearTimeout(autoCloseTimer);
-  autoCloseTimer = setTimeout(closeBreath, 300000);
+
+  clearInterval(sessionTimer);
+  sessionTimer = setInterval(()=>{
+    sessionSecondsLeft--;
+    renderSessionStatus();
+    if (sessionSecondsLeft<=0){
+      closeBreath();
+    }
+  }, 1000);
+  beep(40, 500);
 }
 function pauseBreathing(){
   breathing = false;
   breathToggle.textContent = 'Iniciar';
   clearInterval(breathTimer);
+  // El tiempo sigue corriendo; si querés que se pause el reloj, comenta la línea de abajo y usa clearInterval(sessionTimer)
 }
 function closeBreath(){
-  pauseBreathing();
+  breathing = false;
+  clearInterval(breathTimer);
+  clearInterval(sessionTimer);
+  breathToggle.textContent = 'Iniciar';
   breathPanel.hidden = true;
-  clearTimeout(autoCloseTimer);
 }
 
+/* Eventos del panel */
 breathBtn?.addEventListener('click', openBreath);
-breathClose?.addEventListener('click', closeBreath);
-breathToggle?.addEventListener('click', ()=>{
-  if (!breathing) startBreathing(); else pauseBreathing();
+breathToggle?.addEventListener('click', ()=>{ (!breathing) ? startBreathing() : pauseBreathing(); });
+breathClose?.addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); closeBreath(); });
+/* Fallback por si el selector no engancha por alguna razón */
+document.addEventListener('click', (e)=>{
+  if (e.target && e.target.id === 'breath-close') { e.preventDefault(); e.stopPropagation(); closeBreath(); }
 });
-document.addEventListener('keydown', (e)=>{
-  if (!breathPanel.hidden && e.key === 'Escape') closeBreath();
-});
+/* Cerrar con click fuera de la tarjeta */
+breathPanel?.addEventListener('click', ()=> closeBreath());
+breathCard?.addEventListener('click', (e)=> e.stopPropagation());
+/* Cerrar con ESC */
+document.addEventListener('keydown', (e)=>{ if (!breathPanel.hidden && e.key==='Escape') closeBreath(); });
 
 /* === Eventos generales === */
 startBtn?.addEventListener('click', async ()=>{
