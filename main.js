@@ -44,18 +44,6 @@ const o2Val = document.getElementById('o2-val');
 const stressVal = document.getElementById('stress-val');
 const energyVal = document.getElementById('energy-val');
 
-/* ===== Respiración ===== */
-const breathPanel = document.getElementById('breath-panel');
-const breathCard  = document.getElementById('breath-card');
-const breathVisual = document.getElementById('breath-visual');
-const breathStepEl = document.getElementById('breath-step');
-const breathCountEl = document.getElementById('breath-count');
-const breathBtn = document.getElementById('breath-btn');
-const breathToggleBtn = document.getElementById('breath-toggle');
-const breathCloseBtn  = document.getElementById('breath-close');
-const breathTimeEl = document.getElementById('breath-time');
-const breathCyclesEl = document.getElementById('breath-cycles');
-
 /* ===== Audio (OFF por defecto) ===== */
 let audioCtx, masterGain, humOsc;
 let soundOn = false;
@@ -111,10 +99,18 @@ const FX = (()=> {
     const nc = Math.max(12, Math.round(baseCells*scale));
 
     for(let i=0;i<nb;i++){
-      bots.push({ x:Math.random()*W, y:Math.random()*H, vx:(Math.random()-.5)*0.6, vy:(Math.random()-.5)*0.6, r:1.2+Math.random()*1.2 });
+      bots.push({
+        x: Math.random()*W, y: Math.random()*H,
+        vx: (Math.random()-.5)*0.6, vy:(Math.random()-.5)*0.6,
+        r: 1.2 + Math.random()*1.2
+      });
     }
     for(let i=0;i<nc;i++){
-      cells.push({ x:Math.random()*W, y:Math.random()*H, vx:(Math.random()-.5)*0.25, vy:(Math.random()-.5)*0.25, r:5+Math.random()*9, a:Math.random()*Math.PI*2 });
+      cells.push({
+        x: Math.random()*W, y: Math.random()*H,
+        vx: (Math.random()-.5)*0.25, vy:(Math.random()-.5)*0.25,
+        r: 5 + Math.random()*9, a: Math.random()*Math.PI*2
+      });
     }
   }
 
@@ -166,13 +162,16 @@ function computeAge(date){
   return y;
 }
 function renderPatient(){
-  patientNameEl.textContent = patientName;
-  patientAgeEl.textContent = computeAge(birth);
+  const nameEl=document.getElementById('patient-name');
+  const ageEl=document.getElementById('patient-age');
+  if (nameEl) nameEl.textContent = patientName;
+  if (ageEl) ageEl.textContent = computeAge(birth);
 }
 renderPatient();
 
 /* ===== Organs banner ===== */
 function renderOrgans(){
+  if (!organsGrid) return;
   organsGrid.innerHTML = '';
   let done = 0;
   organState.forEach((o, idx) => {
@@ -198,12 +197,12 @@ function renderOrgans(){
   });
 
   const pct = Math.round((done / organState.length) * 100);
-  organsFill.style.width = pct + '%';
-  organsSummary.textContent = `${pct}% completado`;
+  if (organsFill) organsFill.style.width = pct + '%';
+  if (organsSummary) organsSummary.textContent = `${pct}% completado`;
 
-  if (pct === 100 && !organsBanner.classList.contains('is-hidden')) {
+  if (pct === 100 && organsBanner && !organsBanner.classList.contains('is-hidden')) {
     setTimeout(()=> organsBanner.classList.add('is-hidden'), 900);
-  } else if (pct < 100) {
+  } else if (pct < 100 && organsBanner) {
     organsBanner.classList.remove('is-hidden');
   }
 }
@@ -216,13 +215,17 @@ function setPower(on){
   powerBtn.textContent = `Power: ${isOn ? 'ON' : 'OFF'}`;
   if (isOn) {
     FX.start();
-    setGauge(bpVal,'120/80'); setGauge(o2Val,'98%'); setGauge(stressVal,'Bajo'); setGauge(energyVal,'Alta');
+    setGauge(bpVal, '120/80');
+    setGauge(o2Val, '98%');
+    setGauge(stressVal, 'Bajo');
+    setGauge(energyVal, 'Alta');
   } else {
     FX.stop();
-    setGauge(bpVal,'—'); setGauge(o2Val,'—'); setGauge(stressVal,'—'); setGauge(energyVal,'—');
+    setGauge(bpVal, '—'); setGauge(o2Val, '—');
+    setGauge(stressVal, '—'); setGauge(energyVal, '—');
   }
 }
-function setGauge(el, v){ el.textContent = v; }
+function setGauge(el, v){ if (el) el.textContent = v; }
 
 /* ===== Rutinas ===== */
 const ROUTINE_PRIORITIES = {
@@ -232,7 +235,7 @@ const ROUTINE_PRIORITIES = {
   energy:  ["Energía","Corazón","Pulmones","Músculos","Hígado"]
 };
 function pickOrganIndexByRoutine(){
-  const routine = routineSel.value || 'default';
+  const routine = routineSel?.value || 'default';
   const prefs = ROUTINE_PRIORITIES[routine] || ROUTINE_PRIORITIES.default;
   const ENERGY_MAP = ["Músculos","Hígado","Páncreas"];
   const pending = organState.map((o,i)=>({...o,i})).filter(o=>o.pct<100);
@@ -247,7 +250,7 @@ function pickOrganIndexByRoutine(){
 function stepOptimization(){
   const idx = pickOrganIndexByRoutine();
   if (idx < 0){ renderOrgans(); return; }
-  const inc = 6 + Math.random()*8;
+  const inc = 6 + Math.random()*8; // 6–14%
   organState[idx].pct = Math.min(100, organState[idx].pct + inc);
   beep(40, 520 + Math.random()*60);
   saveState(); renderOrgans();
@@ -273,94 +276,9 @@ function runInjectionNonBlocking(){
   }, 400);
 }
 
-/* ===== Respiración (handlers explícitos) ===== */
-let breathing=false, breathTimer=null, phase=0, count=4;
-let sessionTimer=null, sessionSecondsLeft=300, cycles=0;
-const PHASES = ['Inhala','Mantén','Exhala','Mantén'];
-
-function mmss(s){
-  const m = Math.floor(s/60).toString().padStart(2,'0');
-  const sec = (s%60).toString().padStart(2,'0');
-  return `${m}:${sec}`;
-}
-function renderSessionStatus(){
-  breathTimeEl.textContent = mmss(sessionSecondsLeft);
-  breathCyclesEl.textContent = String(cycles);
-}
-function renderBreath(){
-  breathStepEl.textContent = PHASES[phase];
-  breathCountEl.textContent = String(count);
-  let scale = 1;
-  if (PHASES[phase]==='Inhala') scale = 1.18;
-  else if (PHASES[phase]==='Exhala') scale = 0.92;
-  else scale = 1.05;
-  breathVisual.style.transform = `scale(${scale})`;
-}
-function tickBreath(){
-  if (!breathing) return;
-  count--;
-  if (count<=0){
-    const prev = phase;
-    phase = (phase+1)%4;
-    count = 4;
-    if (prev === 3) { cycles++; renderSessionStatus(); }
-  }
-  renderBreath();
-}
-
-function openBreath(){
-  breathPanel.hidden = false;
-  phase=0; count=4; cycles=0; sessionSecondsLeft = 300;
-  renderBreath(); renderSessionStatus();
-}
-function startBreathing(){
-  breathing = true;
-  breathToggleBtn.textContent = 'Pausar';
-  clearInterval(breathTimer);
-  breathTimer = setInterval(tickBreath, 1000);
-  clearInterval(sessionTimer);
-  sessionTimer = setInterval(()=>{
-    sessionSecondsLeft--; renderSessionStatus();
-    if (sessionSecondsLeft<=0) closeBreath();
-  }, 1000);
-  beep(40, 500);
-}
-function pauseBreathing(){
-  breathing = false;
-  breathToggleBtn.textContent = 'Iniciar';
-  clearInterval(breathTimer);
-  // si querés pausar también el reloj: clearInterval(sessionTimer);
-}
-function closeBreath(){
-  breathing = false;
-  clearInterval(breathTimer);
-  clearInterval(sessionTimer);
-  breathToggleBtn.textContent = 'Iniciar';
-  breathPanel.hidden = true;
-}
-
-/* Wireo explícito y verificación */
-(function wireBreath(){
-  if (!breathBtn || !breathToggleBtn || !breathCloseBtn || !breathPanel || !breathCard){
-    console.error('[breath] missing elements', {breathBtn,breathToggleBtn,breathCloseBtn,breathPanel,breathCard});
-    return;
-  }
-  breathBtn.addEventListener('click', openBreath);
-  breathToggleBtn.addEventListener('click', () => breathing ? pauseBreathing() : startBreathing());
-  breathCloseBtn.addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); closeBreath(); });
-  // cerrar con click fuera de la tarjeta
-  breathPanel.addEventListener('click', (e)=>{ if (e.target === breathPanel) closeBreath(); });
-  // evitar cierre al click dentro de la tarjeta
-  breathCard.addEventListener('click', (e)=> e.stopPropagation());
-  // cerrar con Escape
-  document.addEventListener('keydown', (e)=>{ if (!breathPanel.hidden && e.key==='Escape') closeBreath(); });
-
-  console.log('[breath] wired: open/toggle/close');
-})();
-
 /* ===== Eventos generales (robustos) ===== */
-startBtn.addEventListener('click', async ()=>{
-  const forceHide = setTimeout(()=> overlay.classList.add('is-hidden'), 2000);
+startBtn?.addEventListener('click', async ()=>{
+  const forceHide = setTimeout(()=> overlay?.classList.add('is-hidden'), 2000);
   try { await ensureAudio(); } catch {}
   runInjectionNonBlocking();
   overlay.classList.add('is-hidden');
@@ -368,24 +286,24 @@ startBtn.addEventListener('click', async ()=>{
   burstOptimization(3);
   clearTimeout(forceHide);
 });
-skipBtn.addEventListener('click', ()=>{
+skipBtn?.addEventListener('click', ()=>{
   overlay.classList.add('is-hidden');
   setPower(true);
 });
-powerBtn.addEventListener('click', ()=>{
+powerBtn?.addEventListener('click', ()=>{
   setPower(!isOn);
   if (isOn && soundOn) startHum(); else stopHum();
 });
-soundBtn.addEventListener('click', async ()=>{
+soundBtn?.addEventListener('click', async ()=>{
   await ensureAudio();
   soundOn = !soundOn;
   soundBtn.textContent = 'Sonido: ' + (soundOn ? 'ON' : 'OFF');
   soundBtn.setAttribute('aria-pressed', String(soundOn));
   if (isOn && soundOn) startHum(); else stopHum();
 });
-optimizeBtn.addEventListener('click', ()=> burstOptimization(3));
-routineSel.addEventListener('change', ()=> beep(40, 460));
-resetBtn.addEventListener('click', ()=>{
+optimizeBtn?.addEventListener('click', ()=> burstOptimization(3));
+routineSel?.addEventListener('change', ()=> beep(40, 460));
+resetBtn?.addEventListener('click', ()=>{
   organState = ORGANS.map(name => ({ name, pct: 0 }));
   saveState(); renderOrgans(); beep(60, 420);
 });
