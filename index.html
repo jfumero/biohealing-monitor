@@ -1,106 +1,95 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>BioHealing Monitor — Nanorobots</title>
-
-  <meta name="description" content="Juego mental: inyección de nanorobots que optimizan órganos y sistemas del cuerpo.">
-  <meta property="og:title" content="BioHealing Monitor — Nanorobots">
-  <meta property="og:description" content="Panel futurista con nanorobots, gauges y optimización guiada.">
-  <meta property="og:type" content="website">
-  <meta name="theme-color" content="#0b0a12">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2730%27 fill=%27%2310b981%27/%3E%3C/svg%3E">
-
-  <!-- cache busting -->
-  <link rel="stylesheet" href="/style.css?v=no-breath-1" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BioHealing Monitor</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- Fondo -->
-  <canvas id="bloodstream-canvas" aria-hidden="true"></canvas>
+  <!-- Overlay de bienvenida -->
+  <div id="overlay" class="overlay">
+    <div class="welcome card-glass">
+      <h1>BioHealing Monitor</h1>
+      <p id="project-meta">Paciente: <b>Jonathan Fumero Mesa</b> · Edad: —</p>
 
-  <!-- Overlay de bienvenida + inyección -->
-  <section id="overlay" class="overlay">
-    <div class="overlay__card">
-      <h1 class="app-title center">BioHealing Monitor</h1>
-      <p class="muted center">Juego mental para Jonathan: inyecta nanorobots y optimiza el cuerpo hasta 100%.</p>
-
-      <div class="inject-seq" id="inject-seq" hidden>
-        <p class="inject-seq__title">Preparando inyección de nanorobots</p>
-        <div class="inject-meter">
-          <div class="inject-meter__fill" id="inject-fill" style="width:0%"></div>
+      <!-- Panel de nanorobots (Totales + Operativos) -->
+      <div class="swarm">
+        <div class="swarm-row">
+          <div class="swarm-head">
+            <span class="swarm-k">Nanorobots totales</span>
+            <span class="swarm-v" id="n-total">—</span>
+          </div>
+          <div class="swarm-bar">
+            <div id="swarm-total-bar" class="swarm-fill"></div>
+          </div>
         </div>
-        <p class="inject-count" id="inject-count">3</p>
+        <div class="swarm-row">
+          <div class="swarm-head">
+            <span class="swarm-k">Nanorobots operativos</span>
+            <span class="swarm-v" id="n-op">—</span>
+          </div>
+          <div class="swarm-bar">
+            <div id="swarm-bar" class="swarm-fill alt"></div>
+          </div>
+        </div>
       </div>
 
-      <div class="overlay__actions">
-        <button id="start-btn" class="btn btn-primary" type="button">Iniciar</button>
-        <button id="skip-btn" class="btn" type="button">Entrar sin inyección</button>
+      <div class="welcome-ctas">
+        <button id="startBtn" class="btn">Comenzar</button>
+        <button id="opt-start-btn" class="btn alt">Optimizar ahora</button>
       </div>
-      <p class="tiny muted center">Consejo: podés activar sonido luego (está apagado por defecto).</p>
     </div>
-  </section>
+  </div>
 
-  <!-- Header / Controles -->
-  <header class="topbar">
+  <!-- Cabecera (segunda web) -->
+  <header class="header">
+    <h2 class="brand">BioHealing Monitor</h2>
+
     <div class="patient">
-      <span class="pill">Paciente: <b id="patient-name">Jonathan Fumero Mesa</b></span>
-      <span class="pill">Edad: <b id="patient-age">—</b></span>
+      <div class="pill">Paciente: <b>Jonathan Fumero Mesa</b></div>
+      <div class="pill">Edad: <span id="age">—</span></div>
     </div>
-    <div class="controls">
-      <div class="control-group">
-        <label for="routine">Rutina:</label>
-        <select id="routine" class="select">
-          <option value="default">General</option>
-          <option value="sleep">Sueño reparador</option>
-          <option value="focus">Foco mental</option>
-          <option value="energy">Energía</option>
-        </select>
-      </div>
-      <button id="optimize-btn" class="btn" type="button">Optimizar</button>
-      <button id="power-btn" class="btn" type="button">Power: OFF</button>
-      <button id="sound-btn" class="btn" aria-pressed="false" type="button">Sonido: OFF</button>
-      <button id="reset-btn" class="btn btn-danger" type="button">Reset</button>
+
+    <div class="header-ctrls">
+      <div id="led" class="led" title="Estado"></div>
+      <button id="power-btn" class="btn">Encender</button>
+      <button id="sound-btn" class="btn" aria-pressed="true">Sonido: ON</button>
+      <button id="opt-btn" class="btn alt" aria-controls="optimizer">Optimizar cuerpo humano</button>
+    </div>
+
+    <!-- HUD con datos bio/astro -->
+    <div class="hud">
+      <div class="hud-item"><span class="k">Zodiaco</span><span class="v" id="hd-zodiac">—</span></div>
+      <div class="hud-item"><span class="k">Chino</span><span class="v" id="hd-czodiac">—</span></div>
+      <div class="hud-item"><span class="k">Luna</span><span class="v" id="hd-moon">—</span></div>
+      <div class="hud-item"><span class="k">Circadiano</span><span class="v" id="hd-circ">—</span></div>
+      <div class="hud-item"><span class="k">Físico</span><span class="v" id="hd-bio-f">—</span></div>
+      <div class="hud-item"><span class="k">Emocional</span><span class="v" id="hd-bio-e">—</span></div>
+      <div class="hud-item"><span class="k">Intelectual</span><span class="v" id="hd-bio-i">—</span></div>
     </div>
   </header>
 
-  <!-- Banner de progreso de órganos -->
-  <section id="organs-banner" class="organs-banner" aria-live="polite">
-    <div class="organs-banner__title">
-      <strong>Progreso de Optimización</strong>
-      <small id="organs-progress-summary">0% completado</small>
-    </div>
-    <div class="organs-grid" id="organs-grid"></div>
-    <div class="organs-progressbar" aria-hidden="true">
-      <div class="organs-progressbar__fill" id="organs-progressbar-fill" style="width:0%"></div>
-    </div>
-  </section>
-
-  <!-- Panel principal (gauges simples) -->
-  <main class="grid">
-    <article class="card gauge" id="gauge-bp">
-      <h3 class="center">Presión arterial</h3>
-      <div class="gauge__value center"><span id="bp-val">—</span></div>
-    </article>
-    <article class="card gauge" id="gauge-o2">
-      <h3 class="center">Oxigenación</h3>
-      <div class="gauge__value center"><span id="o2-val">—</span></div>
-    </article>
-    <article class="card gauge" id="gauge-stress">
-      <h3 class="center">Estrés</h3>
-      <div class="gauge__value center"><span id="stress-val">—</span></div>
-    </article>
-    <article class="card gauge" id="gauge-energy">
-      <h3 class="center">Energía</h3>
-      <div class="gauge__value center"><span id="energy-val">—</span></div>
-    </article>
+  <!-- Módulos/Gauges -->
+  <main>
+    <div id="grid" class="grid"></div>
   </main>
 
-  <footer class="footer">
-    <small>Hecho con ❤️ para Jonathan — Nanorobots imaginarios, salud real en tu mente.</small>
-  </footer>
+  <!-- Panel Optimización -->
+  <section id="optimizer" class="optimizer hidden card-glass">
+    <h3>Optimización del cuerpo humano</h3>
+    <div id="opt-list" class="opt-list"></div>
+    <button id="opt-cancel" class="btn alt">Cancelar</button>
+  </section>
 
-  <!-- cache busting -->
-  <script src="/main.js?v=no-breath-1" defer></script>
+  <!-- Ticker inferior -->
+  <div id="sys-ticker" class="sys-ticker">
+    <div id="sys-ticker-track" class="sys-ticker-track"></div>
+  </div>
+
+  <!-- Canvas FX de fondo -->
+  <canvas id="fx-bloodstream"></canvas>
+
+  <script src="main.js"></script>
 </body>
 </html>
