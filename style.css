@@ -4,7 +4,7 @@
   --panel-2:#0f1520;
   --text:#e9f6ef;
   --muted:#a6c7ba;
-  --brand:#34d399; /* verde */
+  --brand:#34d399;
   --brand-2:#10b981;
   --danger:#ef4444;
   --shadow:0 10px 30px rgba(0,0,0,.35);
@@ -21,6 +21,7 @@ html,body{
 a{ color:var(--brand); text-decoration:none; }
 .tiny{ font-size:12px; }
 .muted{ color:var(--muted); }
+.center{ text-align:center; }
 
 .btn{
   background:#152032;
@@ -91,9 +92,7 @@ a{ color:var(--brand); text-decoration:none; }
 }
 .card h3{ margin:0 0 6px; font-size:16px; letter-spacing:.2px; }
 
-.gauge{
-  display:flex; flex-direction:column; gap:10px;
-}
+.gauge{ display:flex; flex-direction:column; gap:10px; }
 .gauge__value{
   font-size:28px; font-weight:800; letter-spacing:.5px;
   color:#e7ffee;
@@ -107,10 +106,8 @@ a{ color:var(--brand); text-decoration:none; }
   opacity:.9;
 }
 
-/* Canvas fondo */
-#bloodstream-canvas{
-  position:fixed; inset:0; z-index:-1;
-}
+/* Canvas */
+#bloodstream-canvas{ position:fixed; inset:0; z-index:-1; }
 
 /* Overlay */
 .overlay{
@@ -130,15 +127,13 @@ a{ color:var(--brand); text-decoration:none; }
 }
 .app-title{ margin:0 0 6px; font-size:22px; }
 .overlay__actions{ display:flex; gap:8px; margin-top:10px; }
-
-/* Inyección */
 .inject-seq{ margin-top:12px; text-align:center; }
 .inject-seq__title{ color:#e7ffee; margin-bottom:8px; font-weight:600; letter-spacing:.3px; }
 .inject-meter{ height:10px; border-radius:12px; background:rgba(255,255,255,.08); overflow:hidden; box-shadow:inset 0 0 0 1px rgba(255,255,255,.06); }
 .inject-meter__fill{ height:100%; background:linear-gradient(90deg, #6ee7b7, #34d399); width:0%; transition:width .25s ease; }
 .inject-count{ margin-top:6px; font-size:24px; font-weight:700; color:#dff8ee; }
 
-/* Banner de órganos */
+/* Banner órganos */
 .organs-banner{
   border:1px solid var(--brand);
   border-radius:12px;
@@ -148,18 +143,10 @@ a{ color:var(--brand); text-decoration:none; }
   box-shadow:0 0 0 1px rgba(52,211,153,.15) inset;
   transition:opacity .6s ease, transform .4s ease;
 }
-.organs-banner.is-hidden{
-  opacity:0; transform:translateY(-6px); pointer-events:none;
-}
-.organs-banner__title{
-  display:flex; align-items:baseline; gap:8px;
-  font-size:14px; color:#e7ffee; margin-bottom:8px;
-}
+.organs-banner.is-hidden{ opacity:0; transform:translateY(-6px); pointer-events:none; }
+.organs-banner__title{ display:flex; align-items:baseline; gap:8px; font-size:14px; color:#e7ffee; margin-bottom:8px; }
 .organs-banner__title small{ opacity:.85; font-weight:600; }
-.organs-grid{
-  display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr));
-  gap:8px;
-}
+.organs-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:8px; }
 .organ-chip{
   display:flex; align-items:center; gap:8px;
   padding:8px 10px; border:1px solid rgba(52,211,153,.35);
@@ -188,6 +175,7 @@ a{ color:var(--brand); text-decoration:none; }
   border-radius:16px;
   padding:16px; box-shadow:var(--shadow);
 }
+.breath-card h2{ margin:0 0 6px; }
 .breath-visual{
   --size: 180px;
   width:var(--size); height:var(--size);
@@ -200,15 +188,11 @@ a{ color:var(--brand); text-decoration:none; }
 .breath-steps{ display:flex; justify-content:center; gap:10px; font-weight:700; margin-bottom:10px; }
 .breath-actions{ display:flex; justify-content:center; gap:8px; }
 
-/* Layout responsive */
-@media (max-width: 980px){
-  .grid{ grid-template-columns:repeat(2, 1fr); }
-}
-@media (max-width: 520px){
-  .grid{ grid-template-columns:1fr; }
-}
+/* Responsive */
+@media (max-width: 980px){ .grid{ grid-template-columns:repeat(2, 1fr); } }
+@media (max-width: 520px){ .grid{ grid-template-columns:1fr; } }
 
-/* Accesibilidad y movimiento reducido */
+/* Accesibilidad */
 @media (prefers-reduced-motion: reduce){
   *{ animation:none !important; transition:none !important; }
   .organs-progressbar__fill, .organ-chip__fill, .inject-meter__fill { transition:none !important; }
