@@ -1,95 +1,128 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>BioHealing Monitor</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>BioHealing Monitor — Jonathan Fumero Mesa</title>
+  <meta name="description" content="Panel personal de monitoreo de nanorobots — BioHealing Monitor." />
+  <meta name="theme-color" content="#0a0f1a" />
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <!-- Overlay de bienvenida -->
-  <div id="overlay" class="overlay">
+  <div id="overlay" class="overlay" role="dialog" aria-modal="true" aria-labelledby="ov-title">
     <div class="welcome card-glass">
-      <h1>BioHealing Monitor</h1>
-      <p id="project-meta">Paciente: <b>Jonathan Fumero Mesa</b> · Edad: —</p>
+      <div class="title" id="ov-title">
+        <div class="logo" aria-hidden="true"></div>
+        BIOHEALING MONITOR
+      </div>
+      <p id="project-meta">
+        Paciente: <b>Jonathan Fumero Mesa</b> · <span id="ov-age">Edad: —</span>
+      </p>
 
-      <!-- Panel de nanorobots (Totales + Operativos) -->
-      <div class="swarm">
-        <div class="swarm-row">
-          <div class="swarm-head">
-            <span class="swarm-k">Nanorobots totales</span>
-            <span class="swarm-v" id="n-total">—</span>
-          </div>
-          <div class="swarm-bar">
-            <div id="swarm-total-bar" class="swarm-fill"></div>
-          </div>
+      <div class="ov-stats">
+        <div class="ov-item">
+          <div class="ov-label">Nanorobots totales</div>
+          <div class="ov-value"><span id="ov-total">—</span></div>
+          <div class="progress"><div id="ov-total-bar" class="bar"></div></div>
         </div>
-        <div class="swarm-row">
-          <div class="swarm-head">
-            <span class="swarm-k">Nanorobots operativos</span>
-            <span class="swarm-v" id="n-op">—</span>
-          </div>
-          <div class="swarm-bar">
-            <div id="swarm-bar" class="swarm-fill alt"></div>
-          </div>
+        <div class="ov-item">
+          <div class="ov-label">Nanorobots operativos</div>
+          <div class="ov-value"><span id="ov-active">—</span></div>
+          <div class="progress"><div id="ov-active-bar" class="bar"></div></div>
         </div>
       </div>
 
-      <div class="welcome-ctas">
-        <button id="startBtn" class="btn">Comenzar</button>
-        <button id="opt-start-btn" class="btn alt">Optimizar ahora</button>
+      <div class="ov-actions">
+        <button id="btnStart" class="btn primary" aria-label="Comenzar monitoreo">Comenzar</button>
+        <button id="btnStartOptimize" class="btn alt" aria-label="Optimizar ahora">Optimizar ahora</button>
       </div>
+      <div class="ov-hint">Se cerrará automáticamente si no interactúas.</div>
     </div>
   </div>
 
-  <!-- Cabecera (segunda web) -->
-  <header class="header">
-    <h2 class="brand">BioHealing Monitor</h2>
+  <!-- Cabecera / HUD -->
+  <header class="topbar card-glass">
+    <div class="brand">
+      <div class="logo sm" aria-hidden="true"></div>
+      <div class="title-sm">BioHealing Monitor</div>
+    </div>
 
     <div class="patient">
-      <div class="pill">Paciente: <b>Jonathan Fumero Mesa</b></div>
-      <div class="pill">Edad: <span id="age">—</span></div>
+      <span class="pill">Paciente: <b>Jonathan Fumero Mesa</b></span>
+      <span class="pill">Edad: <b id="age">—</b></span>
     </div>
 
-    <div class="header-ctrls">
-      <div id="led" class="led" title="Estado"></div>
-      <button id="power-btn" class="btn">Encender</button>
-      <button id="sound-btn" class="btn" aria-pressed="true">Sonido: ON</button>
-      <button id="opt-btn" class="btn alt" aria-controls="optimizer">Optimizar cuerpo humano</button>
-    </div>
+    <div class="controls">
+      <span class="led" id="led" aria-hidden="true"></span>
 
-    <!-- HUD con datos bio/astro -->
-    <div class="hud">
-      <div class="hud-item"><span class="k">Zodiaco</span><span class="v" id="hd-zodiac">—</span></div>
-      <div class="hud-item"><span class="k">Chino</span><span class="v" id="hd-czodiac">—</span></div>
-      <div class="hud-item"><span class="k">Luna</span><span class="v" id="hd-moon">—</span></div>
-      <div class="hud-item"><span class="k">Circadiano</span><span class="v" id="hd-circ">—</span></div>
-      <div class="hud-item"><span class="k">Físico</span><span class="v" id="hd-bio-f">—</span></div>
-      <div class="hud-item"><span class="k">Emocional</span><span class="v" id="hd-bio-e">—</span></div>
-      <div class="hud-item"><span class="k">Intelectual</span><span class="v" id="hd-bio-i">—</span></div>
+      <button id="btnPower" class="btn tiny" aria-pressed="false"
+              aria-label="Encender o apagar el sistema">Encender</button>
+
+      <button id="btnSound" class="btn tiny" aria-pressed="false"
+              aria-label="Activar o silenciar sonido">Sonido</button>
+
+      <button id="btnOptimize" class="btn tiny"
+              aria-label="Iniciar optimización del cuerpo humano">Optimizar cuerpo humano</button>
     </div>
   </header>
 
-  <!-- Módulos/Gauges -->
-  <main>
-    <div id="grid" class="grid"></div>
-  </main>
-
-  <!-- Panel Optimización -->
-  <section id="optimizer" class="optimizer hidden card-glass">
-    <h3>Optimización del cuerpo humano</h3>
-    <div id="opt-list" class="opt-list"></div>
-    <button id="opt-cancel" class="btn alt">Cancelar</button>
+  <!-- HUD bio/astro -->
+  <section class="hud card-glass" aria-label="Indicadores bio y astro">
+    <div class="hud-item">
+      <span class="label">Zodiaco</span>
+      <span class="value" id="hud-zodiac">—</span>
+    </div>
+    <div class="hud-item">
+      <span class="label">Zodiaco chino</span>
+      <span class="value" id="hud-chinese">—</span>
+    </div>
+    <div class="hud-item">
+      <span class="label">Elemento</span>
+      <span class="value" id="hud-element">—</span>
+    </div>
+    <div class="hud-item">
+      <span class="label">Fase lunar</span>
+      <span class="value" id="hud-moon">—</span>
+    </div>
+    <div class="hud-item">
+      <span class="label">Fase circadiana</span>
+      <span class="value" id="hud-circadian">—</span>
+    </div>
+    <div class="hud-item trio">
+      <span class="label">Biorritmos</span>
+      <div class="bio">
+        <span class="value" id="bio-phy">Físico: —</span>
+        <span class="value" id="bio-emo">Emocional: —</span>
+        <span class="value" id="bio-int">Intelectual: —</span>
+      </div>
+    </div>
   </section>
 
-  <!-- Ticker inferior -->
-  <div id="sys-ticker" class="sys-ticker">
-    <div id="sys-ticker-track" class="sys-ticker-track"></div>
-  </div>
+  <main>
+    <!-- Grid de módulos -->
+    <div class="grid" id="grid" aria-label="Módulos de optimización"></div>
 
-  <!-- Canvas FX de fondo -->
-  <canvas id="fx-bloodstream"></canvas>
+    <!-- Checklist / estado del sistema -->
+    <section class="card" id="checks" aria-labelledby="checks-title">
+      <div class="title-sm" id="checks-title">Chequeos del sistema</div>
+      <div class="checklist" id="checklist" aria-live="polite" aria-atomic="true"></div>
+    </section>
+  </main>
 
-  <script src="main.js"></script>
+  <!-- Panel de optimización (drawer inferior) -->
+  <aside id="optimizer" class="optimizer card-glass" aria-hidden="true" aria-labelledby="opt-title">
+    <div class="opt-header">
+      <div class="title-sm" id="opt-title">Optimización del cuerpo humano</div>
+      <button id="btnCloseOpt" class="btn tiny" aria-label="Cerrar optimización">Cerrar</button>
+    </div>
+    <div class="opt-queue" id="opt-queue"></div>
+  </aside>
+
+  <!-- Canvas de fondo -->
+  <canvas id="fx" aria-hidden="true"></canvas>
+
+  <!-- JS -->
+  <script src="main.js" defer></script>
 </body>
 </html>
