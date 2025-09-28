@@ -1,157 +1,393 @@
-/* =========================================================
-   Gauges agrandados (estructura actual: dial/needle/hub/value)
-   + botón ▶ Iniciar, + barra de progreso de órganos
-   ========================================================= */
+/* ===== Paciente por querystring ===== */
+const qs = new URLSearchParams(location.search);
+const patientName = qs.get('name') || 'Jonathan Fumero Mesa';
+const dob = qs.get('dob');
+const birth = dob ? new Date(dob) : new Date(1976,11,4,0,50,0);
 
-/* Módulos (podés editar títulos y órganos) */
-const MODULES = [
-  { id:'org-internos', title:'Rejuvenecimiento — Órganos internos', target:95,
-    organs:['Hígado','Corazón','Pulmones','Riñones','Páncreas','Bazo','Estómago','Intestino','Tiroides'] },
-  { id:'org-externos', title:'Rejuvenecimiento — Piel & tejido externo', target:92,
-    organs:['Dermis','Epidermis','Folículos','Uñas','Cabello'] },
-  { id:'glucosa', title:'Regulación de azúcar', target:94,
-    organs:['Islotes pancreáticos','Sensibilidad insulina','Captación muscular'] },
-  { id:'globulos', title:'Glóbulos (inmunidad)', target:90,
-    organs:['Linfocitos','Neutrófilos','Monocitos','NK','Complemento'] },
-  { id:'presion', title:'Presión arterial', target:88,
-    organs:['Vascular','Endotelio','Ritmo','Barorreceptores'] },
-  { id:'detox', title:'Detox hepático', target:93,
-    organs:['Fase I','Fase II','Glutatión','Microsomas'] },
+/* ===== Estado órganos (localStorage) ===== */
+const ORGANS = [
+  "Cerebro","Corazón","Pulmones","Hígado","Riñones",
+  "Páncreas","Intestino","Sistema Inmune","Piel","Músculos",
+  "Sistema Nervioso","Sistema Endócrino"
 ];
+const LS_KEY = "biohealing_progress_v1";
+let organState = ORGANS.map(name => ({ name, pct: 0 }));
+function loadState(){ try{ const raw=localStorage.getItem(LS_KEY); if(raw){ const saved=JSON.parse(raw); if(Array.isArray(saved)&&saved.length===ORGANS.length) organState=saved; } }catch{} }
+function saveState(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(organState)); }catch{} }
+loadState();
 
-/* Helpers */
-function clamp(n,min,max){return Math.max(min,Math.min(max,n));}
-function toAngle(v){ return -120 + (clamp(v,0,100)*2.4); } // -120..+120 deg
+/* ===== Refs UI ===== */
+const overlay = document.getElementById('overlay');
+const startBtn = document.getElementById('start-btn');
+const skipBtn  = document.getElementById('skip-btn');
+const injectSeq = document.getElementById('inject-seq');
+const injectFill = document.getElementById('inject-fill');
+const injectCount = document.getElementById('inject-count');
 
-/* Construye tarjeta */
-function createCard(mod){
-  const card = document.createElement('section');
-  card.className = 'card';
+const patientNameEl = document.getElementById('patient-name');
+const patientAgeEl  = document.getElementById('patient-age');
 
-  card.innerHTML = `
-    <div class="title-sm">${mod.title.toUpperCase()}</div>
-    <div class="status"><i class="dot bad"></i><span>En espera</span></div>
+const routineSel = document.getElementById('routine');
+const optimizeBtn = document.getElementById('optimize-btn');
+const powerBtn = document.getElementById('power-btn');
+const soundBtn = document.getElementById('sound-btn');
+const resetBtn = document.getElementById('reset-btn');
 
-    <div class="gauge">
-      <div class="dial"></div>
-      <div class="needle"></div>
-      <div class="hub"></div>
-      <div class="value">0%</div>
-    </div>
+const organsGrid = document.getElementById('organs-grid');
+const organsBanner = document.getElementById('organs-banner');
+const organsFill = document.getElementById('organs-progressbar-fill');
+const organsSummary = document.getElementById('organs-progress-summary');
 
-    <div class="progress">
-      <div class="prog-bar"><div class="prog-fill"></div></div>
-      <div class="orgs"></div>
-    </div>
+/* Gauges */
+const bpVal = document.getElementById('bp-val');
+const o2Val = document.getElementById('o2-val');
+const stressVal = document.getElementById('stress-val');
+const energyVal = document.getElementById('energy-val');
 
-    <div class="controls">
-      <button class="btn mod">▶ Iniciar</button>
-      <button class="btn alt mod">Detener</button>
-    </div>
-  `;
+/* ===== Respiración ===== */
+const breathPanel = document.getElementById('breath-panel');
+const breathCard  = document.getElementById('breath-card');
+const breathVisual = document.getElementById('breath-visual');
+const breathStepEl = document.getElementById('breath-step');
+const breathCountEl = document.getElementById('breath-count');
+const breathBtn = document.getElementById('breath-btn');
+const breathTimeEl = document.getElementById('breath-time');
+const breathCyclesEl = document.getElementById('breath-cycles');
 
-  // refs
-  const dot   = card.querySelector('.dot');
-  const stxt  = card.querySelector('.status span');
-  const needle= card.querySelector('.needle');
-  const value = card.querySelector('.value');
-  const fill  = card.querySelector('.prog-fill');
-  const orgs  = card.querySelector('.orgs');
-  const bStart= card.querySelector('.btn.mod');
-  const bStop = card.querySelector('.btn.alt.mod');
-
-  // estado
-  card._timer = null;
-  card._active= false;
-  card.dataset.current = 0;
-  const goal = clamp(mod.target ?? 92, 70, 100);
-  card._orgQueue = [...(mod.organs ?? [])];
-  renderOrgList(orgs, card._orgQueue);
-
-  // funciones ui
-  function setStatus(text, level){
-    dot.className = 'dot ' + level;
-    stxt.textContent = text;
-  }
-  function setVisual(v, active){
-    card.dataset.current = v;
-    needle.style.transform = `rotate(${toAngle(v)}deg)`;
-    value.textContent = `${Math.round(v)}%`;
-
-    // estado por rangos
-    if(v<40) setStatus(active?'Calibrando':'En espera', 'bad');
-    else if(v<75) setStatus(active?'Ajustando':'En espera', 'warn');
-    else setStatus('Estable', 'good');
-  }
-  function renderOrgList(el, list){
-    if (!el) return;
-    if (!list || !list.length){
-      el.textContent = 'Órganos optimizados ✔';
-      el.style.color = 'var(--ok)';
-      return;
+/* ===== Audio (OFF por defecto) ===== */
+let audioCtx, masterGain, humOsc;
+let soundOn = false;
+async function ensureAudio(){
+  try{
+    if (!audioCtx){
+      audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+      masterGain = audioCtx.createGain();
+      masterGain.gain.value = 0.0009;
+      masterGain.connect(audioCtx.destination);
     }
-    el.textContent = 'Optimizando: ' + list.join(' · ');
-    el.style.color = '#ccf6ff';
-  }
-
-  function animateTo(goalV){
-    clearInterval(card._timer);
-    card._timer = setInterval(()=>{
-      let cur = Number(card.dataset.current || 0);
-      cur += (goalV - cur)*0.10 + 0.6;
-      if (Math.abs(goalV - cur) < 0.6){
-        cur = goalV;
-        setVisual(cur,true);
-        clearInterval(card._timer);
-        card._active = false;
-      } else {
-        setVisual(cur,true);
-      }
-
-      // barra progreso
-      fill.style.width = Math.round(cur) + '%';
-
-      // consumir órganos a medida que sube
-      if (card._orgQueue.length && Math.round(cur) % Math.max(1, Math.floor(100/Math.max(1, (mod.organs||[]).length))) === 0){
-        card._orgQueue.shift();
-        renderOrgList(orgs, card._orgQueue);
-      }
-    }, 100);
-  }
-
-  function start(){
-    if (card._active) return;
-    card._active = true;
-    animateTo(goal);
-  }
-  function stop(){
-    clearInterval(card._timer);
-    card._active = false;
-    // descenso suave a 10%
-    card._timer = setInterval(()=>{
-      let cur = Number(card.dataset.current || 10);
-      cur -= Math.max(0.8, (cur - 10)*0.06);
-      if (cur <= 10){
-        cur = 10;
-        setVisual(cur,false);
-        fill.style.width = '10%';
-        clearInterval(card._timer);
-      } else {
-        setVisual(cur,false);
-        fill.style.width = Math.round(cur) + '%';
-      }
-    }, 90);
-  }
-
-  bStart.addEventListener('click', start);
-  bStop.addEventListener('click', stop);
-
-  // inicial
-  setVisual(0, false);
-
-  return card;
+    if (audioCtx.state==='suspended'){ await audioCtx.resume(); }
+  }catch(err){ console.warn('[audio] init/resume error:', err); }
+}
+function startHum(){
+  stopHum();
+  if (!soundOn || !audioCtx) return;
+  humOsc = audioCtx.createOscillator();
+  humOsc.type='sine'; humOsc.frequency.value=72;
+  const g=audioCtx.createGain(); g.gain.value=0.02;
+  humOsc.connect(g).connect(masterGain); humOsc.start();
+}
+function stopHum(){ try{ humOsc && humOsc.stop(); }catch{} humOsc=null; }
+function beep(ms=120, freq=440){
+  if (!soundOn || !audioCtx) return;
+  const o=audioCtx.createOscillator(); o.frequency.value=freq;
+  const g=audioCtx.createGain(); g.gain.value=0.08;
+  o.connect(g).connect(masterGain); o.start();
+  setTimeout(()=>{ try{o.stop();}catch{} }, ms);
 }
 
-/* Monta la grilla */
-const grid = document.getElementById('grid');
-MODULES.forEach(m => grid.appendChild(createCard(m)));
+/* ===== Canvas efecto ===== */
+const FX = (()=> {
+  const cvs = document.getElementById('bloodstream-canvas');
+  const ctx = cvs.getContext('2d', { alpha:true });
+  let W=innerWidth, H=innerHeight, DPR = Math.min(devicePixelRatio||1, 2);
+  let running=false, raf=0;
+  let bots=[], cells=[];
+
+  function resize(){
+    W=innerWidth; H=innerHeight; DPR=Math.min(devicePixelRatio||1,2);
+    cvs.width = Math.floor(W*DPR); cvs.height = Math.floor(H*DPR);
+    cvs.style.width=W+'px'; cvs.style.height=H+'px';
+  }
+  addEventListener('resize', resize);
+
+  function initField(){
+    bots.length=0; cells.length=0;
+    const baseBots=120, baseCells=30;
+    const isMobile = innerWidth<520;
+    const scale = isMobile?0.45:(innerWidth<900?0.7:1);
+    const nb = Math.max(40, Math.round(baseBots*scale));
+    const nc = Math.max(12, Math.round(baseCells*scale));
+
+    for(let i=0;i<nb;i++){
+      bots.push({ x:Math.random()*W, y:Math.random()*H, vx:(Math.random()-.5)*0.6, vy:(Math.random()-.5)*0.6, r:1.2+Math.random()*1.2 });
+    }
+    for(let i=0;i<nc;i++){
+      cells.push({ x:Math.random()*W, y:Math.random()*H, vx:(Math.random()-.5)*0.25, vy:(Math.random()-.5)*0.25, r:5+Math.random()*9, a:Math.random()*Math.PI*2 });
+    }
+  }
+
+  function step(){
+    ctx.clearRect(0,0,cvs.width,cvs.height);
+    ctx.save(); ctx.scale(DPR,DPR);
+
+    const grd = ctx.createRadialGradient(W*0.3,H*0.2,20, W*0.3,H*0.2, W*0.8);
+    grd.addColorStop(0,'rgba(16,185,129,.16)'); grd.addColorStop(1,'transparent');
+    ctx.fillStyle=grd; ctx.fillRect(0,0,W,H);
+
+    ctx.globalAlpha=.22; ctx.fillStyle='#34d399';
+    for(const c of cells){
+      c.x+=c.vx; c.y+=c.vy; c.a+=0.01;
+      if (c.x<-20) c.x=W+20; if (c.x>W+20) c.x=-20;
+      if (c.y<-20) c.y=H+20; if (c.y>H+20) c.y=-20;
+      ctx.beginPath(); ctx.ellipse(c.x,c.y,c.r*1.3,c.r,c.a,0,Math.PI*2); ctx.fill();
+    }
+
+    ctx.globalAlpha=.75;
+    for(const b of bots){
+      b.x+=b.vx; b.y+=b.vy;
+      if (b.x<0||b.x>W) b.vx*=-1;
+      if (b.y<0||b.y>H) b.vy*=-1;
+      ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
+      ctx.fillStyle='rgba(52,211,153,.9)'; ctx.fill();
+    }
+
+    ctx.restore();
+    if (running) raf=requestAnimationFrame(step);
+  }
+
+  function start(){ if(running) return; running=true; resize(); initField(); step(); }
+  function stop(){ running=false; cancelAnimationFrame(raf); }
+
+  return { start, stop };
+})();
+
+document.addEventListener('visibilitychange', ()=>{
+  if (document.hidden) FX.stop(); else if (isOn) FX.start();
+});
+
+/* ===== Paciente ===== */
+function computeAge(date){
+  const now = new Date();
+  let y = now.getFullYear() - date.getFullYear();
+  const m = now.getMonth() - date.getMonth();
+  if (m<0 || (m===0 && now.getDate()<date.getDate())) y--;
+  return y;
+}
+function renderPatient(){
+  patientNameEl.textContent = patientName;
+  patientAgeEl.textContent = computeAge(birth);
+}
+renderPatient();
+
+/* ===== Organs banner ===== */
+function renderOrgans(){
+  organsGrid.innerHTML = '';
+  let done = 0;
+  organState.forEach((o, idx) => {
+    if (o.pct >= 100) done++;
+    const chip = document.createElement('div');
+    chip.className = 'organ-chip' + (o.pct>=100 ? ' is-done' : '');
+    chip.dataset.index = idx;
+
+    const name = document.createElement('span');
+    name.className = 'organ-chip__name';
+    name.textContent = o.name;
+
+    const bar = document.createElement('div');
+    bar.className = 'organ-chip__bar';
+    const fill = document.createElement('div');
+    fill.className = 'organ-chip__fill';
+    fill.style.width = Math.max(0, Math.min(100, o.pct)) + '%';
+    bar.appendChild(fill);
+
+    chip.appendChild(name);
+    chip.appendChild(bar);
+    organsGrid.appendChild(chip);
+  });
+
+  const pct = Math.round((done / organState.length) * 100);
+  organsFill.style.width = pct + '%';
+  organsSummary.textContent = `${pct}% completado`;
+
+  if (pct === 100 && !organsBanner.classList.contains('is-hidden')) {
+    setTimeout(()=> organsBanner.classList.add('is-hidden'), 900);
+  } else if (pct < 100) {
+    organsBanner.classList.remove('is-hidden');
+  }
+}
+renderOrgans();
+
+/* ===== Power & Gauges ===== */
+let isOn = false;
+function setPower(on){
+  isOn = on;
+  powerBtn.textContent = `Power: ${isOn ? 'ON' : 'OFF'}`;
+  if (isOn) {
+    FX.start();
+    setGauge(bpVal,'120/80'); setGauge(o2Val,'98%'); setGauge(stressVal,'Bajo'); setGauge(energyVal,'Alta');
+  } else {
+    FX.stop();
+    setGauge(bpVal,'—'); setGauge(o2Val,'—'); setGauge(stressVal,'—'); setGauge(energyVal,'—');
+  }
+}
+function setGauge(el, v){ el.textContent = v; }
+
+/* ===== Rutinas ===== */
+const ROUTINE_PRIORITIES = {
+  default: ["Corazón","Pulmones","Cerebro","Sistema Inmune","Hígado"],
+  sleep:   ["Sistema Nervioso","Sistema Endócrino","Cerebro","Pulmones","Corazón"],
+  focus:   ["Cerebro","Sistema Nervioso","Pulmones","Corazón","Páncreas"],
+  energy:  ["Energía","Corazón","Pulmones","Músculos","Hígado"]
+};
+function pickOrganIndexByRoutine(){
+  const routine = routineSel.value || 'default';
+  const prefs = ROUTINE_PRIORITIES[routine] || ROUTINE_PRIORITIES.default;
+  const ENERGY_MAP = ["Músculos","Hígado","Páncreas"];
+  const pending = organState.map((o,i)=>({...o,i})).filter(o=>o.pct<100);
+  if (!pending.length) return -1;
+  for (const p of prefs){
+    const names = p==='Energía' ? ENERGY_MAP : [p];
+    const found = pending.find(o => names.includes(o.name));
+    if (found) return found.i;
+  }
+  return pending[0].i;
+}
+function stepOptimization(){
+  const idx = pickOrganIndexByRoutine();
+  if (idx < 0){ renderOrgans(); return; }
+  const inc = 6 + Math.random()*8;
+  organState[idx].pct = Math.min(100, organState[idx].pct + inc);
+  beep(40, 520 + Math.random()*60);
+  saveState(); renderOrgans();
+}
+function burstOptimization(times=3, delay=450){
+  let n=times; const t=setInterval(()=>{ stepOptimization(); if(--n<=0) clearInterval(t); }, delay);
+}
+
+/* ===== Inyección (no bloquea) ===== */
+function runInjectionNonBlocking(){
+  if (!injectSeq) return;
+  injectSeq.hidden = false;
+  injectFill.style.width = '0%';
+  injectCount.textContent = '3';
+  let p=0; const timer=setInterval(()=>{ p+=100/12; injectFill.style.width=Math.min(100,p)+'%'; },100);
+  const steps = [() => injectCount.textContent='2',
+                 () => injectCount.textContent='1',
+                 () => injectCount.textContent='¡Listo!'];
+  let i=0;
+  const stepTimer = setInterval(()=>{
+    steps[i++]?.();
+    if (i>=steps.length){
+      clearInterval(stepTimer); clearInterval(timer);
+      setTimeout(()=> injectSeq.hidden = true, 380);
+    }
+  }, 400);
+}
+
+/* ===== Respiración (delegación por data-action, 5:00, ciclos) ===== */
+let breathing=false, breathTimer=null, phase=0, count=4;
+let sessionTimer=null, sessionSecondsLeft=300, cycles=0;
+const PHASES = ['Inhala','Mantén','Exhala','Mantén'];
+
+function mmss(s){
+  const m = Math.floor(s/60).toString().padStart(2,'0');
+  const sec = (s%60).toString().padStart(2,'0');
+  return `${m}:${sec}`;
+}
+function renderSessionStatus(){
+  breathTimeEl.textContent = mmss(sessionSecondsLeft);
+  breathCyclesEl.textContent = cycles;
+}
+function renderBreath(){
+  breathStepEl.textContent = PHASES[phase];
+  breathCountEl.textContent = count;
+  let scale = 1;
+  if (PHASES[phase]==='Inhala') scale = 1.18;
+  else if (PHASES[phase]==='Exhala') scale = 0.92;
+  else scale = 1.05;
+  breathVisual.style.transform = `scale(${scale})`;
+}
+function tickBreath(){
+  if (!breathing) return;
+  count--;
+  if (count<=0){
+    const prev = phase;
+    phase = (phase+1)%4;
+    count = 4;
+    if (prev === 3) { cycles++; renderSessionStatus(); }
+  }
+  renderBreath();
+}
+function openBreath(){
+  breathPanel.hidden = false;
+  phase=0; count=4; cycles=0; sessionSecondsLeft = 300;
+  renderBreath(); renderSessionStatus();
+}
+function startBreathing(){
+  breathing = true;
+  const toggleBtn = breathCard.querySelector('[data-action="toggle"]');
+  if (toggleBtn) toggleBtn.textContent = 'Pausar';
+  clearInterval(breathTimer); breathTimer = setInterval(tickBreath, 1000);
+  clearInterval(sessionTimer);
+  sessionTimer = setInterval(()=>{
+    sessionSecondsLeft--; renderSessionStatus();
+    if (sessionSecondsLeft<=0) closeBreath();
+  }, 1000);
+  beep(40, 500);
+}
+function pauseBreathing(){
+  breathing = false;
+  const toggleBtn = breathCard.querySelector('[data-action="toggle"]');
+  if (toggleBtn) toggleBtn.textContent = 'Iniciar';
+  clearInterval(breathTimer);
+  // El reloj sigue; si querés que se pause el tiempo, comenta la línea de abajo y haz clearInterval(sessionTimer)
+}
+function closeBreath(){
+  breathing = false;
+  clearInterval(breathTimer);
+  clearInterval(sessionTimer);
+  const toggleBtn = breathCard.querySelector('[data-action="toggle"]');
+  if (toggleBtn) toggleBtn.textContent = 'Iniciar';
+  breathPanel.hidden = true;
+}
+
+/* Delegación dentro de la tarjeta (funciona aunque IDs cambien) */
+breathCard.addEventListener('click', (e)=>{
+  const btn = e.target.closest('button,[data-action]');
+  if (!btn) return;
+  const act = btn.dataset.action;
+  if (act === 'toggle'){ e.preventDefault(); (!breathing) ? startBreathing() : pauseBreathing(); }
+  else if (act === 'close'){ e.preventDefault(); closeBreath(); }
+});
+
+/* Click en fondo para cerrar (sólo si el click fue realmente en el panel, no dentro de la tarjeta) */
+breathPanel.addEventListener('click', (e)=>{ if (e.target === breathPanel) closeBreath(); });
+document.addEventListener('keydown', (e)=>{ if (!breathPanel.hidden && e.key==='Escape') closeBreath(); });
+
+/* ===== Eventos generales (robustos) ===== */
+startBtn.addEventListener('click', async ()=>{
+  const forceHide = setTimeout(()=> overlay.classList.add('is-hidden'), 2000);
+  try { await ensureAudio(); } catch {}
+  runInjectionNonBlocking();
+  overlay.classList.add('is-hidden');
+  setPower(true);
+  burstOptimization(3);
+  clearTimeout(forceHide);
+});
+skipBtn.addEventListener('click', ()=>{
+  overlay.classList.add('is-hidden');
+  setPower(true);
+});
+powerBtn.addEventListener('click', ()=>{
+  setPower(!isOn);
+  if (isOn && soundOn) startHum(); else stopHum();
+});
+soundBtn.addEventListener('click', async ()=>{
+  await ensureAudio();
+  soundOn = !soundOn;
+  soundBtn.textContent = 'Sonido: ' + (soundOn ? 'ON' : 'OFF');
+  soundBtn.setAttribute('aria-pressed', String(soundOn));
+  if (isOn && soundOn) startHum(); else stopHum();
+});
+optimizeBtn.addEventListener('click', ()=> burstOptimization(3));
+routineSel.addEventListener('change', ()=> beep(40, 460));
+resetBtn.addEventListener('click', ()=>{
+  organState = ORGANS.map(name => ({ name, pct: 0 }));
+  saveState(); renderOrgans(); beep(60, 420);
+});
+
+/* ===== Init ===== */
+(function init(){
+  renderPatient();
+  setPower(false);
+})();
