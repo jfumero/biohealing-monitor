@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>BioHealing Monitor — Nanorobots</title>
 
-  <!-- SEO básico -->
   <meta name="description" content="Juego mental: inyección de nanorobots que optimizan órganos y sistemas del cuerpo.">
   <meta property="og:title" content="BioHealing Monitor — Nanorobots">
   <meta property="og:description" content="Panel futurista con nanorobots, gauges y optimización guiada.">
@@ -16,14 +15,13 @@
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
-  <!-- Fondo visual (canvas) -->
   <canvas id="bloodstream-canvas" aria-hidden="true"></canvas>
 
   <!-- Overlay de bienvenida + inyección -->
   <section id="overlay" class="overlay">
     <div class="overlay__card">
-      <h1 class="app-title">BioHealing Monitor</h1>
-      <p class="muted">Juego mental para Jonathan: inyecta nanorobots y optimiza el cuerpo hasta 100%.</p>
+      <h1 class="app-title center">BioHealing Monitor</h1>
+      <p class="muted center">Juego mental para Jonathan: inyecta nanorobots y optimiza el cuerpo hasta 100%.</p>
 
       <div class="inject-seq" id="inject-seq" hidden>
         <p class="inject-seq__title">Preparando inyección de nanorobots</p>
@@ -37,7 +35,7 @@
         <button id="start-btn" class="btn btn-primary">Iniciar</button>
         <button id="skip-btn" class="btn">Entrar sin inyección</button>
       </div>
-      <p class="tiny muted">Consejo: podés activar sonido luego (está apagado por defecto).</p>
+      <p class="tiny muted center">Consejo: podés activar sonido luego (está apagado por defecto).</p>
     </div>
   </section>
 
@@ -77,40 +75,43 @@
     </div>
   </section>
 
-  <!-- Panel de gauges (demo simple y liviano) -->
+  <!-- Panel principal (gauges simples) -->
   <main class="grid">
     <article class="card gauge" data-name="Presión arterial" id="gauge-bp">
-      <h3>Presión arterial</h3>
-      <div class="gauge__value"><span id="bp-val">—</span></div>
+      <h3 class="center">Presión arterial</h3>
+      <div class="gauge__value center"><span id="bp-val">—</span></div>
     </article>
 
     <article class="card gauge" data-name="Oxigenación" id="gauge-o2">
-      <h3>Oxigenación</h3>
-      <div class="gauge__value"><span id="o2-val">—</span></div>
+      <h3 class="center">Oxigenación</h3>
+      <div class="gauge__value center"><span id="o2-val">—</span></div>
     </article>
 
     <article class="card gauge" data-name="Estrés" id="gauge-stress">
-      <h3>Estrés</h3>
-      <div class="gauge__value"><span id="stress-val">—</span></div>
+      <h3 class="center">Estrés</h3>
+      <div class="gauge__value center"><span id="stress-val">—</span></div>
     </article>
 
     <article class="card gauge" data-name="Energía" id="gauge-energy">
-      <h3>Energía</h3>
-      <div class="gauge__value"><span id="energy-val">—</span></div>
+      <h3 class="center">Energía</h3>
+      <div class="gauge__value center"><span id="energy-val">—</span></div>
     </article>
   </main>
 
-  <!-- Módulo de respiración guiada (box breathing 4-4-4-4) -->
+  <!-- Respiración guiada -->
   <section id="breath-panel" class="breath-panel" hidden>
     <div class="breath-card">
-      <h2>Respiración guiada</h2>
-      <p class="muted">Box breathing 4-4-4-4. Sincroniza tu respiración con el círculo.</p>
+      <h2 class="center">Respiración guiada 4 x 4</h2>
+      <p class="muted center">Sincroniza tu respiración con el círculo.</p>
+
       <div class="breath-visual" id="breath-visual" role="img" aria-label="Guía de respiración"></div>
-      <div class="breath-steps">
+
+      <div class="breath-steps center">
         <span id="breath-step">Inhala</span>
         <span id="breath-count">4</span>
       </div>
-      <div class="breath-actions">
+
+      <div class="breath-actions center">
         <button id="breath-toggle" class="btn btn-primary">Iniciar</button>
         <button id="breath-close" class="btn">Cerrar</button>
       </div>
