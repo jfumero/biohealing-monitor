@@ -2,132 +2,18 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>BioHealing Monitor — Nanorobots</title>
-
-  <meta name="description" content="Juego mental: inyección de nanorobots que optimizan órganos y sistemas del cuerpo.">
-  <meta property="og:title" content="BioHealing Monitor — Nanorobots">
-  <meta property="og:description" content="Panel futurista con nanorobots, gauges y optimización guiada.">
-  <meta property="og:type" content="website">
-  <meta name="theme-color" content="#0b0a12">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2730%27 fill=%27%2310b981%27/%3E%3C/svg%3E">
-
-  <link rel="stylesheet" href="/style.css" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BioHealing – Gauges Neon</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- Fondo animado -->
-  <canvas id="bloodstream-canvas" aria-hidden="true"></canvas>
+  <main class="page">
+    <h1 class="app-title">BioHealing Monitor — Panel</h1>
 
-  <!-- Overlay de bienvenida + inyección -->
-  <section id="overlay" class="overlay">
-    <div class="overlay__card">
-      <h1 class="app-title center">BioHealing Monitor</h1>
-      <p class="muted center">Juego mental para Jonathan: inyecta nanorobots y optimiza el cuerpo hasta 100%.</p>
-
-      <div class="inject-seq" id="inject-seq" hidden>
-        <p class="inject-seq__title">Preparando inyección de nanorobots</p>
-        <div class="inject-meter">
-          <div class="inject-meter__fill" id="inject-fill" style="width:0%"></div>
-        </div>
-        <p class="inject-count" id="inject-count">3</p>
-      </div>
-
-      <div class="overlay__actions">
-        <button id="start-btn" class="btn btn-primary">Iniciar</button>
-        <button id="skip-btn" class="btn">Entrar sin inyección</button>
-      </div>
-      <p class="tiny muted center">Tip: podés activar sonido luego (está apagado por defecto).</p>
-    </div>
-  </section>
-
-  <!-- Header / Controles -->
-  <header class="topbar">
-    <div class="patient">
-      <span class="pill">Paciente: <b id="patient-name">Jonathan Fumero Mesa</b></span>
-      <span class="pill">Edad: <b id="patient-age">—</b></span>
-    </div>
-    <div class="controls">
-      <div class="control-group">
-        <label for="routine">Rutina:</label>
-        <select id="routine" class="select">
-          <option value="default">General</option>
-          <option value="sleep">Sueño reparador</option>
-          <option value="focus">Foco mental</option>
-          <option value="energy">Energía</option>
-        </select>
-      </div>
-      <button id="optimize-btn" class="btn">Optimizar</button>
-      <button id="power-btn" class="btn">Power: OFF</button>
-      <button id="sound-btn" class="btn" aria-pressed="false">Sonido: OFF</button>
-      <button id="breath-btn" class="btn">Respiración</button>
-      <button id="reset-btn" class="btn btn-danger">Reset</button>
-    </div>
-  </header>
-
-  <!-- Banner de progreso de órganos -->
-  <section id="organs-banner" class="organs-banner" aria-live="polite">
-    <div class="organs-banner__title">
-      <strong>Progreso de Optimización</strong>
-      <small id="organs-progress-summary">0% completado</small>
-    </div>
-    <div class="organs-grid" id="organs-grid"></div>
-    <div class="organs-progressbar" aria-hidden="true">
-      <div class="organs-progressbar__fill" id="organs-progressbar-fill" style="width:0%"></div>
-    </div>
-  </section>
-
-  <!-- Panel principal (gauges) -->
-  <main class="grid">
-    <article class="card gauge" data-name="Presión arterial" id="gauge-bp">
-      <h3 class="center">Presión arterial</h3>
-      <div class="gauge__value center"><span id="bp-val">—</span></div>
-    </article>
-
-    <article class="card gauge" data-name="Oxigenación" id="gauge-o2">
-      <h3 class="center">Oxigenación</h3>
-      <div class="gauge__value center"><span id="o2-val">—</span></div>
-    </article>
-
-    <article class="card gauge" data-name="Estrés" id="gauge-stress">
-      <h3 class="center">Estrés</h3>
-      <div class="gauge__value center"><span id="stress-val">—</span></div>
-    </article>
-
-    <article class="card gauge" data-name="Energía" id="gauge-energy">
-      <h3 class="center">Energía</h3>
-      <div class="gauge__value center"><span id="energy-val">—</span></div>
-    </article>
+    <!-- Grilla: se llena desde main.js -->
+    <section id="grid" class="grid"></section>
   </main>
 
-  <!-- Respiración guiada -->
-  <section id="breath-panel" class="breath-panel" hidden>
-    <div class="breath-card" id="breath-card">
-      <h2 class="center">Respiración guiada 4 x 4</h2>
-      <p class="muted center">Sincroniza tu respiración con el círculo.</p>
-
-      <div class="breath-status center">
-        <span>Tiempo: <b id="breath-time">05:00</b></span>
-        <span>Respiraciones: <b id="breath-cycles">0</b></span>
-      </div>
-
-      <div class="breath-visual" id="breath-visual" role="img" aria-label="Guía de respiración"></div>
-
-      <div class="breath-steps center">
-        <span id="breath-step">Inhala</span>
-        <span id="breath-count">4</span>
-      </div>
-
-      <div class="breath-actions center">
-        <button id="breath-toggle" class="btn btn-primary" type="button">Iniciar</button>
-        <button id="breath-close" class="btn" type="button">Cerrar</button>
-      </div>
-    </div>
-  </section>
-
-  <footer class="footer">
-    <small>Hecho con ❤️ para Jonathan — Nanorobots imaginarios, salud real en tu mente.</small>
-  </footer>
-
-  <script src="/main.js" defer></script>
+  <script src="main.js"></script>
 </body>
 </html>
