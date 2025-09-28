@@ -51,6 +51,8 @@ const breathVisual = document.getElementById('breath-visual');
 const breathStepEl = document.getElementById('breath-step');
 const breathCountEl = document.getElementById('breath-count');
 const breathBtn = document.getElementById('breath-btn');
+const breathToggleBtn = document.getElementById('breath-toggle');
+const breathCloseBtn  = document.getElementById('breath-close');
 const breathTimeEl = document.getElementById('breath-time');
 const breathCyclesEl = document.getElementById('breath-cycles');
 
@@ -261,20 +263,17 @@ function runInjectionNonBlocking(){
   injectFill.style.width = '0%';
   injectCount.textContent = '3';
   let p=0; const timer=setInterval(()=>{ p+=100/12; injectFill.style.width=Math.min(100,p)+'%'; },100);
-  const steps = [() => injectCount.textContent='2',
-                 () => injectCount.textContent='1',
-                 () => injectCount.textContent='¡Listo!'];
-  let i=0;
+  const seq = ['2','1','¡Listo!']; let i=0;
   const stepTimer = setInterval(()=>{
-    steps[i++]?.();
-    if (i>=steps.length){
+    injectCount.textContent = seq[i++];
+    if (i>=seq.length){
       clearInterval(stepTimer); clearInterval(timer);
       setTimeout(()=> injectSeq.hidden = true, 380);
     }
   }, 400);
 }
 
-/* ===== Respiración (delegación por data-action, 5:00, ciclos) ===== */
+/* ===== Respiración (handlers explícitos) ===== */
 let breathing=false, breathTimer=null, phase=0, count=4;
 let sessionTimer=null, sessionSecondsLeft=300, cycles=0;
 const PHASES = ['Inhala','Mantén','Exhala','Mantén'];
@@ -286,11 +285,11 @@ function mmss(s){
 }
 function renderSessionStatus(){
   breathTimeEl.textContent = mmss(sessionSecondsLeft);
-  breathCyclesEl.textContent = cycles;
+  breathCyclesEl.textContent = String(cycles);
 }
 function renderBreath(){
   breathStepEl.textContent = PHASES[phase];
-  breathCountEl.textContent = count;
+  breathCountEl.textContent = String(count);
   let scale = 1;
   if (PHASES[phase]==='Inhala') scale = 1.18;
   else if (PHASES[phase]==='Exhala') scale = 0.92;
@@ -308,6 +307,7 @@ function tickBreath(){
   }
   renderBreath();
 }
+
 function openBreath(){
   breathPanel.hidden = false;
   phase=0; count=4; cycles=0; sessionSecondsLeft = 300;
@@ -315,9 +315,9 @@ function openBreath(){
 }
 function startBreathing(){
   breathing = true;
-  const toggleBtn = breathCard.querySelector('[data-action="toggle"]');
-  if (toggleBtn) toggleBtn.textContent = 'Pausar';
-  clearInterval(breathTimer); breathTimer = setInterval(tickBreath, 1000);
+  breathToggleBtn.textContent = 'Pausar';
+  clearInterval(breathTimer);
+  breathTimer = setInterval(tickBreath, 1000);
   clearInterval(sessionTimer);
   sessionTimer = setInterval(()=>{
     sessionSecondsLeft--; renderSessionStatus();
@@ -327,32 +327,36 @@ function startBreathing(){
 }
 function pauseBreathing(){
   breathing = false;
-  const toggleBtn = breathCard.querySelector('[data-action="toggle"]');
-  if (toggleBtn) toggleBtn.textContent = 'Iniciar';
+  breathToggleBtn.textContent = 'Iniciar';
   clearInterval(breathTimer);
-  // El reloj sigue; si querés que se pause el tiempo, comenta la línea de abajo y haz clearInterval(sessionTimer)
+  // si querés pausar también el reloj: clearInterval(sessionTimer);
 }
 function closeBreath(){
   breathing = false;
   clearInterval(breathTimer);
   clearInterval(sessionTimer);
-  const toggleBtn = breathCard.querySelector('[data-action="toggle"]');
-  if (toggleBtn) toggleBtn.textContent = 'Iniciar';
+  breathToggleBtn.textContent = 'Iniciar';
   breathPanel.hidden = true;
 }
 
-/* Delegación dentro de la tarjeta (funciona aunque IDs cambien) */
-breathCard.addEventListener('click', (e)=>{
-  const btn = e.target.closest('button,[data-action]');
-  if (!btn) return;
-  const act = btn.dataset.action;
-  if (act === 'toggle'){ e.preventDefault(); (!breathing) ? startBreathing() : pauseBreathing(); }
-  else if (act === 'close'){ e.preventDefault(); closeBreath(); }
-});
+/* Wireo explícito y verificación */
+(function wireBreath(){
+  if (!breathBtn || !breathToggleBtn || !breathCloseBtn || !breathPanel || !breathCard){
+    console.error('[breath] missing elements', {breathBtn,breathToggleBtn,breathCloseBtn,breathPanel,breathCard});
+    return;
+  }
+  breathBtn.addEventListener('click', openBreath);
+  breathToggleBtn.addEventListener('click', () => breathing ? pauseBreathing() : startBreathing());
+  breathCloseBtn.addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); closeBreath(); });
+  // cerrar con click fuera de la tarjeta
+  breathPanel.addEventListener('click', (e)=>{ if (e.target === breathPanel) closeBreath(); });
+  // evitar cierre al click dentro de la tarjeta
+  breathCard.addEventListener('click', (e)=> e.stopPropagation());
+  // cerrar con Escape
+  document.addEventListener('keydown', (e)=>{ if (!breathPanel.hidden && e.key==='Escape') closeBreath(); });
 
-/* Click en fondo para cerrar (sólo si el click fue realmente en el panel, no dentro de la tarjeta) */
-breathPanel.addEventListener('click', (e)=>{ if (e.target === breathPanel) closeBreath(); });
-document.addEventListener('keydown', (e)=>{ if (!breathPanel.hidden && e.key==='Escape') closeBreath(); });
+  console.log('[breath] wired: open/toggle/close');
+})();
 
 /* ===== Eventos generales (robustos) ===== */
 startBtn.addEventListener('click', async ()=>{
