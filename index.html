@@ -12,11 +12,10 @@
   <meta name="theme-color" content="#0b0a12">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2730%27 fill=%27%2310b981%27/%3E%3C/svg%3E">
 
-  <link rel="stylesheet" href="./style.css" />
-  
+  <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
-  <!-- Fondo -->
+  <!-- Fondo animado -->
   <canvas id="bloodstream-canvas" aria-hidden="true"></canvas>
 
   <!-- Overlay de bienvenida + inyección -->
@@ -37,7 +36,7 @@
         <button id="start-btn" class="btn btn-primary">Iniciar</button>
         <button id="skip-btn" class="btn">Entrar sin inyección</button>
       </div>
-      <p class="tiny muted center">Consejo: podés activar sonido luego (está apagado por defecto).</p>
+      <p class="tiny muted center">Tip: podés activar sonido luego (está apagado por defecto).</p>
     </div>
   </section>
 
@@ -77,7 +76,7 @@
     </div>
   </section>
 
-  <!-- Panel principal (gauges simples) -->
+  <!-- Panel principal (gauges) -->
   <main class="grid">
     <article class="card gauge" data-name="Presión arterial" id="gauge-bp">
       <h3 class="center">Presión arterial</h3>
@@ -119,8 +118,8 @@
       </div>
 
       <div class="breath-actions center">
-        <button id="breath-toggle" class="btn btn-primary">Iniciar</button>
-        <button id="breath-close" class="btn">Cerrar</button>
+        <button id="breath-toggle" class="btn btn-primary" type="button">Iniciar</button>
+        <button id="breath-close" class="btn" type="button">Cerrar</button>
       </div>
     </div>
   </section>
@@ -129,6 +128,6 @@
     <small>Hecho con ❤️ para Jonathan — Nanorobots imaginarios, salud real en tu mente.</small>
   </footer>
 
-  <script src="./main.js" defer></script>
+  <script src="/main.js" defer></script>
 </body>
 </html>
