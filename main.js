@@ -60,17 +60,21 @@ const breathCyclesEl = document.getElementById('breath-cycles');
 let audioCtx, masterGain, humOsc;
 let soundOn = false;
 async function ensureAudio(){
-  if (!audioCtx){
-    audioCtx = new (window.AudioContext||window.webkitAudioContext)();
-    masterGain = audioCtx.createGain();
-    masterGain.gain.value = 0.0009;
-    masterGain.connect(audioCtx.destination);
+  try{
+    if (!audioCtx){
+      audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+      masterGain = audioCtx.createGain();
+      masterGain.gain.value = 0.0009;
+      masterGain.connect(audioCtx.destination);
+    }
+    if (audioCtx.state==='suspended'){ await audioCtx.resume(); }
+  }catch(err){
+    console.warn('[audio] No se pudo inicializar/resumir el AudioContext:', err);
   }
-  if (audioCtx.state==='suspended'){ try{ await audioCtx.resume(); }catch{} }
 }
 function startHum(){
   stopHum();
-  if (!soundOn) return;
+  if (!soundOn || !audioCtx) return;
   humOsc = audioCtx.createOscillator();
   humOsc.type='sine'; humOsc.frequency.value=72;
   const g=audioCtx.createGain(); g.gain.value=0.02;
@@ -269,19 +273,25 @@ function burstOptimization(times=3, delay=450){
   let n=times; const t=setInterval(()=>{ stepOptimization(); if(--n<=0) clearInterval(t); }, delay);
 }
 
-/* === Inyección === */
-async function runInjection(){
+/* === Inyección (no bloquea salida del overlay) === */
+function runInjectionNonBlocking(){
   if (!injectSeq) return;
   injectSeq.hidden = false;
   injectFill.style.width = '0%';
   injectCount.textContent = '3';
   let p=0; const timer=setInterval(()=>{ p+=100/12; injectFill.style.width=Math.min(100,p)+'%'; },100);
-  const step = () => new Promise(res=>setTimeout(res,400));
-  await step(); injectCount.textContent='2';
-  await step(); injectCount.textContent='1';
-  await step(); injectCount.textContent='¡Listo!';
-  clearInterval(timer);
-  setTimeout(()=> injectSeq.hidden = true, 380);
+  const steps = [() => injectCount.textContent='2',
+                 () => injectCount.textContent='1',
+                 () => injectCount.textContent='¡Listo!'];
+  let i=0;
+  const stepTimer = setInterval(()=>{
+    steps[i++]?.();
+    if (i>=steps.length){
+      clearInterval(stepTimer);
+      clearInterval(timer);
+      setTimeout(()=> injectSeq.hidden = true, 380);
+    }
+  }, 400);
 }
 
 /* === Respiración guiada (5:00, contador de ciclos) === */
@@ -314,10 +324,7 @@ function tickBreath(){
     const prev = phase;
     phase = (phase+1)%4;
     count = 4;
-    if (prev === 3) { // completó un ciclo (Inhala->Mantén->Exhala->Mantén)
-      cycles++;
-      renderSessionStatus();
-    }
+    if (prev === 3) { cycles++; renderSessionStatus(); }
   }
   renderBreath();
 }
@@ -339,9 +346,7 @@ function startBreathing(){
   sessionTimer = setInterval(()=>{
     sessionSecondsLeft--;
     renderSessionStatus();
-    if (sessionSecondsLeft<=0){
-      closeBreath();
-    }
+    if (sessionSecondsLeft<=0){ closeBreath(); }
   }, 1000);
   beep(40, 500);
 }
@@ -349,7 +354,6 @@ function pauseBreathing(){
   breathing = false;
   breathToggle.textContent = 'Iniciar';
   clearInterval(breathTimer);
-  // El tiempo sigue corriendo; si querés que se pause el reloj, comenta la línea de abajo y usa clearInterval(sessionTimer)
 }
 function closeBreath(){
   breathing = false;
@@ -363,32 +367,39 @@ function closeBreath(){
 breathBtn?.addEventListener('click', openBreath);
 breathToggle?.addEventListener('click', ()=>{ (!breathing) ? startBreathing() : pauseBreathing(); });
 breathClose?.addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); closeBreath(); });
-/* Fallback por si el selector no engancha por alguna razón */
 document.addEventListener('click', (e)=>{
   if (e.target && e.target.id === 'breath-close') { e.preventDefault(); e.stopPropagation(); closeBreath(); }
 });
-/* Cerrar con click fuera de la tarjeta */
 breathPanel?.addEventListener('click', ()=> closeBreath());
 breathCard?.addEventListener('click', (e)=> e.stopPropagation());
-/* Cerrar con ESC */
 document.addEventListener('keydown', (e)=>{ if (!breathPanel.hidden && e.key==='Escape') closeBreath(); });
 
-/* === Eventos generales === */
+/* === Eventos generales (robustos) === */
 startBtn?.addEventListener('click', async ()=>{
-  await ensureAudio();
-  await runInjection();
+  // Failsafe para que NUNCA quede trabado
+  const forceHide = setTimeout(()=> overlay?.classList.add('is-hidden'), 2000);
+
+  try { await ensureAudio(); } catch {}
+  // correr inyección sin bloquear
+  runInjectionNonBlocking();
+
+  // salir del overlay ya mismo
   overlay.classList.add('is-hidden');
   setPower(true);
   burstOptimization(3);
+  clearTimeout(forceHide);
 });
+
 skipBtn?.addEventListener('click', ()=>{
   overlay.classList.add('is-hidden');
   setPower(true);
 });
+
 powerBtn?.addEventListener('click', ()=>{
   setPower(!isOn);
   if (isOn && soundOn) startHum(); else stopHum();
 });
+
 soundBtn?.addEventListener('click', async ()=>{
   await ensureAudio();
   soundOn = !soundOn;
@@ -396,6 +407,7 @@ soundBtn?.addEventListener('click', async ()=>{
   soundBtn.setAttribute('aria-pressed', String(soundOn));
   if (isOn && soundOn) startHum(); else stopHum();
 });
+
 optimizeBtn?.addEventListener('click', ()=> burstOptimization(3));
 routineSel?.addEventListener('change', ()=> beep(40, 460));
 resetBtn?.addEventListener('click', ()=>{
