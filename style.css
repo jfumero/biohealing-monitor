@@ -165,8 +165,11 @@ a{ color:var(--brand); text-decoration:none; }
 
 /* Respiración */
 .breath-panel{
-  position:fixed; inset:0; z-index:15; display:grid; place-items:center;
-  background: rgba(5,8,12,.65); backdrop-filter: blur(4px);
+  position:fixed; inset:0; z-index:15;
+  display:grid; place-items:center;
+  background: rgba(5,8,12,.65);
+  backdrop-filter: blur(4px);
+  cursor:pointer;             /* clic fuera cierra */
 }
 .breath-card{
   width:min(560px, calc(100% - 24px));
@@ -174,8 +177,13 @@ a{ color:var(--brand); text-decoration:none; }
   border:1px solid rgba(255,255,255,.08);
   border-radius:16px;
   padding:16px; box-shadow:var(--shadow);
+  cursor:default;             /* no cerrar al clicar dentro */
 }
 .breath-card h2{ margin:0 0 6px; }
+.breath-status{
+  display:flex; gap:16px; justify-content:center;
+  margin:8px 0 4px; font-size:14px; color:#cfeee1;
+}
 .breath-visual{
   --size: 180px;
   width:var(--size); height:var(--size);
