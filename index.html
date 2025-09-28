@@ -12,8 +12,8 @@
   <meta name="theme-color" content="#0b0a12">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2730%27 fill=%27%2310b981%27/%3E%3C/svg%3E">
 
-  <!-- Cache busting con ?v= -->
-  <link rel="stylesheet" href="/style.css?v=2025-09-28-1" />
+  <!-- cache busting -->
+  <link rel="stylesheet" href="/style.css?v=fix-closer-1" />
 </head>
 <body>
   <!-- Fondo -->
@@ -77,7 +77,7 @@
     </div>
   </section>
 
-  <!-- Panel principal (gauges simples) -->
+  <!-- Panel principal -->
   <main class="grid">
     <article class="card gauge" id="gauge-bp">
       <h3 class="center">Presión arterial</h3>
@@ -116,9 +116,8 @@
       </div>
 
       <div class="breath-actions center">
-        <!-- Importante: data-action manda, los ids son secundarios -->
-        <button id="breath-toggle" data-action="toggle" class="btn btn-primary" type="button">Iniciar</button>
-        <button id="breath-close"  data-action="close"  class="btn" type="button">Cerrar</button>
+        <button id="breath-toggle" class="btn btn-primary" type="button">Iniciar</button>
+        <button id="breath-close" class="btn" type="button">Cerrar</button>
       </div>
     </div>
   </section>
@@ -127,7 +126,7 @@
     <small>Hecho con ❤️ para Jonathan — Nanorobots imaginarios, salud real en tu mente.</small>
   </footer>
 
-  <!-- Cache busting con ?v= -->
-  <script src="/main.js?v=2025-09-28-1" defer></script>
+  <!-- cache busting -->
+  <script src="/main.js?v=fix-closer-1" defer></script>
 </body>
 </html>
