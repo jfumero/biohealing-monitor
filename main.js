@@ -384,10 +384,10 @@ function createOptItem(name,from){
   row.innerHTML=`
     <span>${name}</span>
     <div class="opt-meter">
-      <div class="opt-bar">
+      <div class="opt-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(from)}">
         <div class="opt-fill" style="transform:scaleX(${from/100}); background:${colorForPct(from)}"></div>
+        <div class="opt-mini-label">${Math.round(from)}%</div>
       </div>
-      <span class="opt-pct">${Math.round(from)}%</span>
     </div>`;
   return row;
 }
@@ -412,13 +412,16 @@ async function runOptimizer(){
 
     const from=Math.max(10,Math.round(30+Math.random()*25)); // 30–55%
     const row=createOptItem(name,from);
+    const bar=row.querySelector('.opt-bar');
     const fill=row.querySelector('.opt-fill');
-    const pctEl=row.querySelector('.opt-pct');
+    const miniLabel=row.querySelector('.opt-mini-label');
     optList.prepend(row);
 
-    // Animar ítem hasta 100%, actualizando color y % de texto
+    // Animar ítem hasta 100%, actualizando color y % (centrado dentro de la barrita)
     await animateFill(fill, from, 100, 850, v=>{
-      if(pctEl) pctEl.textContent = `${Math.round(v)}%`;
+      const pct = Math.round(v);
+      if(miniLabel) miniLabel.textContent = pct + '%';
+      if(bar) bar.setAttribute('aria-valuenow', String(pct));
       fill.style.background = colorForPct(v);
     });
 
