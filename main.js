@@ -345,6 +345,9 @@ const optList=document.getElementById('opt-list');
 const optBtn=document.getElementById('opt-btn');
 const optStartBtn=document.getElementById('opt-start-btn');
 const optCancel=document.getElementById('opt-cancel');
+// NUEVO: barra de progreso general del optimizador
+const optProgressFill = document.getElementById('opt-progress-fill');
+
 let optRunning=false, optAbort=null;
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 function createOptItem(name,from,to){
@@ -356,25 +359,40 @@ async function runOptimizer(){
   if(optRunning) return;
   optRunning=true; optAbort=new AbortController();
   optList.innerHTML=''; optPanel.classList.remove('hidden'); if(optBtn) optBtn.disabled=true;
+  if(optProgressFill) optProgressFill.style.width='0%';
+
+  const total = OPT_QUEUE.length;
+  let processed = 0;
 
   for(const name of OPT_QUEUE){
     if(optAbort.signal.aborted) break;
 
-    const from=Math.max(10,Math.round(30+Math.random()*25));
-    const to=Math.min(100,Math.round(85+Math.random()*12));
+    const from=Math.max(10,Math.round(30+Math.random()*25)); // 30–55%
+    const to=100; // SIEMPRE al 100%
 
     const row=createOptItem(name,from,to);
     optList.prepend(row);
 
-    await sleep(150);
-    row.querySelector('.opt-fill').style.transform=`scaleX(${to/100})`;
+    // animar el fill del item a 100%
+    await sleep(90);
+    const fill = row.querySelector('.opt-fill');
+    if(fill) fill.style.transform=`scaleX(${to/100})`;
 
     // Eco visual al ticker (aleatorio)
     const keys=['scan','torrente','operativos','autorreparacion','depuracion'];
     const k=keys[Math.floor(Math.random()*keys.length)];
     setCheck(k, Math.round(60 + Math.random()*40));
 
-    await sleep(850);
+    // actualizar progreso general
+    processed++;
+    if(optProgressFill){
+      const pct = Math.round((processed/total)*100);
+      optProgressFill.style.width = pct + '%';
+    }
+
+    // dejar que se vea completar + pequeña pausa y retirar
+    await sleep(900);
+    await sleep(350);
     row.remove();
   }
 
