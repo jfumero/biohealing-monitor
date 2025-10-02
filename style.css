@@ -135,8 +135,10 @@ main{position:relative; z-index:5}
 }
 .hidden{ display:none !important; }
 
+/* Progreso general */
 .opt-progress{
-  height:10px; 
+  position:relative;
+  height:12px; 
   background:rgba(255,255,255,0.08); 
   border:1px solid rgba(255,255,255,0.10);
   border-radius:999px; 
@@ -146,10 +148,18 @@ main{position:relative; z-index:5}
 .opt-progress-fill{
   height:100%;
   width:0%;
-  background:linear-gradient(90deg,var(--brand),#62f3ff);
-  transition: width .4s ease;
+  background:linear-gradient(90deg,var(--bad),var(--warn),var(--ok));
+  transition: width .45s ease;
+}
+.opt-progress-label{
+  position:absolute; inset:0;
+  display:flex; align-items:center; justify-content:center;
+  font-weight:700; font-size:.85rem;
+  text-shadow:0 1px 2px rgba(0,0,0,.35);
+  pointer-events:none;
 }
 
+/* Lista de items (ítem + mini barra + %) */
 .opt-list{ display:grid; gap:.4rem; margin:.6rem 0 }
 .opt-row{
   display:grid; grid-template-columns: 1fr auto; align-items:center; gap:.6rem;
@@ -157,6 +167,7 @@ main{position:relative; z-index:5}
   border:1px solid rgba(255,255,255,0.08);
   padding:.35rem .5rem; border-radius:.5rem;
 }
+.opt-meter{ display:flex; align-items:center; gap:.45rem; }
 .opt-bar{ 
   width:220px; height:8px; 
   background:rgba(255,255,255,0.08); 
@@ -164,11 +175,12 @@ main{position:relative; z-index:5}
   border:1px solid rgba(255,255,255,0.10)
 }
 .opt-fill{ 
-  height:100%; width:0%; 
+  height:100%; width:0%;
   transform:scaleX(0); transform-origin:left; 
-  background:linear-gradient(90deg,var(--ok),#00ffaa); 
+  background:linear-gradient(90deg,var(--bad),var(--warn),var(--ok)); 
   transition:transform .7s ease 
 }
+.opt-pct{ font-weight:700; min-width:3ch; text-align:right; opacity:.9; }
 
 .opt-actions{ display:flex; justify-content:flex-end; }
 
