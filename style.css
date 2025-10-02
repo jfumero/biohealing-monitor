@@ -177,9 +177,10 @@ main{position:relative; z-index:5}
 .opt-fill{ 
   height:100%; width:0%;
   transform:scaleX(0); transform-origin:left; 
-  background:linear-gradient(90deg,var(--bad),var(--warn),var(--ok)); 
-  transition:transform .7s ease 
+  /* El color ahora lo setea JS dinámicamente; dejamos transición suave */
+  transition: transform .7s ease, background .25s linear;
 }
+
 .opt-pct{ font-weight:700; min-width:3ch; text-align:right; opacity:.9; }
 
 .opt-actions{ display:flex; justify-content:flex-end; }
