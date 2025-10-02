@@ -1,113 +1,95 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>BioHealing Monitor — Jonathan Fumero Mesa</title>
-  <meta name="description" content="Panel personal de monitoreo de nanorobots — BioHealing Monitor." />
-  <meta name="theme-color" content="#0a0f1a" />
-  <!-- CSS: ruta absoluta funciona, pero si tu sitio usa subcarpeta probá cambiar a href="css/style.css" -->
-  <link rel="stylesheet" href="/css/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BioHealing Monitor</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-<!-- FX: fondo futurista (torrente + partículas) -->
-<canvas id="fx-bloodstream" class="fx-canvas" aria-hidden="true"></canvas>
-<div class="fx-vignette" aria-hidden="true"></div>
   <!-- Overlay de bienvenida -->
   <div id="overlay" class="overlay">
-    <div class="welcome">
-      <div class="title"><div class="logo"></div> BIOHEALING MONITOR</div>
-      <h2>Bienvenido al centro de monitoreo de nanorobots</h2>
-      <p>Inicializando protocolo de verificación…</p>
+    <div class="welcome card-glass">
+      <h1>BioHealing Monitor</h1>
+      <p id="project-meta">Paciente: <b>Jonathan Fumero Mesa</b> · Edad: —</p>
 
-      <!-- Datos paciente -->
-      <div class="cols">
-        <div class="metric">
-          <div class="mini">Paciente</div>
-          <div class="big">Jonathan Fumero Mesa</div>
-          <div class="mini" id="ov-age">Edad: —</div>
-          <div class="mini">Zona: America/Montevideo</div>
+      <!-- Panel de nanorobots (Totales + Operativos) -->
+      <div class="swarm">
+        <div class="swarm-row">
+          <div class="swarm-head">
+            <span class="swarm-k">Nanorobots totales</span>
+            <span class="swarm-v" id="n-total">—</span>
+          </div>
+          <div class="swarm-bar">
+            <div id="swarm-total-bar" class="swarm-fill"></div>
+          </div>
         </div>
-        <div class="metric">
-          <div class="mini">Identificador</div>
-          <div class="big" id="ov-id">JFM-19761204</div>
-          <div class="mini">Nacimiento: 04/12/1976 — 00:50</div>
-          <div class="mini">Uruguay</div>
-        </div>
-      </div>
-
-      <!-- Recuento nanorobots -->
-      <div class="cols">
-        <div class="metric">
-          <div class="mini">Nanorobots en torrente</div>
-          <div id="n-total" class="big">—</div>
-        </div>
-        <div class="metric">
-          <div class="mini">Operativos</div>
-          <div id="n-op" class="big">—</div>
+        <div class="swarm-row">
+          <div class="swarm-head">
+            <span class="swarm-k">Nanorobots operativos</span>
+            <span class="swarm-v" id="n-op">—</span>
+          </div>
+          <div class="swarm-bar">
+            <div id="swarm-bar" class="swarm-fill alt"></div>
+          </div>
         </div>
       </div>
-      <div class="mini">Integridad del enjambre</div>
-      <div class="bar bar--swarm"><div id="swarm-bar" class="fill"></div></div>
 
-     <!-- Bio panel -->
-<div class="cols">
-  <div class="metric">
-    <div class="section-title">Biorritmo del día</div>
-    <div class="mini" id="ov-bio-f">Físico: —</div>
-    <div class="mini" id="ov-bio-e">Emocional: —</div>
-    <div class="mini" id="ov-bio-i">Intelectual: —</div>
-  </div>
-  <div class="metric">
-    <div class="section-title">Astrología & Energía</div>
-    <div class="mini" id="ov-zodiac">Zodiaco: —</div>
-    <div class="mini" id="ov-czodiac">Chino: —</div>
-    <div class="mini" id="ov-moon">Luna: —</div>
-    <div class="mini" id="ov-circ">Circadiano: —</div>
-  </div>
-</div>
-
-
-
-      <button id="startBtn" class="btn">Iniciar monitoreo</button>
+      <div class="welcome-ctas">
+        <button id="startBtn" class="btn">Comenzar</button>
+        <button id="opt-start-btn" class="btn alt">Optimizar ahora</button>
+      </div>
     </div>
   </div>
 
-<header>
-  <h2>BioHealing Monitor</h2>
-  <div class="patient">
-    <div class="pill">Paciente: <b>Jonathan Fumero Mesa</b></div>
-    <div class="pill">Edad: <span id="age">—</span></div>
-  </div>
-  <div class="header-ctrls">
-    <div id="led" class="led"></div>
-    <button id="power-btn" class="btn">Encender</button>
-    <button id="sound-btn" class="btn" aria-pressed="true">Sonido: ON</button>
-  </div>
+  <!-- Cabecera (segunda web) -->
+  <header class="header">
+    <h2 class="brand">BioHealing Monitor</h2>
 
-  <!-- NUEVO: info extendida minimalista -->
-  <div class="hud">
-    <div class="hud-item" id="hd-zodiac">Zodiaco: —</div>
-    <div class="hud-item" id="hd-czodiac">Chino: —</div>
-    <div class="hud-item" id="hd-moon">Luna: —</div>
-    <div class="hud-item" id="hd-circ">Circadiano: —</div>
-    <div class="hud-item" id="hd-bio-f">Físico: —</div>
-    <div class="hud-item" id="hd-bio-e">Emocional: —</div>
-    <div class="hud-item" id="hd-bio-i">Intelectual: —</div>
-  </div>
-</header>
+    <div class="patient">
+      <div class="pill">Paciente: <b>Jonathan Fumero Mesa</b></div>
+      <div class="pill">Edad: <span id="age">—</span></div>
+    </div>
 
+    <div class="header-ctrls">
+      <div id="led" class="led" title="Estado"></div>
+      <button id="power-btn" class="btn">Encender</button>
+      <button id="sound-btn" class="btn" aria-pressed="true">Sonido: ON</button>
+      <button id="opt-btn" class="btn alt" aria-controls="optimizer">Optimizar cuerpo humano</button>
+    </div>
+
+    <!-- HUD con datos bio/astro -->
+    <div class="hud">
+      <div class="hud-item"><span class="k">Zodiaco</span><span class="v" id="hd-zodiac">—</span></div>
+      <div class="hud-item"><span class="k">Chino</span><span class="v" id="hd-czodiac">—</span></div>
+      <div class="hud-item"><span class="k">Luna</span><span class="v" id="hd-moon">—</span></div>
+      <div class="hud-item"><span class="k">Circadiano</span><span class="v" id="hd-circ">—</span></div>
+      <div class="hud-item"><span class="k">Físico</span><span class="v" id="hd-bio-f">—</span></div>
+      <div class="hud-item"><span class="k">Emocional</span><span class="v" id="hd-bio-e">—</span></div>
+      <div class="hud-item"><span class="k">Intelectual</span><span class="v" id="hd-bio-i">—</span></div>
+    </div>
+  </header>
+
+  <!-- Módulos/Gauges -->
   <main>
-    <div class="grid" id="grid"></div>
-
-    <section class="card" id="checks">
-      <div class="title-sm">Chequeos del sistema</div>
-      <div class="checklist" id="checklist"></div>
-    </section>
+    <div id="grid" class="grid"></div>
   </main>
 
-  <!-- JS: usa RUTA RELATIVA si la absoluta falla en tu dominio -->
-  <!-- Si /js/main.js devuelve 404, cambia a js/main.js -->
-  <script src="js/main.js" defer></script>
+  <!-- Panel Optimización -->
+  <section id="optimizer" class="optimizer hidden card-glass">
+    <h3>Optimización del cuerpo humano</h3>
+    <div id="opt-list" class="opt-list"></div>
+    <button id="opt-cancel" class="btn alt">Cancelar</button>
+  </section>
+
+  <!-- Ticker inferior -->
+  <div id="sys-ticker" class="sys-ticker">
+    <div id="sys-ticker-track" class="sys-ticker-track"></div>
+  </div>
+
+  <!-- Canvas FX de fondo -->
+  <canvas id="fx-bloodstream"></canvas>
+
+  <script src="main.js"></script>
 </body>
 </html>
