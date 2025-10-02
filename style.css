@@ -140,10 +140,26 @@ main{position:relative; z-index:5}
 .opt-bar{ width:220px; height:8px; background:rgba(255,255,255,0.08); border-radius:999px; overflow:hidden; border:1px solid rgba(255,255,255,0.10)}
 .opt-fill{ height:100%; width:0%; transform:scaleX(0); transform-origin:left; background:linear-gradient(90deg,var(--ok),#00ffaa); transition:transform .7s ease }
 
-/* Ticker */
-.sys-ticker{ position:fixed; bottom:0; left:0; right:0; z-index:15; background:rgba(255,255,255,0.05); border-top:1px solid rgba(255,255,255,0.08); overflow:hidden; white-space:nowrap }
-.sys-ticker-track{ display:inline-block; padding:.5rem .75rem; animation:ticker 24s linear infinite }
-@keyframes ticker{ from{ transform:translateX(100%) } to{ transform:translateX(-100%) } }
+/* Ticker (debajo de la cabecera, no fijo) */
+.sys-ticker{
+  position: relative;  
+  left: 0; right: 0;
+  z-index: 15;
+  background: rgba(255,255,255,0.05);
+  border-top: 1px solid rgba(255,255,255,0.08);
+  overflow: hidden;
+  white-space: nowrap;
+  margin-top: .5rem;
+}
+.sys-ticker-track{
+  display: inline-block;
+  padding: .5rem .75rem;
+  animation: ticker 24s linear infinite;
+}
+@keyframes ticker{ 
+  from{ transform:translateX(100%) } 
+  to{ transform:translateX(-100%) } 
+}
 .nb-item{ opacity:.95 }
 .nb-sep{ opacity:.45; margin:0 .6rem }
 .nb-pos{ color:var(--ok) }
