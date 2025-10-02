@@ -343,7 +343,7 @@ function animateFill(el, fromPct, toPct, duration, onProgress){
     onProgress?.(v);
   });
 }
-// NUEVO: color HSL dinámico rojo(0) → verde(120) según %
+// Color HSL dinámico rojo(0) → verde(120) según %
 function colorForPct(pct){
   const p = Math.max(0, Math.min(100, pct));
   const h = Math.round(p*1.2); // 0..120
@@ -394,10 +394,20 @@ function createOptItem(name,from){
 
 async function runOptimizer(){
   if(optRunning) return;
+  optRunning=true; optAbort=new AbortSignal();
+}
+
+async function runOptimizer(){
+  if(optRunning) return;
   optRunning=true; optAbort=new AbortController();
   optList.innerHTML=''; optPanel.classList.remove('hidden'); if(optBtn) optBtn.disabled=true;
-  if(optProgressFill) optProgressFill.style.width='0%';
-  if(optProgressLabel) optProgressLabel.textContent='0%';
+
+  // Inicial del progreso general
+  if(optProgressFill){
+    optProgressFill.style.width = '0%';
+    optProgressFill.style.background = colorForPct(0);
+  }
+  if(optProgressLabel) optProgressLabel.textContent = '0%';
 
   const total = OPT_QUEUE.length;
   let processed = 0;
@@ -422,10 +432,13 @@ async function runOptimizer(){
     const k=keys[Math.floor(Math.random()*keys.length)];
     setCheck(k, Math.round(60 + Math.random()*40));
 
-    // Actualizar progreso general (barra + etiqueta)
+    // Actualizar progreso general (barra + etiqueta + color)
     processed++;
     const gpct = Math.round((processed/total)*100);
-    if(optProgressFill) optProgressFill.style.width = gpct + '%';
+    if(optProgressFill){
+      optProgressFill.style.width = gpct + '%';
+      optProgressFill.style.background = colorForPct(gpct);
+    }
     if(optProgressLabel) optProgressLabel.textContent = gpct + '%';
 
     // Pausa breve y quitar el ítem
