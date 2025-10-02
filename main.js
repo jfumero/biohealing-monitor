@@ -31,20 +31,16 @@ class BloodstreamFX{
   loop(now){
     if(!this.running||!this.ctx) return;
     const {ctx,canvas}=this; const W=canvas.width,H=canvas.height; const dt=(now-this.t)/1000; this.t=now;
-    // Fondo
     const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,'#0b0a12'); g.addColorStop(1,'#110b15');
     ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
-    // Corrientes
     ctx.lineWidth=8*this.dpr; ctx.strokeStyle='rgba(255,120,160,.08)';
     for(let i=0;i<3;i++){ const baseY=(H/4)*(i+1)+Math.sin(now/900+i)*4*this.dpr; ctx.beginPath(); ctx.moveTo(0,baseY);
       for(let x=0;x<=W;x+=50*this.dpr){ const yy=baseY+Math.sin((x+now/5)/60+i)*2*this.dpr; ctx.lineTo(x,yy); }
       ctx.stroke();
     }
-    // Células
     for(const c of this.cells){ ctx.fillStyle='rgba(240,90,126,.7)'; ctx.beginPath(); ctx.arc(c.x,c.y,c.r*this.dpr,0,Math.PI*2); ctx.fill();
       c.x+=c.vx; c.y+=Math.sin((c.x+now/20)/60)*(0.3*this.dpr); if(c.x>W+10){c.x=-10; c.y=Math.random()*H;}
     }
-    // Nanobots
     ctx.save(); ctx.globalCompositeOperation='lighter';
     for(const p of this.particles){
       const y=p.y+Math.sin(p.phase+now/600)*p.amp, r=p.r*this.dpr;
@@ -59,7 +55,7 @@ class BloodstreamFX{
 }
 
 // ===== Edad (detallada Y-M-D h:m:s) =====
-const birth = new Date(1976,11,4,0,50,0); // 4/12/1976 00:50 local
+const birth = new Date(1976,11,4,0,50,0);
 function ageTextDetailed(now=new Date()){
   let y=now.getFullYear()-birth.getFullYear();
   let m=now.getMonth()-birth.getMonth();
@@ -79,7 +75,7 @@ function renderAge(){
 }
 setInterval(renderAge,1000); renderAge();
 
-// ===== Audio (hum + beep suave) =====
+// ===== Audio =====
 let audioCtx=null, masterGain=null, humOsc=null, humGain=null; let soundOn=true;
 function ensureAudio(){
   if(audioCtx) return;
@@ -108,7 +104,7 @@ function stopHum(){
 const CHINESE=['Rata','Buey','Tigre','Conejo','Dragón','Serpiente','Caballo','Cabra','Mono','Gallo','Perro','Cerdo'];
 function chineseAnimal(y){ return CHINESE[(y-1900)%12]; }
 function chineseElement(y){
-  const e=(y-4)%10; // 0-1 Madera, 2-3 Fuego, 4-5 Tierra, 6-7 Metal, 8-9 Agua
+  const e=(y-4)%10;
   if(e===0||e===1) return 'Madera';
   if(e===2||e===3) return 'Fuego';
   if(e===4||e===5) return 'Tierra';
@@ -133,14 +129,14 @@ function zodiac(d){
 function moon(d){
   const syn=29.530588853, ref=new Date(Date.UTC(2000,0,6,18,14));
   const days=(d-ref)/86400000, age=((days%syn)+syn)%syn;
-  if(age<1.84566)return'Creciente nueva 🌑'.replace('Creciente nueva','Luna nueva');
+  if(age<1.84566)return'Luna nueva 🌑';
   if(age<5.53699)return'Creciente visible 🌒';
   if(age<9.22831)return'Cuarto creciente 🌓';
   if(age<12.91963)return'Gibosa creciente 🌔';
   if(age<16.61096)return'Luna llena 🌕';
   if(age<20.30228)return'Gibosa menguante 🌖';
-  if(age<23.99361)return'Cuarto menguante 🌓'.replace('🌓','🌗');
-  return'Creciente menguante 🌘';
+  if(age<23.99361)return'Cuarto menguante 🌗';
+  return'Menguante 🌘';
 }
 function circadian(d){
   const h=d.getHours()+d.getMinutes()/60;
@@ -151,7 +147,6 @@ function circadian(d){
   if(h<18) return'Segundo pico de energía';
   return'Desaceleración vespertina';
 }
-// Biorritmo compacto con color
 function bioCompact(days, period){
   const pct=Math.round(Math.sin(2*Math.PI*days/period)*100);
   const cls=pct>3?'bio-pos':(pct<-3?'bio-neg':'bio-neu');
@@ -159,9 +154,8 @@ function bioCompact(days, period){
   return {html:`<span class="bio-val ${cls}">${sign}${pct}%</span>`, pct};
 }
 function renderHeaderInfo(now=new Date()){
-  // Edad ya se actualiza aparte
   const zOcc = zodiac(new Date(1976,11,4));
-  const animal = chineseAnimal(1976), elem = chineseElement(1976); // 1976 => Dragón(Fuego)
+  const animal = chineseAnimal(1976), elem = chineseElement(1976);
   const czTxt = `${animal} (${elem}) ${animal==='Dragón'?'🐉':''}`;
 
   const set=(id,txt)=>{ const el=document.getElementById(id); if(el) el.innerHTML=txt; };
@@ -179,7 +173,7 @@ function renderHeaderInfo(now=new Date()){
 }
 setInterval(()=>renderHeaderInfo(new Date()),1000); renderHeaderInfo(new Date());
 
-// ===== Bienvenida: contadores & barras =====
+// ===== Bienvenida =====
 function animateCounter(el,to,ms=3200){
   if(!el) return;
   const start=0, t0=performance.now();
@@ -192,7 +186,7 @@ function animateCounter(el,to,ms=3200){
 }
 function initWelcome(){
   const base=12_000_000;
-  const ops=Math.floor(base*(0.90+Math.random()*0.06)); // 90–96%
+  const ops=Math.floor(base*(0.90+Math.random()*0.06));
   animateCounter(document.getElementById('n-total'), base, 3000);
   animateCounter(document.getElementById('n-op'), ops, 3200);
   const totalBar=document.getElementById('swarm-total-bar');
@@ -291,7 +285,7 @@ function toggleModules(on){
   });
 }
 
-// ===== Ticker de sistema (una sola línea) =====
+// ===== Ticker de sistema =====
 const CHECKS=[
   { id:'scan', label:'Escaneo sistémico' },
   { id:'torrente', label:'Recuento en torrente sanguíneo' },
@@ -313,7 +307,6 @@ function setCheck(id, pct){
   CHECK_STATE[id]=Math.max(0,Math.min(100,pct));
   renderSysTicker();
 }
-// Valores iniciales por defecto (si usuario espera en overlay)
 setTimeout(()=>{
   const overlay=document.getElementById('overlay');
   if(overlay && !overlay.classList.contains('is-hidden')){
@@ -323,21 +316,37 @@ setTimeout(()=>{
   }
 },1200);
 
+// ===== Helpers de animación (para barras del Optimizer) =====
+function animateValue(from, to, duration, onUpdate){
+  return new Promise(resolve=>{
+    const t0=performance.now();
+    function step(t){
+      const k=Math.min(1,(t-t0)/duration);
+      // easeOutCubic
+      const e = 1 - Math.pow(1-k,3);
+      const v = from + (to-from)*e;
+      onUpdate(v);
+      if(k<1) requestAnimationFrame(step); else resolve();
+    }
+    requestAnimationFrame(step);
+  });
+}
+function animateFill(el, fromPct, toPct, duration, onProgress){
+  return animateValue(fromPct, toPct, duration, v=>{
+    el.style.transform = `scaleX(${v/100})`;
+    onProgress?.(v);
+  });
+}
+
 // ===== Optimización (cola) =====
 const OPT_QUEUE = [
-  // 1 Entradas básicas
   'Agua','Oxígeno','Carbohidratos','Grasas saludables','Proteínas',
   'Minerales','Vitaminas',
-  // 2 Regulación (NT + Hormonas)
   'Dopamina','Serotonina','GABA','Glutamato','Acetilcolina',
   'Insulina','Glucagón','T3/T4','GH','Cortisol','Melatonina','Testosterona','Estrógeno','Progesterona','Leptina','Grelina',
-  // 3 Soporte
   'Sistema Inmune','Microbiota intestinal','Sodio','Potasio','Calcio','Músculos','Huesos','Tejido conectivo',
-  // 4 Estilo de vida
   'Movimiento físico','Sueño','Gestión emocional','Conexión social',
-  // 5 Hábitos/ambiente
   'Alimentación','Hidratación','Exposición solar','Aire limpio','Higiene/Prevención',
-  // 6 Núcleo celular
   'ADN','Reparación celular','Células madre','Telómeros','Autofagia'
 ];
 const optPanel=document.getElementById('optimizer');
@@ -345,21 +354,29 @@ const optList=document.getElementById('opt-list');
 const optBtn=document.getElementById('opt-btn');
 const optStartBtn=document.getElementById('opt-start-btn');
 const optCancel=document.getElementById('opt-cancel');
-// NUEVO: barra de progreso general del optimizador
 const optProgressFill = document.getElementById('opt-progress-fill');
+const optProgressLabel = document.getElementById('opt-progress-label');
 
 let optRunning=false, optAbort=null;
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
-function createOptItem(name,from,to){
+
+function createOptItem(name,from){
   const row=document.createElement('div'); row.className='opt-row';
-  row.innerHTML=`<span>${name}</span><div class="opt-bar"><div class="opt-fill" style="transform:scaleX(${from/100})"></div></div>`;
+  row.innerHTML=`
+    <span>${name}</span>
+    <div class="opt-meter">
+      <div class="opt-bar"><div class="opt-fill" style="transform:scaleX(${from/100})"></div></div>
+      <span class="opt-pct">${Math.round(from)}%</span>
+    </div>`;
   return row;
 }
+
 async function runOptimizer(){
   if(optRunning) return;
   optRunning=true; optAbort=new AbortController();
   optList.innerHTML=''; optPanel.classList.remove('hidden'); if(optBtn) optBtn.disabled=true;
   if(optProgressFill) optProgressFill.style.width='0%';
+  if(optProgressLabel) optProgressLabel.textContent='0%';
 
   const total = OPT_QUEUE.length;
   let processed = 0;
@@ -368,37 +385,36 @@ async function runOptimizer(){
     if(optAbort.signal.aborted) break;
 
     const from=Math.max(10,Math.round(30+Math.random()*25)); // 30–55%
-    const to=100; // SIEMPRE al 100%
-
-    const row=createOptItem(name,from,to);
+    const row=createOptItem(name,from);
+    const fill=row.querySelector('.opt-fill');
+    const pctEl=row.querySelector('.opt-pct');
     optList.prepend(row);
 
-    // animar el fill del item a 100%
-    await sleep(90);
-    const fill = row.querySelector('.opt-fill');
-    if(fill) fill.style.transform=`scaleX(${to/100})`;
+    // Animar ítem hasta 100% y mostrar % en texto
+    await animateFill(fill, from, 100, 850, v=>{
+      if(pctEl) pctEl.textContent = `${Math.round(v)}%`;
+    });
 
-    // Eco visual al ticker (aleatorio)
+    // Efecto en ticker (aleatorio)
     const keys=['scan','torrente','operativos','autorreparacion','depuracion'];
     const k=keys[Math.floor(Math.random()*keys.length)];
     setCheck(k, Math.round(60 + Math.random()*40));
 
-    // actualizar progreso general
+    // Actualizar progreso general (barra + etiqueta)
     processed++;
-    if(optProgressFill){
-      const pct = Math.round((processed/total)*100);
-      optProgressFill.style.width = pct + '%';
-    }
+    const gpct = Math.round((processed/total)*100);
+    if(optProgressFill) optProgressFill.style.width = gpct + '%';
+    if(optProgressLabel) optProgressLabel.textContent = gpct + '%';
 
-    // dejar que se vea completar + pequeña pausa y retirar
-    await sleep(900);
-    await sleep(350);
+    // Pausa breve para que se “sienta” el paso y quitar el ítem
+    await sleep(300);
     row.remove();
   }
 
   optPanel.classList.add('hidden');
   optRunning=false; if(optBtn) optBtn.disabled=false;
 }
+
 optBtn?.addEventListener('click',()=>{ playBeep(); runOptimizer(); });
 optStartBtn?.addEventListener('click',()=>{
   overlay.classList.add('is-hidden');
@@ -442,8 +458,5 @@ soundBtn.onclick=async()=>{
   soundBtn.setAttribute('aria-pressed', String(soundOn));
   if(isOn && soundOn) startHum(); else stopHum();
 };
-// Failsafe: oculta overlay a los 15s
 setTimeout(()=>{ if(!overlay.classList.contains('is-hidden')){ overlay.classList.add('is-hidden'); if(!isOn) powerBtn.click(); } },15000);
-
-// Pausa FX si pestaña oculta
 document.addEventListener('visibilitychange', ()=>{ if(document.hidden) fx.stop(); else if(isOn) fx.start(); });
