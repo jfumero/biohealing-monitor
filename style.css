@@ -148,9 +148,11 @@ main{position:relative; z-index:5}
 .opt-progress-fill{
   height:100%;
   width:0%;
-  background:linear-gradient(90deg,var(--bad),var(--warn),var(--ok));
-  transition: width .45s ease;
+  /* color inicial (rojo); JS lo irá cambiando dinámicamente */
+  background: linear-gradient(90deg, hsl(0 90% 50%), hsl(0 90% 50%));
+  transition: width .45s ease, background .25s linear;
 }
+
 .opt-progress-label{
   position:absolute; inset:0;
   display:flex; align-items:center; justify-content:center;
