@@ -42,7 +42,7 @@
     </div>
   </div>
 
-  <!-- Cabecera (segunda web) -->
+  <!-- Cabecera -->
   <header class="header">
     <h2 class="brand">BioHealing Monitor</h2>
 
@@ -70,22 +70,33 @@
     </div>
   </header>
 
+  <!-- Ticker del sistema (debajo de la cabecera) -->
+  <div class="sys-ticker">
+    <div id="sys-ticker-track" class="sys-ticker-track"></div>
+  </div>
+
+  <!-- Panel Optimización (debajo del encabezado/ticker) -->
+  <section id="optimizer" class="optimizer hidden card-glass">
+    <h3>Optimización del cuerpo humano</h3>
+
+    <!-- Barra de progreso general + % -->
+    <div class="opt-progress">
+      <div id="opt-progress-fill" class="opt-progress-fill"></div>
+      <div id="opt-progress-label" class="opt-progress-label">0%</div>
+    </div>
+
+    <!-- Cola visual de items -->
+    <div id="opt-list" class="opt-list"></div>
+
+    <div class="opt-actions">
+      <button id="opt-cancel" class="btn alt">Cancelar</button>
+    </div>
+  </section>
+
   <!-- Módulos/Gauges -->
   <main>
     <div id="grid" class="grid"></div>
   </main>
-
-  <!-- Panel Optimización -->
-  <section id="optimizer" class="optimizer hidden card-glass">
-    <h3>Optimización del cuerpo humano</h3>
-    <div id="opt-list" class="opt-list"></div>
-    <button id="opt-cancel" class="btn alt">Cancelar</button>
-  </section>
-
-  <!-- Ticker inferior -->
-  <div id="sys-ticker" class="sys-ticker">
-    <div id="sys-ticker-track" class="sys-ticker-track"></div>
-  </div>
 
   <!-- Canvas FX de fondo -->
   <canvas id="fx-bloodstream"></canvas>
