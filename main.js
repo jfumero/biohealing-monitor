@@ -313,7 +313,6 @@ function setCheck(id, pct){
   CHECK_STATE[id]=Math.max(0,Math.min(100,pct));
   renderSysTicker();
 }
-// Valores iniciales por defecto (si usuario espera en overlay)
 setTimeout(()=>{
   const overlay=document.getElementById('overlay');
   if(overlay && !overlay.classList.contains('is-hidden')){
@@ -373,6 +372,7 @@ const optBtn=document.getElementById('opt-btn');
 const optStartBtn=document.getElementById('opt-start-btn');
 const optCancel=document.getElementById('opt-cancel');
 // Barra de progreso general
+const optProgress = document.querySelector('.opt-progress');
 const optProgressFill = document.getElementById('opt-progress-fill');
 const optProgressLabel = document.getElementById('opt-progress-label');
 
@@ -390,11 +390,6 @@ function createOptItem(name,from){
       <span class="opt-pct">${Math.round(from)}%</span>
     </div>`;
   return row;
-}
-
-async function runOptimizer(){
-  if(optRunning) return;
-  optRunning=true; optAbort=new AbortSignal();
 }
 
 async function runOptimizer(){
@@ -444,6 +439,13 @@ async function runOptimizer(){
     // Pausa breve y quitar el ítem
     await sleep(300);
     row.remove();
+  }
+
+  // Glow/flash suave al completar (300ms)
+  if(optProgress && optProgressLabel && optProgressLabel.textContent === '100%'){
+    const prev = optProgress.style.boxShadow;
+    optProgress.style.boxShadow = '0 0 18px rgba(46,234,138,.9), 0 0 36px rgba(46,234,138,.55)';
+    setTimeout(()=>{ optProgress.style.boxShadow = prev || ''; }, 320);
   }
 
   optPanel.classList.add('hidden');
