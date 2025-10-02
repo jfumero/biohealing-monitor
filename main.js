@@ -104,6 +104,59 @@ function stopHum(){
   humOsc.stop(audioCtx.currentTime+0.25); humOsc=null; humGain=null;
 }
 
+// ===== Música MP3 (Web Audio) =====
+// Cambiá el nombre si tu archivo se llama distinto:
+const MUSIC_URL = 'music.mp3';
+
+let musicBuffer = null;   // se carga una vez
+let musicSource = null;   // instancia en reproducción
+let musicGain = null;     // volumen de la música
+let musicOn = true;       // (opcional) podés poner false si querés que arranque apagada
+
+async function loadMusicOnce(){
+  try{
+    ensureAudio();
+    if(musicBuffer) return; // ya cargada
+    const res = await fetch(MUSIC_URL);
+    if(!res.ok) throw new Error('No se pudo cargar el MP3');
+    const ab = await res.arrayBuffer();
+    musicBuffer = await audioCtx.decodeAudioData(ab);
+  }catch(err){
+    console.warn('Error cargando música:', err);
+  }
+}
+
+function startMusic(){
+  if(!audioCtx || !soundOn || !musicOn || !musicBuffer) return;
+  // Evita dos reproducciones simultáneas
+  stopMusic();
+
+  // Fuente en loop
+  musicSource = audioCtx.createBufferSource();
+  musicSource.buffer = musicBuffer;
+  musicSource.loop = true;
+
+  // Gain propio de música (independiente del master)
+  if(!musicGain){
+    musicGain = audioCtx.createGain();
+    musicGain.gain.value = 0.12; // Volumen (0.0–1.0)
+    musicGain.connect(audioCtx.destination);
+  }
+
+  musicSource.connect(musicGain);
+  musicSource.start(0);
+}
+
+function stopMusic(){
+  try{
+    if(musicSource){
+      musicSource.stop(0);
+      musicSource.disconnect();
+    }
+  }catch{}
+  musicSource = null;
+}
+
 // ===== Zodiacos / Luna / Circadiano =====
 const CHINESE=['Rata','Buey','Tigre','Conejo','Dragón','Serpiente','Caballo','Cabra','Mono','Gallo','Perro','Cerdo'];
 function chineseAnimal(y){ return CHINESE[(y-1900)%12]; }
@@ -159,7 +212,6 @@ function bioCompact(days, period){
   return {html:`<span class="bio-val ${cls}">${sign}${pct}%</span>`, pct};
 }
 function renderHeaderInfo(now=new Date()){
-  // Edad ya se actualiza aparte
   const zOcc = zodiac(new Date(1976,11,4));
   const animal = chineseAnimal(1976), elem = chineseElement(1976); // 1976 => Dragón(Fuego)
   const czTxt = `${animal} (${elem}) ${animal==='Dragón'?'🐉':''}`;
@@ -313,7 +365,6 @@ function setCheck(id, pct){
   CHECK_STATE[id]=Math.max(0,Math.min(100,pct));
   renderSysTicker();
 }
-// Valores iniciales por defecto (si usuario espera en overlay)
 setTimeout(()=>{
   const overlay=document.getElementById('overlay');
   if(overlay && !overlay.classList.contains('is-hidden')){
@@ -322,6 +373,33 @@ setTimeout(()=>{
     renderSysTicker();
   }
 },1200);
+
+// ===== Helpers de animación (para barras del Optimizer) =====
+function animateValue(from, to, duration, onUpdate){
+  return new Promise(resolve=>{
+    const t0=performance.now();
+    function step(t){
+      const k=Math.min(1,(t-t0)/duration);
+      const e = 1 - Math.pow(1-k,3); // easeOutCubic
+      const v = from + (to-from)*e;
+      onUpdate(v);
+      if(k<1) requestAnimationFrame(step); else resolve();
+    }
+    requestAnimationFrame(step);
+  });
+}
+function animateFill(el, fromPct, toPct, duration, onProgress){
+  return animateValue(fromPct, toPct, duration, v=>{
+    el.style.transform = `scaleX(${v/100})`;
+    onProgress?.(v);
+  });
+}
+// Color HSL dinámico rojo(0) → verde(120) según %
+function colorForPct(pct){
+  const p = Math.max(0, Math.min(100, pct));
+  const h = Math.round(p*1.2); // 0..120
+  return `linear-gradient(90deg, hsl(${h} 90% 50%), hsl(${h} 90% 50%))`;
+}
 
 // ===== Optimización (cola) =====
 const OPT_QUEUE = [
@@ -345,47 +423,99 @@ const optList=document.getElementById('opt-list');
 const optBtn=document.getElementById('opt-btn');
 const optStartBtn=document.getElementById('opt-start-btn');
 const optCancel=document.getElementById('opt-cancel');
+// Barra de progreso general
+const optProgress = document.querySelector('.opt-progress');
+const optProgressFill = document.getElementById('opt-progress-fill');
+const optProgressLabel = document.getElementById('opt-progress-label');
+
 let optRunning=false, optAbort=null;
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
-function createOptItem(name,from,to){
+
+function createOptItem(name,from){
   const row=document.createElement('div'); row.className='opt-row';
-  row.innerHTML=`<span>${name}</span><div class="opt-bar"><div class="opt-fill" style="transform:scaleX(${from/100})"></div></div>`;
+  row.innerHTML=`
+    <span>${name}</span>
+    <div class="opt-meter">
+      <div class="opt-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(from)}">
+        <div class="opt-fill" style="transform:scaleX(${from/100}); background:${colorForPct(from)}"></div>
+        <div class="opt-mini-label">${Math.round(from)}%</div>
+      </div>
+    </div>`;
   return row;
 }
+
 async function runOptimizer(){
   if(optRunning) return;
   optRunning=true; optAbort=new AbortController();
   optList.innerHTML=''; optPanel.classList.remove('hidden'); if(optBtn) optBtn.disabled=true;
 
+  // Inicial del progreso general
+  if(optProgressFill){
+    optProgressFill.style.width = '0%';
+    optProgressFill.style.background = colorForPct(0);
+  }
+  if(optProgressLabel) optProgressLabel.textContent = '0%';
+
+  const total = OPT_QUEUE.length;
+  let processed = 0;
+
   for(const name of OPT_QUEUE){
     if(optAbort.signal.aborted) break;
 
-    const from=Math.max(10,Math.round(30+Math.random()*25));
-    const to=Math.min(100,Math.round(85+Math.random()*12));
-
-    const row=createOptItem(name,from,to);
+    const from=Math.max(10,Math.round(30+Math.random()*25)); // 30–55%
+    const row=createOptItem(name,from);
+    const bar=row.querySelector('.opt-bar');
+    const fill=row.querySelector('.opt-fill');
+    const miniLabel=row.querySelector('.opt-mini-label');
     optList.prepend(row);
 
-    await sleep(150);
-    row.querySelector('.opt-fill').style.transform=`scaleX(${to/100})`;
+    // Animar ítem hasta 100%, actualizando color y % (centrado dentro de la barrita)
+    await animateFill(fill, from, 100, 850, v=>{
+      const pct = Math.round(v);
+      if(miniLabel) miniLabel.textContent = pct + '%';
+      if(bar) bar.setAttribute('aria-valuenow', String(pct));
+      fill.style.background = colorForPct(v);
+    });
 
     // Eco visual al ticker (aleatorio)
     const keys=['scan','torrente','operativos','autorreparacion','depuracion'];
     const k=keys[Math.floor(Math.random()*keys.length)];
     setCheck(k, Math.round(60 + Math.random()*40));
 
-    await sleep(850);
+    // Actualizar progreso general (barra + etiqueta + color)
+    processed++;
+    const gpct = Math.round((processed/total)*100);
+    if(optProgressFill){
+      optProgressFill.style.width = gpct + '%';
+      optProgressFill.style.background = colorForPct(gpct);
+    }
+    if(optProgressLabel) optProgressLabel.textContent = gpct + '%';
+
+    // Pausa breve y quitar el ítem
+    await sleep(300);
     row.remove();
+  }
+
+  // Glow/flash suave al completar (300ms)
+  if(optProgress && optProgressLabel && optProgressLabel.textContent === '100%'){
+    const prev = optProgress.style.boxShadow;
+    optProgress.style.boxShadow = '0 0 18px rgba(46,234,138,.9), 0 0 36px rgba(46,234,138,.55)';
+    setTimeout(()=>{ optProgress.style.boxShadow = prev || ''; }, 320);
   }
 
   optPanel.classList.add('hidden');
   optRunning=false; if(optBtn) optBtn.disabled=false;
 }
+
 optBtn?.addEventListener('click',()=>{ playBeep(); runOptimizer(); });
 optStartBtn?.addEventListener('click',()=>{
   overlay.classList.add('is-hidden');
+  ensureAudio(); try{ audioCtx && audioCtx.resume(); }catch{}
   if(!isOn) powerBtn.click();
-  playBeep(); runOptimizer();
+  if(soundOn) startHum();
+  // Precargar música (no reproduce hasta ON+soundOn)
+  loadMusicOnce();
+  fx.start();
 });
 optCancel?.addEventListener('click',()=>{
   if(!optRunning){ optPanel.classList.add('hidden'); return; }
@@ -406,6 +536,8 @@ startBtn.onclick=async()=>{
   ensureAudio(); try{ await audioCtx.resume(); }catch{}
   if(!isOn) powerBtn.click();
   if(soundOn) startHum();
+  // Precargar música para que arranque rápido cuando corresponde
+  loadMusicOnce();
   fx.start();
 };
 powerBtn.onclick=()=>{
@@ -414,7 +546,16 @@ powerBtn.onclick=()=>{
   led.classList.toggle('on',isOn);
   toggleModules(isOn);
   if(!audioCtx) return;
-  if(isOn && soundOn) startHum(); else stopHum();
+
+  if(isOn && soundOn){
+    startHum();
+    // Cargar si falta y reproducir música
+    loadMusicOnce().then(()=> startMusic());
+  } else {
+    stopHum();
+    stopMusic();
+  }
+
   if(isOn){ fx.start(); renderHeaderInfo(new Date()); } else { fx.stop(); }
 };
 soundBtn.onclick=async()=>{
@@ -422,10 +563,27 @@ soundBtn.onclick=async()=>{
   soundOn=!soundOn;
   soundBtn.textContent='Sonido: '+(soundOn?'ON':'OFF');
   soundBtn.setAttribute('aria-pressed', String(soundOn));
-  if(isOn && soundOn) startHum(); else stopHum();
+
+  if(isOn && soundOn){
+    startHum();
+    loadMusicOnce().then(()=> startMusic());
+  } else {
+    stopHum();
+    stopMusic();
+  }
 };
 // Failsafe: oculta overlay a los 15s
 setTimeout(()=>{ if(!overlay.classList.contains('is-hidden')){ overlay.classList.add('is-hidden'); if(!isOn) powerBtn.click(); } },15000);
 
-// Pausa FX si pestaña oculta
-document.addEventListener('visibilitychange', ()=>{ if(document.hidden) fx.stop(); else if(isOn) fx.start(); });
+// Pausa FX (y música) si pestaña oculta
+document.addEventListener('visibilitychange', ()=>{
+  if(document.hidden){
+    fx.stop();
+    stopMusic();
+  } else {
+    if(isOn){
+      fx.start();
+      if(soundOn) loadMusicOnce().then(()=> startMusic());
+    }
+  }
+});
