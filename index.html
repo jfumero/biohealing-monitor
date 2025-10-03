@@ -1,117 +1,106 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>BioHealing Monitor</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- OVERLAY DE BIENVENIDA -->
+  <!-- Overlay de bienvenida -->
   <div id="overlay" class="overlay">
-    <div class="overlay-content">
-      <h1>Nanorobots en Operación</h1>
-      <p>Insertando nanobots en el torrente sanguíneo...</p>
-      <div class="stats">
-        <div>
-          <span id="nanoTotal">1000000</span><br>Total
+    <div class="welcome card-glass">
+      <h1>BioHealing Monitor</h1>
+      <p id="project-meta">Paciente: <b>Jonathan Fumero Mesa</b> · Edad: —</p>
+
+      <!-- Panel de nanorobots (Totales + Operativos) -->
+      <div class="swarm">
+        <div class="swarm-row">
+          <div class="swarm-head">
+            <span class="swarm-k">Nanorobots totales</span>
+            <span class="swarm-v" id="n-total">—</span>
+          </div>
+          <div class="swarm-bar">
+            <div id="swarm-total-bar" class="swarm-fill"></div>
+          </div>
         </div>
-        <div>
-          <span id="nanoActive">0</span><br>Operativos
+        <div class="swarm-row">
+          <div class="swarm-head">
+            <span class="swarm-k">Nanorobots operativos</span>
+            <span class="swarm-v" id="n-op">—</span>
+          </div>
+          <div class="swarm-bar">
+            <div id="swarm-bar" class="swarm-fill alt"></div>
+          </div>
         </div>
       </div>
-      <div class="bars">
-        <div class="bar"><div id="barTotal" class="fill"></div></div>
-        <div class="bar"><div id="barActive" class="fill"></div></div>
+
+      <div class="welcome-ctas">
+        <button id="startBtn" class="btn">Comenzar</button>
+        <button id="opt-start-btn" class="btn alt">Optimizar ahora</button>
       </div>
-      <button id="startBtn">Comenzar</button>
-      <button id="startOptimizerOverlay">Optimizar ahora</button>
     </div>
   </div>
 
-  <!-- CABECERA HUD -->
-  <header class="hud">
-    <div class="hud-left">
-      <div id="zodiac"></div>
-      <div id="chinese"></div>
-      <div id="lunar"></div>
-      <div id="circadian"></div>
-      <div id="biorhythm"></div>
+  <!-- Cabecera -->
+  <header class="header">
+    <h2 class="brand">BioHealing Monitor</h2>
+
+    <div class="patient">
+      <div class="pill">Paciente: <b>Jonathan Fumero Mesa</b></div>
+      <div class="pill">Edad: <span id="age">—</span></div>
     </div>
-    <div class="hud-center">
-      <h1>BioHealing Monitor</h1>
-      <p id="ageDisplay"></p>
+
+    <div class="header-ctrls">
+      <div id="led" class="led" title="Estado"></div>
+      <button id="power-btn" class="btn">Encender</button>
+      <button id="sound-btn" class="btn" aria-pressed="true">Sonido: ON</button>
+      <button id="opt-btn" class="btn alt" aria-controls="optimizer">Optimizar cuerpo humano</button>
+      <!-- acceso a la app de ciclos en nueva pestaña -->
+      <a href="ciclos.html" class="btn" target="_blank" rel="noopener">Ciclos personales</a>
     </div>
-    <div class="hud-right">
-      <button id="cyclesBtn">Ciclos Personales</button>
-      <button id="soundBtn">🔊</button>
+
+    <!-- HUD con datos bio/astro -->
+    <div class="hud">
+      <div class="hud-item"><span class="k">Zodiaco</span><span class="v" id="hd-zodiac">—</span></div>
+      <div class="hud-item"><span class="k">Chino</span><span class="v" id="hd-czodiac">—</span></div>
+      <div class="hud-item"><span class="k">Luna</span><span class="v" id="hd-moon">—</span></div>
+      <div class="hud-item"><span class="k">Circadiano</span><span class="v" id="hd-circ">—</span></div>
+      <div class="hud-item"><span class="k">Físico</span><span class="v" id="hd-bio-f">—</span></div>
+      <div class="hud-item"><span class="k">Emocional</span><span class="v" id="hd-bio-e">—</span></div>
+      <div class="hud-item"><span class="k">Intelectual</span><span class="v" id="hd-bio-i">—</span></div>
     </div>
   </header>
 
-  <!-- OPTIMIZADOR (movido aquí) -->
-  <section id="optimizer" class="optimizer">
-    <h2>Optimización del cuerpo humano</h2>
-    <div class="optimizer-progress">
-      <div id="optimizer-bar" class="optimizer-bar"></div>
+  <!-- Barra general de optimización (debajo del encabezado) -->
+  <section class="opt-progress card-glass" aria-label="Progreso general de optimización">
+    <div class="title-sm" style="margin-bottom:.35rem;">Optimización general</div>
+    <div class="opt-bar opt-bar-lg">
+      <div id="opt-progress-fill" class="opt-fill" style="transform:scaleX(0)"></div>
+      <div id="opt-progress-label" class="opt-mini-label">0%</div>
     </div>
-    <ul id="optimizer-queue" class="optimizer-queue"></ul>
-    <button id="startOptimizer">Optimizar ahora</button>
   </section>
 
-  <!-- CONTENIDO PRINCIPAL -->
+  <!-- Módulos/Gauges -->
   <main>
-    <section class="modules">
-      <div class="module" data-id="rejuvenecer">
-        <h2>Rejuvenecimiento</h2>
-        <canvas class="gauge"></canvas>
-        <p class="status">En espera</p>
-        <button class="onBtn">Activar</button>
-        <button class="offBtn">Detener</button>
-      </div>
-      <div class="module" data-id="glucosa">
-        <h2>Glucosa</h2>
-        <canvas class="gauge"></canvas>
-        <p class="status">En espera</p>
-        <button class="onBtn">Activar</button>
-        <button class="offBtn">Detener</button>
-      </div>
-      <div class="module" data-id="globulos">
-        <h2>Glóbulos</h2>
-        <canvas class="gauge"></canvas>
-        <p class="status">En espera</p>
-        <button class="onBtn">Activar</button>
-        <button class="offBtn">Detener</button>
-      </div>
-      <div class="module" data-id="presion">
-        <h2>Presión</h2>
-        <canvas class="gauge"></canvas>
-        <p class="status">En espera</p>
-        <button class="onBtn">Activar</button>
-        <button class="offBtn">Detener</button>
-      </div>
-      <div class="module" data-id="defensas">
-        <h2>Defensas</h2>
-        <canvas class="gauge"></canvas>
-        <p class="status">En espera</p>
-        <button class="onBtn">Activar</button>
-        <button class="offBtn">Detener</button>
-      </div>
-      <div class="module" data-id="energia">
-        <h2>Energía</h2>
-        <canvas class="gauge"></canvas>
-        <p class="status">En espera</p>
-        <button class="onBtn">Activar</button>
-        <button class="offBtn">Detener</button>
-      </div>
-    </section>
+    <div id="grid" class="grid"></div>
   </main>
 
-  <!-- FOOTER -->
-  <footer>
-    <div id="ticker" class="ticker"></div>
-  </footer>
+  <!-- Panel Optimización -->
+  <section id="optimizer" class="optimizer hidden card-glass">
+    <h3>Optimización del cuerpo humano</h3>
+    <div id="opt-list" class="opt-list"></div>
+    <button id="opt-cancel" class="btn alt">Cancelar</button>
+  </section>
 
-  <canvas id="bgfx"></canvas>
+  <!-- Ticker inferior -->
+  <div id="sys-ticker" class="sys-ticker">
+    <div id="sys-ticker-track" class="sys-ticker-track"></div>
+  </div>
+
+  <!-- Canvas FX de fondo -->
+  <canvas id="fx-bloodstream"></canvas>
+
   <script src="main.js"></script>
 </body>
 </html>
