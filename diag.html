@@ -3,19 +3,54 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Diagnóstico de Carga</title>
-  <link rel="stylesheet" href="/style.css" />
-  <style>body{padding:16px}</style>
+  <title>Diagnóstico — BioHealing Monitor</title>
+  <link rel="stylesheet" href="style.css?v=1" />
+  <style>
+    .diag-wrap { max-width: 1024px; margin: 24px auto; padding: 16px; }
+    .diag-card { border: 1px solid #00ffff44; border-radius: 12px; padding: 16px; background: #071018; }
+    .diag-card h1 { margin: 0 0 12px; font-size: 1.4rem; color: #9be7ff; }
+    .diag-sec { margin-top: 16px; }
+    .diag-sec h2 { font-size: 1.05rem; margin: 0 0 8px; color: #7ee8fa; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+    ul.chk { list-style: none; padding: 0; margin: 0; }
+    ul.chk li { padding: 6px 8px; border-bottom: 1px dashed #0ff2; }
+    ul.chk li:last-child { border-bottom: 0; }
+    .ok { color: #12d17d; }
+    .warn { color: #f5a524; }
+    .err { color: #ff4d4f; }
+    .links { margin-top: 16px; display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn { padding: 8px 12px; border: 1px solid #0ff4; border-radius: 8px; text-decoration: none; color: #cfefff; }
+    .btn:hover { background: #0a1e2a; }
+    .kv { display: grid; grid-template-columns: 160px 1fr; gap: 8px 12px; }
+    .kv div { padding: 6px 8px; background: #0a1620; border: 1px solid #0ff1; border-radius: 8px; }
+    .kv .k { color: #86d7ff; }
+    .kv .v { color: #d5f4ff; }
+  </style>
 </head>
 <body>
-  <h1>Diagnóstico</h1>
-  <p>Si ves “OK” en todo, CSS y JS cargan bien.</p>
-  <ul>
-    <li id="chk-css">CSS: <strong>OK</strong></li>
-    <li id="chk-js">JS: <strong id="js-ok">—</strong></li>
-  </ul>
-  <script>
-    document.getElementById('js-ok').textContent = 'OK';
-  </script>
+  <div class="diag-wrap">
+    <div class="diag-card">
+      <h1>Diagnóstico del entorno</h1>
+      <p class="mono">Chequeos rápidos de assets, rutas, APIs del navegador y estado del audio.</p>
+
+      <div class="diag-sec">
+        <h2>Resultados</h2>
+        <ul id="diag-list" class="chk mono"></ul>
+      </div>
+
+      <div class="diag-sec">
+        <h2>Entorno del navegador</h2>
+        <div class="kv mono" id="kv"></div>
+      </div>
+
+      <div class="links">
+        <a class="btn" href="index.html">← Volver al monitor</a>
+        <a class="btn" href="ciclos.html" target="_blank" rel="noopener">Abrir Ciclos personales ↗</a>
+        <a class="btn" href="diag.html">Refrescar diagnóstico</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="diag.js?v=1"></script>
 </body>
 </html>
