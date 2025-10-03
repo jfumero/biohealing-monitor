@@ -1,17 +1,14 @@
 {
-  "version": 2,
-  "name": "biohealing-monitor",
   "routes": [
-    { "src": "/(.*)\\.(css|js|mp3|png|jpg|jpeg|gif|svg|ico|json|html)", "dest": "/$1.$2" },
-    { "src": "/ciclos", "dest": "/ciclos.html" },
-    { "src": "/$", "dest": "/index.html" },
-    { "src": "/(?!.*\\.).*", "dest": "/index.html" }
+    { "src": "/(.*)\\.(css|js|mp3|png|jpg|jpeg|webp|svg|ico|json|txt)", "dest": "/$1.$2" },
+    { "src": "/(ciclos|diag)\\.html", "dest": "/$1.html" },
+    { "src": "/.*", "dest": "/index.html" }
   ],
   "headers": [
     {
       "source": "/(.*)\\.(css|js)",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+        { "key": "Cache-Control", "value": "public, max-age=31536000" }
       ]
     }
   ]
