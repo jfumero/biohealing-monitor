@@ -2,149 +2,529 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Mapa de Ciclos Personales</title>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mapa de ciclos personales</title>
+
+  <!-- Tailwind por CDN, sin preflight para no tocar tus estilos globales -->
+  <script>
+    window.tailwind = window.tailwind || {};
+    tailwind.config = { corePlugins: { preflight: false } };
+  </script>
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- React 18 + ReactDOM (UMD prod) -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+  <!-- Astronomy Engine (build navegador) -->
+  <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
+
+  <!-- Babel Standalone para compilar JSX en el navegador -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
   <style>
-    body{background:#06101f;color:#e9f1ff}
-    .card{background:rgba(12,22,40,0.8);border:1px solid #1e2a44;border-radius:16px;padding:12px}
-    .chip{display:flex;justify-content:space-between;gap:8px;padding:8px 10px;border:1px solid #1e2a44;background:rgba(14,22,40,0.8);border-radius:12px}
+    html,body{height:100%}
+    body{margin:0;background:#f9fafb}
+    #app-root{min-height:100vh}
   </style>
 </head>
-<body class="min-h-screen">
-  <div id="root" class="max-w-6xl mx-auto p-4"></div>
+<body>
+  <div id="app-root"></div>
 
-  <script type="text/babel">
-    const pad2=n=>String(n).padStart(2,'0');
+  <script type="text/babel" data-presets="env,react">
+    const { useEffect, useMemo, useState } = React;
+    // Astronomy global (según build)
+    const Astro = window.Astronomy || window.astronomy;
 
-    function biorhythm(birth, target=new Date()){
-      const days = (target - birth)/(1000*60*60*24);
-      const phys=Math.sin(2*Math.PI*days/23), emo=Math.sin(2*Math.PI*days/28), intel=Math.sin(2*Math.PI*days/33);
-      const pct=x=>Math.round((x*0.5+0.5)*100);
-      return {phys:pct(phys),emo:pct(emo),intel:pct(intel)};
-    }
-    const zodiacWest = d=>{
-      const m=d.getUTCMonth()+1, day=d.getUTCDate();
-      const cuts=[120,219,321,420,521,621,723,823,923,1023,1122,1222], names=['Cap','Acu','Pis','Aries','Tau','Gem','Cán','Leo','Vir','Lib','Esc','Sag'];
-      const md=m*100+day; let i=cuts.findIndex(c=>md<c); if(i<0) i=0; return names[i];
+    // === Utils ===
+    const PI = Math.PI;
+    const deg2rad = (d) => (d * PI) / 180;
+    const rad2deg = (r) => (r * 180) / PI;
+    const norm360 = (x) => ((x % 360) + 360) % 360;
+    const pad2 = (n) => String(n).padStart(2, "0");
+
+    const todayDateStr = () => {
+      const d = new Date();
+      return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
     };
-    const chinese = y => ['Rata','Buey','Tigre','Conejo','Dragón','Serpiente','Caballo','Cabra','Mono','Gallo','Perro','Cerdo'][(y-1900)%12];
-    const moonPhase = d => {
-      const lp=2551443; const new_moon=Date.UTC(2001,0,1)/1000; const now=d.getTime()/1000;
-      const phase=((now-new_moon)%lp)/lp; return Math.round(phase*100)+'%';
+    const dayOfYear = (date) => {
+      const d = new Date(date.getFullYear(), 0, 0);
+      return Math.floor((date - d) / (1000*60*60*24));
     };
 
-    function loadState(){
-      try{ return JSON.parse(localStorage.getItem('ciclos_state')||'{}'); }catch{ return {}; }
+    // === Biorritmos ===
+    const bioVal = (birth, target, period) => {
+      const days = Math.floor((target - birth) / (1000 * 60 * 60 * 24));
+      return Math.sin((2 * PI * days) / period);
+    };
+
+    // === Numerología (pitagórica) ===
+    const vowels = new Set(["A","E","I","O","U","Y"]);
+    const pythMap = new Map([
+      ["A",1],["J",1],["S",1], ["B",2],["K",2],["T",2], ["C",3],["L",3],["U",3],
+      ["D",4],["M",4],["V",4], ["E",5],["N",5],["W",5], ["F",6],["O",6],["X",6],
+      ["G",7],["P",7],["Y",7], ["H",8],["Q",8],["Z",8], ["I",9],["R",9],
+    ]);
+    const stripAccents = (s)=> s.normalize("NFD").replace(/\p{Diacritic}/gu,"");
+    const letterVal = (ch)=> pythMap.get(stripAccents(ch.toUpperCase())) || 0;
+    const reduceNum = (n, keepMasters=true)=>{
+      const isMaster = (x)=> x===11 || x===22;
+      if(keepMasters && isMaster(n)) return n;
+      while(n>9){
+        n = String(n).split("").reduce((a,b)=>a+Number(b),0);
+        if(keepMasters && isMaster(n)) return n;
+      }
+      return n;
+    };
+    const reduceNoMasters=(n)=>{ while(n>9) n=String(n).split("").reduce((a,b)=>a+Number(b),0); return n; };
+    const lifePath = (d)=> reduceNum(reduceNoMasters(d.getDate())+reduceNoMasters(d.getMonth()+1)+reduceNoMasters(d.getFullYear()));
+    const sumName = (name, which="all") =>
+      [...name].reduce((acc,ch)=>{
+        if(!/[a-zA-ZáéíóúÁÉÍÓÚñÑ]/.test(ch)) return acc;
+        const v=letterVal(ch); const up=stripAccents(ch.toUpperCase());
+        if(which==="vowels") return acc+(vowels.has(up)?v:0);
+        if(which==="consonants") return acc+(!vowels.has(up)?v:0);
+        return acc+v;
+      },0);
+    const expressionNum=(name)=> reduceNum(sumName(name));
+    const soulUrgeNum=(name)=> reduceNum(sumName(name,"vowels"));
+    const personalityNum=(name)=> reduceNum(sumName(name,"consonants"));
+    const maturityNum=(lp,exp)=> reduceNum(lp+exp);
+    const personalYear=(birth,year)=> reduceNum(reduceNoMasters(birth.getDate())+reduceNoMasters(birth.getMonth()+1)+reduceNoMasters(year));
+    const personalMonth=(pYear,month)=> reduceNum(pYear+month);
+    const personalDay=(birth,target)=> reduceNum(personalMonth(personalYear(birth,target.getFullYear()), target.getMonth()+1) + target.getDate());
+
+    // === Occidental (solar) ===
+    const westernSun = (date)=>{
+      const m=date.getMonth()+1, d=date.getDate();
+      const ranges=[
+        [[1,20],"Capricornio"],[[2,19],"Acuario"],[[3,21],"Piscis"],[[4,20],"Aries"],
+        [[5,21],"Tauro"],[[6,21],"Géminis"],[[7,23],"Cáncer"],[[8,23],"Leo"],
+        [[9,23],"Virgo"],[[10,23],"Libra"],[[11,22],"Escorpio"],[[12,22],"Sagitario"],[[12,31],"Capricornio"]
+      ];
+      for (const [[mm,dd], sign] of ranges) if (m < mm || (m === mm && d <= dd)) return sign;
+      return "Capricornio";
+    };
+
+    // === Chino ===
+    const chineseAnimal=(y)=>["Rata","Buey","Tigre","Conejo","Dragón","Serpiente","Caballo","Cabra","Mono","Gallo","Perro","Cerdo"][(y-1900)%12];
+    const chineseElement=(y)=>["Madera","Madera","Fuego","Fuego","Tierra","Tierra","Metal","Metal","Agua","Agua"][(y-4)%10];
+
+    // === Tzolk’in Maya ===
+    const gregorianToJDN=(y,m,d)=>{
+      const a=Math.floor((14-m)/2), y2=y+4800-a, m2=m+12*a-3;
+      return d + Math.floor((153*m2+2)/5) + 365*y2 + Math.floor(y2/4) - Math.floor(y2/100) + Math.floor(y2/400) - 32045;
+    };
+    const tzNames=[
+      "Imix (Cocodrilo)","Ik (Viento)","Akbal (Noche)","Kan (Semilla)","Chicchan (Serpiente)",
+      "Cimi (Enlazador)","Manik (Mano)","Lamat (Estrella)","Muluc (Luna)","Oc (Perro)",
+      "Chuen (Mono)","Eb (Humano)","Ben (Caña)","Ix (Mago)","Men (Águila)",
+      "Cib (Guerrero)","Caban (Tierra)","Etznab (Espejo)","Cauac (Tormenta)","Ahau (Sol)"
+    ];
+    const tzTones={1:"Magnético (propósito)",2:"Lunar (desafío)",3:"Eléctrico (servicio)",4:"Autoexistente (definición)",5:"Entonado (poder)",6:"Rítmico (equilibrio)",7:"Resonante (sintonía)",8:"Galáctico (integridad)",9:"Solar (intención)",10:"Planetario (manifestación)",11:"Espectral (liberación)",12:"Cristal (cooperación)",13:"Cósmico (presencia)"};
+    const tzolkinForDate=(date)=>{
+      const y=date.getFullYear(), m=date.getMonth()+1, d=date.getDate();
+      const jdn=gregorianToJDN(y,m,d), base=584283, days=jdn-base;
+      const tone=((days+4)%13)+1, nameIdx=(days+19)%20;
+      return { tone, toneDesc: tzTones[tone], seal: tzNames[nameIdx] };
+    };
+
+    // === Runas (lúdico) ===
+    const RUNES=[["Fehu","Riqueza, inicio, recursos"],["Uruz","Fuerza vital, salud, coraje"],["Thurisaz","Umbral, protección, ruptura"],["Ansuz","Comunicación, guía, inspiración"],["Raidho","Viaje, proceso, orden"],["Kenaz","Fuego interno, claridad"],["Gebo","Intercambio, pacto, regalo"],["Wunjo","Alegría, armonía"],["Hagalaz","Cambio brusco, prueba"],["Nauthiz","Necesidad, disciplina"],["Isa","Pausa, concentración"],["Jera","Cosecha, ritmos"],["Eihwaz","Eje, transformación"],["Perthro","Destino, azar, intuición"],["Algiz","Protección, límites"],["Sowilo","Éxito, vitalidad"],["Tiwaz","Dirección, justicia"],["Berkano","Nacimiento, cuidado"],["Ehwaz","Cooperación, avance"],["Mannaz","Humanidad, rol social"],["Laguz","Flujo, emociones"],["Ingwaz","Semilla, reposo fértil"],["Dagaz","Renovación, claridad"],["Othala","Legado, territorio"]];
+    const natalRune=(birth)=>{ const n=dayOfYear(birth)%24; const idx=(n===0?24:n)-1; return { idx, name:RUNES[idx][0], meaning:RUNES[idx][1] }; };
+    const yearlyRune=(birth,year)=>{ const d=new Date(year,birth.getMonth(),birth.getDate()); const n=dayOfYear(d)%24; const idx=(n===0?24:n)-1; return { idx, name:RUNES[idx][0], meaning:RUNES[idx][1] }; };
+
+    // === Horas Planetarias ===
+    const CHALDEAN=["Saturno","Júpiter","Marte","Sol","Venus","Mercurio","Luna"];
+    const dayLordFromWeekday=(weekday)=>({0:"Luna",1:"Marte",2:"Mercurio",3:"Júpiter",4:"Venus",5:"Saturno",6:"Sol"})[weekday];
+    const seqFromLord=(lord)=>{ const idx=CHALDEAN.indexOf(lord); const arr=[]; for(let i=0;i<24;i++) arr.push(CHALDEAN[(idx+i)%7]); return arr; };
+    function sunriseSunset(date, latDeg, lonDeg, tzOffsetHours){
+      const N=dayOfYear(date), lngHour=lonDeg/15;
+      const calcFor=(isSunrise)=>{
+        const t=N+((isSunrise?6:18)-lngHour)/24;
+        const M=0.9856*t-3.289;
+        let L=M+1.916*Math.sin(deg2rad(M))+0.020*Math.sin(deg2rad(2*M))+282.634; L=norm360(L);
+        let RA=rad2deg(Math.atan(0.91764*Math.tan(deg2rad(L)))); RA=norm360(RA);
+        const Lquad=Math.floor(L/90)*90, RAquad=Math.floor(RA/90)*90; RA=(RA+(Lquad-RAquad))/15;
+        const sinDec=0.39782*Math.sin(deg2rad(L)), cosDec=Math.cos(Math.asin(sinDec));
+        const cosH=(Math.cos(deg2rad(90.833))-sinDec*Math.sin(deg2rad(latDeg)))/(cosDec*Math.cos(deg2rad(latDeg)));
+        if(cosH>1||cosH<-1) return null;
+        let H=isSunrise?360-rad2deg(Math.acos(cosH)):rad2deg(Math.acos(cosH)); H/=15;
+        const T=H+RA-0.06571*t-6.622; let UT=T-lngHour; while(UT<0)UT+=24; while(UT>=24)UT-=24;
+        let local=UT+tzOffsetHours; while(local<0)local+=24; while(local>=24)local-=24;
+        const hours=Math.floor(local), mins=Math.round((local-hours)*60);
+        const dt=new Date(date); dt.setHours(hours,mins,0,0); return dt;
+      };
+      const sr=calcFor(true), ss=calcFor(false); return { sunrise:sr, sunset:ss };
     }
-    function saveState(s){ localStorage.setItem('ciclos_state', JSON.stringify(s)); }
+    const nextDay=(date)=>{ const d=new Date(date); d.setDate(d.getDate()+1); return d; };
+    function planetaryHours(date, lat, lon, tzOffset){
+      const { sunrise, sunset } = sunriseSunset(date, lat, lon, tzOffset) || {};
+      const { sunrise: tomorrowSunrise } = sunriseSunset(nextDay(date), lat, lon, tzOffset) || {};
+      if(!sunrise||!sunset||!tomorrowSunrise) return { error:"No se pudo calcular amanecer/atardecer.", rows:[], lord:null };
+      const weekday=date.getDay();
+      const lord=dayLordFromWeekday((weekday+6)%7);
+      const seq=seqFromLord(lord);
+      const dayDur=(sunset - sunrise)/12, nightDur=(tomorrowSunrise - sunset)/12;
+      const rows=[];
+      for(let i=0;i<12;i++){ const start=new Date(sunrise.getTime()+i*dayDur), end=new Date(sunrise.getTime()+(i+1)*dayDur); rows.push({ idx:i+1, planet:seq[i], start, end, phase:"Día" }); }
+      for(let i=0;i<12;i++){ const start=new Date(sunset.getTime()+i*nightDur), end=new Date(sunset.getTime()+(i+1)*nightDur); rows.push({ idx:i+13, planet:seq[12+i], start, end, phase:"Noche" }); }
+      return { rows, lord };
+    }
+
+    // === Astronomía (corregido): sin JulianDay/Equator ===
+    const J2000_UTC = Date.UTC(2000,0,1,12,0,0);
+    const centuriesSinceJ2000 = (date)=> (date.getTime()-J2000_UTC)/(86400000*36525);
+
+    // Ayanamsa Lahiri aprox: usa T desde J2000 (no depende de la lib)
+    function ayanamsaLahiri(date){
+      const T = centuriesSinceJ2000(date);
+      const arcsec = 5028.796195*T + 1.1054348*T*T; // precesión
+      return 23.852 + arcsec/3600;
+    }
+
+    // Longitud eclíptica (de fecha) de un cuerpo en grados [0,360)
+    function eclipticLongitude(body, date){
+      if(body === Astro.Body.Sun){
+        // Sol: la lib ya da elon directamente
+        return norm360(Astro.SunPosition(date).elon);
+      }
+      // Luna/planetas: vector geocéntrico -> eclíptica
+      const vec = Astro.GeoVector(body, date, true); // aberration true
+      const ecl = Astro.Ecliptic(vec);               // eclípticas de fecha
+      return norm360(ecl.elon);
+    }
+
+    const siderealLongitude = (tropLon, ayan)=> norm360(tropLon - ayan);
+
+    // === Jyotish ===
+    const NAK_NAMES=["Ashwini","Bharani","Krittika","Rohini","Mrigashira","Ardra","Punarvasu","Pushya","Ashlesha","Magha","Purva Phalguni","Uttara Phalguni","Hasta","Chitra","Swati","Vishakha","Anuradha","Jyeshtha","Mula","Purva Ashadha","Uttara Ashadha","Shravana","Dhanishta","Shatabhisha","Purva Bhadrapada","Uttara Bhadrapada","Revati"];
+    const DASHA_LORDS=["Ketu","Venus","Sun","Moon","Mars","Rahu","Jupiter","Saturn","Mercury"];
+    const DASHA_YEARS={Ketu:7,Venus:20,Sun:6,Moon:10,Mars:7,Rahu:18,Jupiter:16,Saturn:19,Mercury:17};
+    function nakshatraFromLon(lonSid){
+      const span=360/27; const idx=Math.floor(lonSid/span);
+      const within=(lonSid%span)/span; const pada=Math.floor(within*4)+1;
+      const name=NAK_NAMES[idx]; const lord=DASHA_LORDS[idx%9];
+      return { idx:idx+1, name, pada, frac:within, lord };
+    }
+    function currentMahadasha(birth, target, moonSidAtBirth){
+      const nk=nakshatraFromLon(moonSidAtBirth);
+      const start=new Date(birth); const years=DASHA_YEARS[nk.lord];
+      const remYears=(1-nk.frac)*years;
+      let t0=new Date(start.getTime());
+      let t1=new Date(start.getTime()+remYears*365.2425*24*3600*1000);
+      let lord=nk.lord; let i=DASHA_LORDS.indexOf(lord);
+      if(target<t1) return { lord, from:t0, to:t1 };
+      t0=t1;
+      for(let k=1;k<=18;k++){
+        i=(i+1)%9; lord=DASHA_LORDS[i];
+        const yrs=DASHA_YEARS[lord];
+        t1=new Date(t0.getTime()+yrs*365.2425*24*3600*1000);
+        if(target<t1) return { lord, from:t0, to:t1 };
+        t0=t1;
+      }
+      return { lord, from:t0, to:t1 };
+    }
+
+    // === Human Design (básico) ===
+    function findDesignDate(birth){
+      const targetArc=88;
+      const lonBirth=eclipticLongitude(Astro.Body.Sun, birth);
+      for(let i=1;i<=120;i++){
+        const t=new Date(birth); t.setDate(t.getDate()-i);
+        const lonT=eclipticLongitude(Astro.Body.Sun, t);
+        const arc=(lonBirth-lonT+360)%360;
+        if(Math.abs(arc-targetArc)<0.25) return t;
+      }
+      const fallback=new Date(birth); fallback.setDate(fallback.getDate()-89); return fallback;
+    }
+    function gateFromDegreesUniform(deg){
+      const width=360/64; const idx=Math.floor(((deg%360)+360)%360/width);
+      const line=Math.floor(((((deg%width)+width)%width)/(width/6)))+1;
+      return { gate:idx+1, line };
+    }
+
+    // === UI ===
+    const Card = ({ title, children }) => (
+      <div className="rounded-2xl shadow p-4 bg-white/80 backdrop-blur border border-gray-100">
+        <h3 className="text-lg font-semibold mb-2">{title}</h3>
+        {children}
+      </div>
+    );
+    const Field = ({ label, children }) => (
+      <label className="flex flex-col gap-1 text-sm">
+        <span className="text-gray-600">{label}</span>
+        {children}
+      </label>
+    );
+    const fmtHM = (d)=> `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 
     function App(){
-      const [name,setName]=React.useState(loadState().name||'');
-      const [date,setDate]=React.useState(loadState().date||'1976-12-04');
-      const [time,setTime]=React.useState(loadState().time||'00:43');
-      const [tz,setTz]=React.useState(loadState().tz||'-03:00');
-      const [target,setTarget]=React.useState(loadState().target||new Date().toISOString().slice(0,10));
+      const [name,setName]=useState("Jonathan Fumero Mesa");
+      const [birthDate,setBirthDate]=useState("1976-12-04");
+      const [birthTime,setBirthTime]=useState("00:43");
+      const [lat,setLat]=useState(-34.86);
+      const [lon,setLon]=useState(-55.97);
+      const [tz,setTz]=useState(-3);
+      const [dateStr,setDateStr]=useState(todayDateStr());
 
-      React.useEffect(()=>{ saveState({name,date,time,tz,target}); },[name,date,time,tz,target]);
+      useEffect(()=>{
+        const saved=localStorage.getItem("cycles_app_state");
+        if(saved){
+          try{
+            const o=JSON.parse(saved);
+            setName(o.name ?? ""); setBirthDate(o.birthDate ?? "");
+            setBirthTime(o.birthTime ?? ""); setLat(o.lat ?? -34.86);
+            setLon(o.lon ?? -55.97); setTz(o.tz ?? -3);
+            setDateStr(o.dateStr ?? todayDateStr());
+          }catch{}
+        }
+      },[]);
+      useEffect(()=>{
+        localStorage.setItem("cycles_app_state", JSON.stringify({name,birthDate,birthTime,lat,lon,tz,dateStr}));
+      },[name,birthDate,birthTime,lat,lon,tz,dateStr]);
 
-      const birth = new Date(`${date}T${time}:00${tz}`);
-      const when  = new Date(`${target}T12:00:00${tz}`);
-      const bio = biorhythm(birth, when);
+      const birth=useMemo(()=> new Date(`${birthDate}T${birthTime || "00:00"}:00`),[birthDate,birthTime]);
+      const target=useMemo(()=> new Date(`${dateStr}T12:00:00`),[dateStr]);
 
-      const topDays = Array.from({length:30},(_,i)=>{
-        const d = new Date(when); d.setDate(when.getDate()+i);
-        const b = biorhythm(birth,d);
-        const avg = Math.round((b.phys+b.emo+b.intel)/3);
-        return {date:d.toISOString().slice(0,10), ...b, avg};
-      }).sort((a,b)=>b.avg-a.avg).slice(0,5);
+      // Biorritmos
+      const bio=useMemo(()=>({
+        physical: Math.round(bioVal(birth,target,23)*1000)/10,
+        emotional: Math.round(bioVal(birth,target,28)*1000)/10,
+        intellectual: Math.round(bioVal(birth,target,33)*1000)/10,
+      }),[birth,target]);
+
+      // Numerología
+      const num=useMemo(()=>{
+        const lp=lifePath(birth), exp=expressionNum(name), soul=soulUrgeNum(name), pers=personalityNum(name);
+        const mat=maturityNum(lp,exp), py=personalYear(birth,target.getFullYear());
+        const pm=personalMonth(py,target.getMonth()+1), pd=personalDay(birth,target);
+        return { lp,exp,soul,pers,mat,py,pm,pd };
+      },[birth,name,target]);
+
+      const maya=useMemo(()=> tzolkinForDate(target),[target]);
+      const occidental=useMemo(()=> westernSun(birth),[birth]);
+      const chino=useMemo(()=> ({animal:chineseAnimal(birth.getFullYear()), element:chineseElement(birth.getFullYear())}),[birth]);
+      const runes=useMemo(()=> ({natal:natalRune(birth), year:yearlyRune(birth,target.getFullYear())}),[birth,target]);
+
+      // Horas planetarias
+      const planetHours=useMemo(()=> planetaryHours(target, Number(lat), Number(lon), Number(tz)),[target,lat,lon,tz]);
+
+      // Jyotish (corregido)
+      const jyotish=useMemo(()=>{
+        try{
+          const ayan=ayanamsaLahiri(target);
+          const lonSunTrop=eclipticLongitude(Astro.Body.Sun, target);
+          const lonMoonTrop=eclipticLongitude(Astro.Body.Moon, target);
+          const lonSunSid=siderealLongitude(lonSunTrop, ayan);
+          const lonMoonSid=siderealLongitude(lonMoonTrop, ayan);
+          const nk=nakshatraFromLon(lonMoonSid);
+
+          const moonBirthSid=siderealLongitude(
+            eclipticLongitude(Astro.Body.Moon, birth),
+            ayanamsaLahiri(birth)
+          );
+          const md=currentMahadasha(birth, target, moonBirthSid);
+
+          const sidSigns=["Aries","Tauro","Géminis","Cáncer","Leo","Virgo","Libra","Escorpio","Sagitario","Capricornio","Acuario","Piscis"];
+          const sunSign=sidSigns[Math.floor(lonSunSid/30)];
+
+          return { ayan, lonSunSid, lonMoonSid, sunSign, nakshatra:nk, mahadasha:md };
+        }catch(e){ return { error:e?.message || String(e) }; }
+      },[birth,target]);
+
+      // Human Design (básico) – corregido
+      const hd=useMemo(()=>{
+        try{
+          const designDate=findDesignDate(birth);
+          const sunPers=eclipticLongitude(Astro.Body.Sun, birth);
+          const sunDesi=eclipticLongitude(Astro.Body.Sun, designDate);
+          const gP=gateFromDegreesUniform(sunPers);
+          const gD=gateFromDegreesUniform(sunDesi);
+          const profile=`${gP.line}/${gD.line}`;
+          return { designDate, sunPers, sunDesi, gatePers:gP, gateDes:gD, profile, note:"Para gates exactos usa el mandala oficial (hdkit)." };
+        }catch(e){ return { error:e?.message || String(e) }; }
+      },[birth]);
+
+      // Dashboard 30 días
+      const dashboard=useMemo(()=>{
+        const rows=[]; const baseDays=Math.floor((target-birth)/(1000*60*60*24));
+        for(let i=0;i<30;i++){
+          const d=new Date(target); d.setDate(d.getDate()+i);
+          const bf=Math.round(Math.sin((2*PI*(baseDays+i))/23)*1000)/10;
+          const be=Math.round(Math.sin((2*PI*(baseDays+i))/28)*1000)/10;
+          const bi=Math.round(Math.sin((2*PI*(baseDays+i))/33)*1000)/10;
+          const pd=personalDay(birth,d);
+          const {tone,seal}=tzolkinForDate(d);
+          rows.push({ date:d.toISOString().slice(0,10), bf,be,bi, pd, tone, seal });
+        }
+        return rows;
+      },[birth,target]);
+
+      // UI
+      const fmtHM=(d)=>`${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 
       return (
-        <div className="space-y-4">
-          <header className="flex items-center justify-between">
-            <h1 className="text-xl font-semibold">Mapa de Ciclos Personales</h1>
-            <div className="chip"><span>Carácter lúdico/educativo</span><span className="text-green-400">No médico</span></div>
-          </header>
+        <div className="min-h-screen bg-gradient-to-br from-rose-50 to-emerald-50 text-gray-900">
+          <div className="max-w-6xl mx-auto p-4 md:p-8 flex flex-col gap-6">
+            <header className="flex items-center justify-between gap-4">
+              <h1 className="text-2xl md:text-3xl font-bold">Mapa de ciclos personales – App</h1>
+              <button className="px-3 py-2 rounded-xl bg-black text-white text-sm" onClick={()=>setDateStr(todayDateStr())}>Hoy</button>
+            </header>
 
-          <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
-            <div className="card">
-              <h3 className="font-medium mb-2">Datos</h3>
-              <div className="space-y-2">
-                <label className="block text-sm">Nombre<input className="w-full mt-1 bg-transparent border border-slate-600 rounded px-2 py-1" value={name} onChange={e=>setName(e.target.value)} /></label>
-                <div className="grid grid-cols-2 gap-2">
-                  <label className="text-sm">Fecha nacimiento<input type="date" className="w-full mt-1 bg-transparent border border-slate-600 rounded px-2 py-1" value={date} onChange={e=>setDate(e.target.value)} /></label>
-                  <label className="text-sm">Hora<input type="time" className="w-full mt-1 bg-transparent border border-slate-600 rounded px-2 py-1" value={time} onChange={e=>setTime(e.target.value)} /></label>
-                </div>
-                <label className="block text-sm">Huso (±HH:MM)<input className="w-full mt-1 bg-transparent border border-slate-600 rounded px-2 py-1" value={tz} onChange={e=>setTz(e.target.value)} /></label>
-                <label className="block text-sm">Fecha objetivo<input type="date" className="w-full mt-1 bg-transparent border border-slate-600 rounded px-2 py-1" value={target} onChange={e=>setTarget(e.target.value)} /></label>
+            <Card title="Configuración">
+              <div className="grid md:grid-cols-3 gap-4">
+                <Field label="Nombre completo">
+                  <input className="rounded-xl border p-2" value={name} onChange={(e)=>setName(e.target.value)} />
+                </Field>
+                <Field label="Fecha de nacimiento">
+                  <input type="date" className="rounded-xl border p-2" value={birthDate} onChange={(e)=>setBirthDate(e.target.value)} />
+                </Field>
+                <Field label="Hora de nacimiento (opcional)">
+                  <input type="time" className="rounded-xl border p-2" value={birthTime} onChange={(e)=>setBirthTime(e.target.value)} />
+                </Field>
+                <Field label="Latitud (−34.86 Montevideo/Ciudad de la Costa)">
+                  <input type="number" step="0.0001" className="rounded-xl border p-2" value={lat} onChange={(e)=>setLat(e.target.value)} />
+                </Field>
+                <Field label="Longitud (−55.97)">
+                  <input type="number" step="0.0001" className="rounded-xl border p-2" value={lon} onChange={(e)=>setLon(e.target.value)} />
+                </Field>
+                <Field label="Huso horario (UYT = −3)">
+                  <input type="number" step="1" className="rounded-xl border p-2" value={tz} onChange={(e)=>setTz(e.target.value)} />
+                </Field>
+                <Field label="Fecha a calcular">
+                  <input type="date" className="rounded-xl border p-2" value={dateStr} onChange={(e)=>setDateStr(e.target.value)} />
+                </Field>
               </div>
-            </div>
+              <p className="text-xs text-gray-500 mt-2">Los datos se guardan localmente (localStorage). No se envían a ningún servidor.</p>
+            </Card>
 
-            <div className="card">
-              <h3 className="font-medium mb-2">Biorritmos ({target})</h3>
-              <div className="space-y-2">
-                <div className="chip"><span>Físico</span><strong>{bio.phys}%</strong></div>
-                <div className="chip"><span>Emocional</span><strong>{bio.emo}%</strong></div>
-                <div className="chip"><span>Intelectual</span><strong>{bio.intel}%</strong></div>
-              </div>
-            </div>
+            <div className="grid md:grid-cols-3 gap-4">
+              <Card title="Resumen rápido">
+                <ul className="text-sm leading-7">
+                  <li><strong>Occidental (Sol):</strong> {occidental}</li>
+                  <li><strong>Chino:</strong> {chino.animal} de {chino.element}</li>
+                  <li><strong>Maya (hoy):</strong> Tono {maya.tone} – {maya.toneDesc} | {maya.seal}</li>
+                  <li><strong>Runa natal:</strong> {runes.natal.name} – {runes.natal.meaning}</li>
+                  <li><strong>Runa {target.getFullYear()}:</strong> {runes.year.name} – {runes.year.meaning}</li>
+                </ul>
+              </Card>
 
-            <div className="card">
-              <h3 className="font-medium mb-2">Sistemas</h3>
-              <div className="space-y-2">
-                <div className="chip"><span>Occidental</span><strong>{zodiacWest(birth)}</strong></div>
-                <div className="chip"><span>Chino</span><strong>{chinese(birth.getUTCFullYear())}</strong></div>
-                <div className="chip"><span>Fase lunar</span><strong>{moonPhase(when)}</strong></div>
-                <div className="chip"><span>Nota</span><strong>Lúdico / aproximado</strong></div>
-              </div>
-            </div>
-
-            <div className="card">
-              <h3 className="font-medium mb-2">Top 5 días próximos</h3>
-              <ol className="space-y-1 list-decimal ml-5">
-                {topDays.map((d,i)=>(
-                  <li key={i} className="flex justify-between gap-2">
-                    <span>{d.date}</span>
-                    <span className="text-green-300">{d.avg}%</span>
-                  </li>
+              <Card title="Biorritmos (hoy)">
+                {[["Físico", bio.physical],["Emocional", bio.emotional],["Intelectual", bio.intellectual]].map(([k,v])=> (
+                  <div key={k} className="mb-3">
+                    <div className="flex justify-between text-sm"><span>{k}</span><span>{v}%</span></div>
+                    <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="h-2 bg-gradient-to-r from-red-400 to-green-500" style={{ width: `${Math.max(0, v + 100) / 2}%` }} />
+                    </div>
+                  </div>
                 ))}
-              </ol>
-            </div>
-          </section>
+                <p className="text-xs text-gray-500">(Lúdico; no validado científicamente)</p>
+              </Card>
 
-          <section className="card">
-            <h3 className="font-medium mb-2">30 días (vista rápida)</h3>
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-sm">
-                <thead className="text-slate-300">
-                  <tr><th className="text-left p-2">Fecha</th><th className="text-right p-2">F</th><th className="text-right p-2">E</th><th className="text-right p-2">I</th><th className="text-right p-2">Avg</th></tr>
-                </thead>
-                <tbody>
-                  {Array.from({length:30},(_,i)=>{
-                    const d=new Date(when); d.setDate(when.getDate()+i);
-                    const b=biorhythm(birth,d); const avg=Math.round((b.phys+b.emo+b.intel)/3);
-                    return (
-                      <tr key={i} className="border-b border-slate-700/50">
-                        <td className="p-2">{d.toISOString().slice(0,10)}</td>
-                        <td className="p-2 text-right">{b.phys}%</td>
-                        <td className="p-2 text-right">{b.emo}%</td>
-                        <td className="p-2 text-right">{b.intel}%</td>
-                        <td className="p-2 text-right"><strong className={avg>=70?'text-green-400':avg>=40?'text-yellow-300':'text-red-300'}>{avg}%</strong></td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+              <Card title="Numerología (fecha objetivo)">
+                <ul className="text-sm leading-7">
+                  <li><strong>Camino de Vida:</strong> {num.lp}</li>
+                  <li><strong>Destino/Expresión:</strong> {num.exp}</li>
+                  <li><strong>Urgencia del Alma:</strong> {num.soul}</li>
+                  <li><strong>Personalidad:</strong> {num.pers}</li>
+                  <li><strong>Madurez:</strong> {num.mat}</li>
+                  <li><strong>Año Personal:</strong> {num.py}</li>
+                  <li><strong>Mes Personal:</strong> {num.pm}</li>
+                  <li><strong>Día Personal:</strong> {num.pd}</li>
+                </ul>
+              </Card>
             </div>
-          </section>
+
+            <Card title={`Horas planetarias – ${dateStr}`}>
+              {planetHours.error ? (
+                <p className="text-sm text-red-600">{planetHours.error} • Verifica lat/lon y huso horario.</p>
+              ) : (
+                <>
+                  <p className="text-sm mb-2">Día regido por: <strong>{planetHours.lord || "—"}</strong> (1ª hora del día).</p>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full text-sm">
+                      <thead>
+                        <tr className="text-left border-b"><th className="py-2 pr-2">#</th><th className="py-2 pr-2">Planeta</th><th className="py-2 pr-2">Fase</th><th className="py-2 pr-2">Inicio</th><th className="py-2 pr-2">Fin</th></tr>
+                      </thead>
+                      <tbody>
+                        {planetHours.rows.map((r) => (
+                          <tr key={r.idx} className="border-b last:border-0">
+                            <td className="py-1 pr-2">{r.idx}</td>
+                            <td className="py-1 pr-2">{r.planet}</td>
+                            <td className="py-1 pr-2">{r.phase}</td>
+                            <td className="py-1 pr-2">{fmtHM(r.start)}</td>
+                            <td className="py-1 pr-2">{fmtHM(r.end)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">Cálculo aproximado: NOAA + huso fijo. Uruguay sin DST desde 2015.</p>
+                </>
+              )}
+            </Card>
+
+            <Card title="Jyotish (védica)">
+              {jyotish.error ? (
+                <p className="text-sm text-red-600">{jyotish.error}</p>
+              ) : (
+                <ul className="text-sm leading-7">
+                  <li><strong>Ayanamsa (Lahiri):</strong> {jyotish.ayan?.toFixed(3)}°</li>
+                  <li><strong>Sol sideral:</strong> {jyotish.sunSign} ({jyotish.lonSunSid?.toFixed(2)}°)</li>
+                  <li><strong>Luna sideral:</strong> {jyotish.lonMoonSid?.toFixed(2)}°</li>
+                  <li><strong>Nakshatra:</strong> {jyotish.nakshatra?.name} — Pada {jyotish.nakshatra?.pada} (regente: {jyotish.nakshatra?.lord})</li>
+                  <li><strong>Mahadasha actual:</strong> {jyotish.mahadasha?.lord} {jyotish.mahadasha?.from?.toISOString().slice(0,10)} → {jyotish.mahadasha?.to?.toISOString().slice(0,10)}</li>
+                </ul>
+              )}
+              <p className="text-xs text-gray-500 mt-2">Para Ascendente y casas, integrar Swiss Ephemeris o un cálculo de casas sidéreas.</p>
+            </Card>
+
+            <Card title="Human Design (básico)">
+              {hd.error ? (
+                <p className="text-sm text-red-600">{hd.error}</p>
+              ) : (
+                <ul className="text-sm leading-7">
+                  <li><strong>Fecha de Diseño:</strong> {hd.designDate?.toISOString().slice(0,10)}</li>
+                  <li><strong>Sol Personalidad:</strong> {hd.gatePers?.gate} línea {hd.gatePers?.line}</li>
+                  <li><strong>Sol Diseño:</strong> {hd.gateDes?.gate} línea {hd.gateDes?.line}</li>
+                  <li><strong>Perfil:</strong> {hd.profile}</li>
+                </ul>
+              )}
+              <p className="text-xs text-gray-500 mt-2">Nota: mapeo de gates por división uniforme. Para exactitud usa el mandala oficial (hdkit).</p>
+            </Card>
+
+            <Card title="Próximos 30 días (biorritmos + numerología + maya)">
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-sm">
+                  <thead>
+                    <tr className="text-left border-b"><th className="py-2 pr-2">Fecha</th><th className="py-2 pr-2">Físico %</th><th className="py-2 pr-2">Emocional %</th><th className="py-2 pr-2">Intelectual %</th><th className="py-2 pr-2">Día Pers.</th><th className="py-2 pr-2">Tono</th><th className="py-2 pr-2">Sello</th></tr>
+                  </thead>
+                  <tbody>
+                    {dashboard.map((row) => (
+                      <tr key={row.date} className="border-b last:border-0">
+                        <td className="py-1 pr-2 whitespace-nowrap">{row.date}</td>
+                        <td className="py-1 pr-2">{row.bf}</td>
+                        <td className="py-1 pr-2">{row.be}</td>
+                        <td className="py-1 pr-2">{row.bi}</td>
+                        <td className="py-1 pr-2">{row.pd}</td>
+                        <td className="py-1 pr-2">{row.tone}</td>
+                        <td className="py-1 pr-2">{row.seal}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p className="text-xs text-gray-500 mt-2">Biorritmos y numerología son interpretaciones lúdicas; no sustituyen consejo médico/profesional.</p>
+            </Card>
+
+            <footer className="text-xs text-gray-500 text-center pt-4">Hecho con React + astronomy-engine + Tailwind. Tus datos no salen de tu navegador.</footer>
+          </div>
         </div>
       );
     }
 
-    ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+    ReactDOM.createRoot(document.getElementById('app-root')).render(<App />);
   </script>
 </body>
 </html>
