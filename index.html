@@ -1,158 +1,127 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>BioHealing Monitor</title>
-  <link rel="stylesheet" href="/style.css" />
+  <link rel="preload" as="style" href="./style.css" />
+  <link rel="stylesheet" href="./style.css" />
+  <link rel="preload" as="audio" href="./music.mp3" />
 </head>
 <body>
   <!-- Fondo animado -->
-  <canvas id="fx-bloodstream" aria-hidden="true"></canvas>
+  <canvas id="fx-canvas" aria-hidden="true"></canvas>
 
-  <!-- Overlay bienvenida -->
-  <div id="overlay" class="overlay" role="dialog" aria-labelledby="welcomeTitle">
-    <h1 id="welcomeTitle" class="brand">BioHealing Monitor</h1>
-    <p id="project-meta" class="meta">Paciente: <b>—</b> · Edad: —</p>
-
-    <div class="swarm">
-      <div class="swarm-box">
-        <div class="swarm-row"><span>Total nanorobots</span><strong id="n-total">0</strong></div>
-        <div class="swarm-bar"><div id="swarm-total-bar" class="swarm-fill"></div></div>
+  <!-- Overlay de bienvenida -->
+  <div id="overlay" class="overlay">
+    <div class="overlay-card">
+      <h1 class="title">SISTEMA DE BIO-OPTIMIZACIÓN</h1>
+      <p class="sub">Nanorobots totales: <span id="stat-total">—</span> • Operativos: <span id="stat-oper">—</span></p>
+      <div class="bars">
+        <div class="bar">
+          <div class="bar-fill" id="bar-total" style="width:0%"></div>
+        </div>
+        <div class="bar">
+          <div class="bar-fill ok" id="bar-oper" style="width:0%"></div>
+        </div>
       </div>
-      <div class="swarm-box">
-        <div class="swarm-row"><span>Operativos</span><strong id="n-op">0</strong></div>
-        <div class="swarm-bar alt"><div id="swarm-bar" class="swarm-fill"></div></div>
-      </div>
+      <button id="opt-start-btn" class="btn btn-primary">INICIAR</button>
+      <p class="hint">Consejo: sube el volumen si quieres ambiente inmersivo.</p>
     </div>
-
-    <button id="startBtn" class="btn big">Iniciar</button>
   </div>
 
-  <!-- Header -->
-  <header>
-    <h2>BioHealing Monitor</h2>
-
-    <div class="patient">
-      <div class="pill">Paciente: <b id="patient-name">—</b></div>
-      <div class="pill">Edad: <span id="age">—</span></div>
+  <!-- Cabecera -->
+  <header class="header">
+    <div class="left">
+      <div class="badge">Paciente</div>
+      <div class="patient">
+        <strong id="patient-name">Jonathan Fumero Mesa</strong>
+        <small>Nac: 1976-12-04 00:43 • Ciudad de la Costa (UY)</small>
+        <small>Edad exacta: <span id="live-age">—</span></small>
+      </div>
     </div>
 
-    <div class="header-ctrls">
-      <div id="led" class="led"></div>
+    <div class="controls">
       <button id="power-btn" class="btn">Encender</button>
-      <button id="sound-btn" class="btn" aria-pressed="true">Sonido: ON</button>
+      <button id="sound-btn" class="btn">Sonido: OFF</button>
       <button id="help-btn" class="btn">Ayuda</button>
-    </div>
-
-    <!-- HUD compacto con datos bio/astro -->
-    <div class="hud">
-      <div class="hud-item">
-        <span class="k">Zodiaco</span>
-        <span class="v" id="hd-zodiac">—</span>
-      </div>
-      <div class="hud-item">
-        <span class="k">Chino</span>
-        <span class="v" id="hd-czodiac">—</span>
-      </div>
-      <div class="hud-item">
-        <span class="k">Luna</span>
-        <span class="v" id="hd-moon">—</span>
-      </div>
-      <div class="hud-item">
-        <span class="k">Circadiano</span>
-        <span class="v" id="hd-circ">—</span>
-      </div>
-      <div class="hud-item">
-        <span class="k">Físico</span>
-        <span class="v" id="hd-bio-f">—</span>
-      </div>
-      <div class="hud-item">
-        <span class="k">Emocional</span>
-        <span class="v" id="hd-bio-e">—</span>
-      </div>
-      <div class="hud-item">
-        <span class="k">Intelectual</span>
-        <span class="v" id="hd-bio-i">—</span>
-      </div>
     </div>
   </header>
 
-  <!-- Breadcrumb -->
-  <nav id="breadcrumb" class="breadcrumb">
-    <button class="crumb" data-level="root">Cuerpo Humano Óptimo</button>
-    <span id="crumb-cat"></span>
-    <span id="crumb-sub"></span>
-  </nav>
-
-  <!-- Leyenda -->
-  <section id="legend" class="legend hidden card-glass" aria-label="Leyendas y cómo leer">
-    <div style="display:flex; align-items:center; justify-content:space-between; gap:1rem;">
-      <h3 style="margin:0;">¿Cómo leer este panel?</h3>
-      <button id="legend-close" class="btn alt">Cerrar</button>
-    </div>
-    <div style="display:grid; gap:.6rem; margin-top:.6rem">
-      <div>
-        <h4>HUD superior (Zodiaco, Chino, Luna, Circadiano, Biorritmos)</h4>
-        <ul>
-          <li><b>Luna</b>: fase lunar actual.</li>
-          <li><b>Circadiano</b>: tendencia biológica de esta hora del día.</li>
-          <li><b>Físico/Emocional/Intelectual</b>: biorritmos lúdicos (% orientativo).</li>
-        </ul>
-      </div>
-      <div>
-        <h4>Módulos de salud (tarjetas con aguja)</h4>
-        <ul>
-          <li><b>0–39%</b> Ajuste inicial · <b>40–74%</b> Ajustando · <b>75–100%</b> Estable.</li>
-          <li>Debajo verás una <b>interpretación</b> automática del estado.</li>
-        </ul>
-      </div>
-      <div>
-        <h4>Optimización</h4>
-        <ul>
-          <li>La barra general muestra el % total (rojo → verde).</li>
-          <li>El listado flotante recorre cada <i>componente</i> y su % propio.</li>
-        </ul>
-      </div>
-      <p class="text-xs" style="opacity:.8">Aviso: Esto es con fines educativos/lúdicos y no sustituye consejo médico.</p>
+  <!-- HUD -->
+  <section class="hud" id="hud">
+    <div class="hud-chip"><span>Occidental</span><strong id="hud-west">—</strong></div>
+    <div class="hud-chip"><span>Chino</span><strong id="hud-chinese">—</strong></div>
+    <div class="hud-chip"><span>Luna</span><strong id="hud-moon">—</strong></div>
+    <div class="hud-chip"><span>Circadiano</span><strong id="hud-circ">—</strong></div>
+    <div class="hud-chip">
+      <span>Biorritmos</span>
+      <strong>
+        F <span id="bio-f">—</span> ·
+        E <span id="bio-e">—</span> ·
+        I <span id="bio-i">—</span>
+      </strong>
     </div>
   </section>
 
-  <!-- Contenido dinámico -->
-  <main id="app" class="app"></main>
+  <!-- Grid de módulos -->
+  <main class="grid" id="grid">
+    <!-- tarjetas generadas por JS -->
+  </main>
 
-  <!-- Ticker + checklist -->
-  <div class="sys-ticker">
-    <div id="sys-ticker-track" class="sys-ticker-track"></div>
-  </div>
-  <section id="checklist" class="checklist"></section>
-
-  <!-- Optimizer panel (cola visual) -->
-  <aside id="optimizer" class="optimizer hidden" aria-live="polite">
-    <div class="opt-head">
-      <strong>Optimización en progreso</strong>
-      <button id="opt-cancel" class="btn alt sm">Cancelar</button>
+  <!-- Panel Optimización -->
+  <section class="optimizer">
+    <div class="opt-header">
+      <h2>OPTIMIZACIÓN</h2>
+      <button id="opt-btn" class="btn btn-primary">Optimizar cuerpo humano</button>
     </div>
-    <div id="opt-list" class="opt-list"></div>
-  </aside>
 
-  <!-- Info adicional -->
-  <footer>
-    <p id="ov-age"></p>
-    <p id="ov-zodiac"></p>
-    <p id="ov-czodiac"></p>
-    <p id="ov-moon"></p>
-    <p id="ov-circ"></p>
-    <p id="ov-bio-f"></p>
-    <p id="ov-bio-e"></p>
-    <p id="ov-bio-i"></p>
+    <div class="opt-queue" id="opt-queue">
+      <!-- ítems en cola (agua, oxígeno, etc) se inyectan por JS -->
+    </div>
+
+    <div class="opt-progress">
+      <div class="opt-progress-bar">
+        <div id="opt-progress-fill" class="opt-progress-fill" style="width:0%"></div>
+      </div>
+      <span id="opt-progress-label" class="opt-progress-label">0%</span>
+    </div>
+  </section>
+
+  <!-- Ticker -->
+  <footer class="ticker">
+    <div class="check">
+      <span>Escaneo</span>
+      <div class="check-bar"><div id="check-escaneo" class="check-fill" style="width:0%"></div></div>
+    </div>
+    <div class="check">
+      <span>Recuento torrente</span>
+      <div class="check-bar"><div id="check-recuento" class="check-fill" style="width:0%"></div></div>
+    </div>
+    <div class="check">
+      <span>Operativos</span>
+      <div class="check-bar"><div id="check-operativos" class="check-fill ok" style="width:0%"></div></div>
+    </div>
+    <div class="check">
+      <span>Autorreparación</span>
+      <div class="check-bar"><div id="check-autorreparacion" class="check-fill" style="width:0%"></div></div>
+    </div>
+    <div class="check">
+      <span>Depuración</span>
+      <div class="check-bar"><div id="check-depuracion" class="check-fill" style="width:0%"></div></div>
+    </div>
   </footer>
 
-  <script src="/main.js" defer></script>
+  <!-- Panel ayudas/leyendas -->
+  <aside id="help-panel" class="help hidden">
+    <h3>Leyendas</h3>
+    <ul>
+      <li>Los gauges van de 0% a 100%. Verde intenso &gt;= 85%.</li>
+      <li>Contenido lúdico/educativo. No es diagnóstico médico.</li>
+      <li>El sonido puede requerir un clic previo para activarse.</li>
+    </ul>
+  </aside>
 
-  <noscript>
-    <style>.overlay{display:none!important} body{padding:1rem}</style>
-    <p>Necesitas habilitar JavaScript para ver las animaciones y gauges.</p>
-  </noscript>
+  <script src="./main.js" defer></script>
 </body>
 </html>
