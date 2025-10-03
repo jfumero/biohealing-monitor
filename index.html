@@ -56,6 +56,8 @@
       <button id="power-btn" class="btn">Encender</button>
       <button id="sound-btn" class="btn" aria-pressed="true">Sonido: ON</button>
       <button id="opt-btn" class="btn alt" aria-controls="optimizer">Optimizar cuerpo humano</button>
+      <!-- acceso a la app de ciclos en nueva pestaña -->
+      <a href="ciclos.html" class="btn" target="_blank" rel="noopener">Ciclos personales</a>
     </div>
 
     <!-- HUD con datos bio/astro -->
@@ -70,26 +72,12 @@
     </div>
   </header>
 
-  <!-- Ticker del sistema (debajo de la cabecera) -->
-  <div class="sys-ticker">
-    <div id="sys-ticker-track" class="sys-ticker-track"></div>
-  </div>
-
-  <!-- Panel Optimización (debajo del encabezado/ticker) -->
-  <section id="optimizer" class="optimizer hidden card-glass">
-    <h3>Optimización del cuerpo humano</h3>
-
-    <!-- Barra de progreso general + % -->
-    <div class="opt-progress">
-      <div id="opt-progress-fill" class="opt-progress-fill"></div>
-      <div id="opt-progress-label" class="opt-progress-label">0%</div>
-    </div>
-
-    <!-- Cola visual de items -->
-    <div id="opt-list" class="opt-list"></div>
-
-    <div class="opt-actions">
-      <button id="opt-cancel" class="btn alt">Cancelar</button>
+  <!-- Barra general de optimización (debajo del encabezado) -->
+  <section class="opt-progress card-glass" aria-label="Progreso general de optimización">
+    <div class="title-sm" style="margin-bottom:.35rem;">Optimización general</div>
+    <div class="opt-bar opt-bar-lg">
+      <div id="opt-progress-fill" class="opt-fill" style="transform:scaleX(0)"></div>
+      <div id="opt-progress-label" class="opt-mini-label">0%</div>
     </div>
   </section>
 
@@ -97,6 +85,18 @@
   <main>
     <div id="grid" class="grid"></div>
   </main>
+
+  <!-- Panel Optimización -->
+  <section id="optimizer" class="optimizer hidden card-glass">
+    <h3>Optimización del cuerpo humano</h3>
+    <div id="opt-list" class="opt-list"></div>
+    <button id="opt-cancel" class="btn alt">Cancelar</button>
+  </section>
+
+  <!-- Ticker inferior -->
+  <div id="sys-ticker" class="sys-ticker">
+    <div id="sys-ticker-track" class="sys-ticker-track"></div>
+  </div>
 
   <!-- Canvas FX de fondo -->
   <canvas id="fx-bloodstream"></canvas>
