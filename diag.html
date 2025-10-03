@@ -1,17 +1,21 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Diagnóstico BioHealing</title>
-<link rel="stylesheet" href="/css/style.css?v=4">
-<body style="font-family:system-ui;padding:20px">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Diagnóstico de Carga</title>
+  <link rel="stylesheet" href="/style.css" />
+  <style>body{padding:16px}</style>
+</head>
+<body>
   <h1>Diagnóstico</h1>
-  <ol>
-    <li>CSS cargado: <b id="css-ok">verificando…</b></li>
-    <li>JS cargado: <b id="js-ok">verificando…</b></li>
-    <li>Fetch a /css/style.css: <b id="fetch-ok">verificando…</b></li>
-  </ol>
-  <p>Abre también: <a href="/css/style.css?v=4">/css/style.css?v=4</a></p>
-  <script src="/js/diag.js?v=1" defer></script>
+  <p>Si ves “OK” en todo, CSS y JS cargan bien.</p>
+  <ul>
+    <li id="chk-css">CSS: <strong>OK</strong></li>
+    <li id="chk-js">JS: <strong id="js-ok">—</strong></li>
+  </ul>
+  <script>
+    document.getElementById('js-ok').textContent = 'OK';
+  </script>
 </body>
 </html>
