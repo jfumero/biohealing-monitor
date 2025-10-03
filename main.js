@@ -1,393 +1,479 @@
-/** ===================
- *  Fondo animado (torrente)
- *  =================== */
-class BloodstreamFX {
-  constructor(canvas){
-    this.c = canvas;
-    this.ctx = canvas.getContext('2d');
-    this.running = false;
-    this.particles = [];
-    this.resize = this.resize.bind(this);
-    window.addEventListener('resize', this.resize);
-    this.resize();
-    this.seed();
-  }
-  resize(){
-    this.c.width = innerWidth; this.c.height = innerHeight;
-  }
-  seed(){
-    const n = Math.min(160, Math.floor((innerWidth*innerHeight)/20000));
-    this.particles = Array.from({length:n}, ()=>({
-      x: Math.random()*this.c.width,
-      y: Math.random()*this.c.height,
-      v: 0.6 + Math.random()*1.2,
-      r: 0.7 + Math.random()*1.8,
-      a: Math.random()*Math.PI*2
-    }));
-  }
-  start(){ if(this.running) return; this.running = true; this.loop(); }
-  stop(){ this.running = false; }
-  loop(){
-    if(!this.running) return;
-    const {ctx, c} = this;
-    ctx.clearRect(0,0,c.width,c.height);
-    ctx.globalAlpha = 0.9;
-    // leve gradiente
-    const g = ctx.createLinearGradient(0,0,c.width,c.height);
-    g.addColorStop(0,'rgba(20,35,70,0.10)');
-    g.addColorStop(1,'rgba(10,20,40,0.08)');
-    ctx.fillStyle = g; ctx.fillRect(0,0,c.width,c.height);
-    // partículas
-    ctx.globalAlpha = 0.8;
-    for(const p of this.particles){
-      p.x += Math.cos(p.a) * p.v * 0.6 + 0.2;
-      p.y += Math.sin(p.a) * p.v * 0.2 + Math.sin(p.x*0.01)*0.4;
-      if(p.x > c.width+20) p.x = -20;
-      if(p.y > c.height+20) p.y = -20;
-      if(p.y < -20) p.y = c.height+20;
-      ctx.beginPath();
-      ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-      ctx.fillStyle = 'rgba(60,120,255,0.25)';
-      ctx.fill();
-    }
-    requestAnimationFrame(()=>this.loop());
-  }
+/*********************************************************
+ * CONFIGURACIÓN DEL PACIENTE Y ESTADO
+ *********************************************************/
+const PACIENTE = {
+  nombre: "Jonathan Fumero Mesa",
+  nacimiento: new Date("1976-12-04T00:43:00-03:00") // unificado 00:43
+};
+
+let sistemaEncendido = false;
+let sonidoOn = true;
+
+/*********************************************************
+ * UTILIDADES BÁSICAS
+ *********************************************************/
+const $ = (sel, ctx = document) => ctx.querySelector(sel);
+const $$ = (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel));
+
+function two(n){ return n<10? "0"+n : ""+n; }
+
+function duracionHumana(ms){
+  const s = Math.floor(ms/1000);
+  const d = Math.floor(s/86400);
+  const h = Math.floor((s%86400)/3600);
+  const m = Math.floor((s%3600)/60);
+  const r = [];
+  if(d) r.push(d+"d");
+  if(h) r.push(h+"h");
+  if(m) r.push(m+"m");
+  r.push((s%60)+"s");
+  return r.join(" ");
 }
 
-/** ===================
- *  Utilidades simples
- *  =================== */
-const clamp = (v,min,max)=> Math.max(min, Math.min(max,v));
-const lerp = (a,b,t)=> a + (b-a)*t;
-const pad2 = n => String(n).padStart(2,'0');
-
-function toLiveAgeString(birth){
-  const now = new Date();
-  let diff = (now - birth)/1000 | 0;
-  const s = diff%60; diff=(diff/60)|0;
-  const m = diff%60; diff=(diff/60)|0;
-  const h = diff%24; diff=(diff/24)|0;
-  const d = diff%30; const mo = ((diff/30)|0)%12; const y = (diff/365)|0;
-  return `${y}a ${mo}m ${d}d ${pad2(h)}:${pad2(m)}:${pad2(s)}`;
+function calcularEdadViva(nac){
+  const ahora = new Date();
+  const diff = ahora - nac;
+  // años exactos con decimales para "viva"
+  const years = diff / (365.2425*24*3600*1000);
+  return years;
 }
 
-/** ===================
- *  Audio
- *  =================== */
-let soundOn = false;
-const humCtx = new (window.AudioContext || window.webkitAudioContext)();
-let humOsc, humGain;
+function signoZodiaco(date){
+  const d = date, m = d.getMonth()+1, day = d.getDate();
+  const tbl = [
+    [1,20,"Capricornio"],[2,19,"Acuario"],[3,21,"Piscis"],[4,20,"Aries"],[5,21,"Tauro"],
+    [6,21,"Géminis"],[7,23,"Cáncer"],[8,23,"Leo"],[9,23,"Virgo"],[10,23,"Libra"],
+    [11,22,"Escorpio"],[12,22,"Sagitario"],[12,32,"Capricornio"]
+  ];
+  for(let i=0;i<tbl.length-1;i++){
+    const [mm,dd,name] = tbl[i], [mm2,dd2] = tbl[i+1];
+    if((m===mm && day>=dd) || (m===mm2 && day<dd2)) return name;
+  }
+  return "—";
+}
+
+function zodiacoChino(date){
+  const y = date.getFullYear();
+  const animals = ["Rata","Buey","Tigre","Conejo","Dragón","Serpiente","Caballo","Cabra","Mono","Gallo","Perro","Cerdo"];
+  const idx = (y - 1900) % 12;
+  const elements = ["Madera","Fuego","Tierra","Metal","Agua"];
+  const elem = elements[Math.floor(((y - 1924) % 10)/2)];
+  return animals[(idx+12)%12] + " (" + elem + ")";
+}
+
+function faseLunarAprox(date=new Date()){
+  // algoritmo simple sin astronomía real (suficiente para estética)
+  const lp = 2551443; // duración lunación en s
+  const now = date.getTime()/1000;
+  const new_moon = Date.UTC(2001,0,24,13,35)/1000; // referencia
+  const phase = ((now - new_moon) % lp) / lp;
+  const pct = Math.round(phase*100);
+  let nombre = "Nueva";
+  if(phase<0.25) nombre = "Creciente";
+  else if(phase<0.5) nombre = "Cuarto creciente";
+  else if(phase<0.75) nombre = "Menguante";
+  else nombre = "Cuarto menguante";
+  return `${nombre} ~${pct}%`;
+}
+
+function estadoCircadiano(h = new Date().getHours()){
+  if (h>=6 && h<10) return "Alerta matutina";
+  if (h>=10 && h<14) return "Desempeño pico";
+  if (h>=14 && h<18) return "Ligera siesta";
+  if (h>=18 && h<22) return "Activación suave";
+  return "Descanso/recuperación";
+}
+
+function biorritmos(baseDate, today=new Date()){
+  // biorritmos clásicos: Físico 23d, Emocional 28d, Intelectual 33d
+  const dayMs = 86400000;
+  const d = Math.floor((+today - +baseDate)/dayMs);
+  function wave(p){ return Math.sin(2*Math.PI*d/p); }
+  const F = wave(23), E = wave(28), I = wave(33);
+  const fmt = x => (x*100).toFixed(0)+"%";
+  return `F:${fmt(F)} E:${fmt(E)} I:${fmt(I)}`;
+}
+
+/*********************************************************
+ * OVERLAY / CONTADORES INICIALES
+ *********************************************************/
+const overlay = $("#overlay");
+const elNanoTotal = $("#nano-total");
+const elNanoActivos = $("#nano-activos");
+const barraOverlay = $("#barra-progreso");
+
+let overlayTick = 0;
+let overlayTimer = setInterval(()=>{
+  overlayTick++;
+  const total = 5000 + Math.floor(overlayTick*37*Math.random());
+  const activos = Math.floor(total*(0.72 + 0.2*Math.random()));
+  elNanoTotal.textContent = total.toLocaleString("es-UY");
+  elNanoActivos.textContent = activos.toLocaleString("es-UY");
+  const pct = Math.min(100, Math.floor(overlayTick*4));
+  barraOverlay.style.width = pct+"%";
+  if (pct>=100) clearInterval(overlayTimer);
+}, 120);
+
+$("#btn-comenzar")?.addEventListener("click", ()=> overlay.style.display="none");
+$("#btn-optimizar")?.addEventListener("click", ()=> iniciarOptimizer());
+
+/*********************************************************
+ * HUD / DATOS VIVOS
+ *********************************************************/
+$("#paciente").textContent = PACIENTE.nombre;
+
+function tickHUD(){
+  const yrs = calcularEdadViva(PACIENTE.nacimiento);
+  $("#edad").textContent = yrs.toFixed(8)+" años";
+  $("#zodiaco").textContent = signoZodiaco(PACIENTE.nacimiento);
+  $("#chino").textContent = zodiacoChino(PACIENTE.nacimiento);
+  $("#luna").textContent = faseLunarAprox(new Date());
+  $("#circadiano").textContent = estadoCircadiano();
+  $("#biorritmos").textContent = biorritmos(PACIENTE.nacimiento);
+}
+setInterval(tickHUD, 250);
+tickHUD();
+
+/*********************************************************
+ * AUDIO: HUM + MÚSICA (al ENCENDER)
+ *********************************************************/
+let audioCtx, humNode, musicEl, musicLoaded=false;
+
+function ensureAudio(){
+  if (!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+}
+
 function startHum(){
-  if(humOsc) return;
-  humOsc = humCtx.createOscillator();
-  humGain = humCtx.createGain();
-  humOsc.type='sine';
-  humOsc.frequency.value = 80;
-  humGain.gain.value = 0.03;
-  humOsc.connect(humGain).connect(humCtx.destination);
-  humOsc.start();
+  if (!audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = "sawtooth";
+  osc.frequency.value = 31;
+  gain.gain.value = 0.02;
+  osc.connect(gain).connect(audioCtx.destination);
+  osc.start();
+  humNode = {osc,gain};
 }
 function stopHum(){
-  if(humOsc){ humOsc.stop(); humOsc.disconnect(); humOsc=null; }
-  if(humGain){ humGain.disconnect(); humGain=null; }
-}
-const musicEl = new Audio('./music.mp3');
-musicEl.loop = true; musicEl.volume = 0.18;
-
-function startMusic(){
-  musicEl.currentTime = 0;
-  musicEl.play().catch(()=>{/* autoplay puede bloquearse hasta click */});
-}
-function stopMusic(){ musicEl.pause(); }
-
-/** ===================
- *  HUD básico (lúdico)
- *  =================== */
-function zodiacWest(date){
-  const m = date.getUTCMonth()+1, d = date.getUTCDate();
-  const k = ['Cap','Acu','Pis','Aries','Tau','Gem','Cán','Leo','Vir','Lib','Esc','Sag'];
-  const cuts = [120,219,321,420,521,621,723,823,923,1023,1122,1222];
-  const md = m*100+d;
-  let i = cuts.findIndex(c=>md< c); if(i<0) i=0;
-  return k[i];
-}
-function zodiacChinese(y){
-  const animals = ['Rata','Buey','Tigre','Conejo','Dragón','Serpiente','Caballo','Cabra','Mono','Gallo','Perro','Cerdo'];
-  return animals[(y - 1900) % 12];
-}
-function moonPhase(date){
-  // aproximación simple
-  const lp = 2551443; // seg ciclo sinódico
-  const new_moon = Date.UTC(2001,0,1,0,0,0)/1000;
-  const now = date.getTime()/1000;
-  const phase = ((now - new_moon) % lp)/lp;
-  const pct = Math.round(phase*100);
-  return `${pct}%`;
-}
-function circadianNow(date){
-  const h = date.getHours();
-  const labels = ['Sueño','Sueño','Sueño','Sueño','Sueño','Amanece','Arranque','Alta alerta','Foco','Foco','Descenso','Pausa','Digestión','Pico 2','Social','Relajo','Atardecer','Baja alerta','Noche','Noche','Noche','Noche','Noche','Noche'];
-  return labels[h] || '—';
-}
-function biorhythm(birth, targetDate=new Date()){
-  const days = (targetDate - birth)/(1000*60*60*24);
-  const phys = Math.sin(2*Math.PI*days/23);
-  const emo  = Math.sin(2*Math.PI*days/28);
-  const intel= Math.sin(2*Math.PI*days/33);
-  const pct = x => Math.round((x*0.5+0.5)*100);
-  return { phys:pct(phys), emo:pct(emo), intel:pct(intel) };
+  if (humNode?.osc){
+    try{ humNode.osc.stop(); }catch{}
+    humNode = null;
+  }
 }
 
-/** ===================
- *  Gauges + módulos
- *  =================== */
-const MODULES = [
-  { id:'organos',   name:'Órganos internos' },
-  { id:'piel',      name:'Piel y tejido' },
-  { id:'glucosa',   name:'Glucosa' },
-  { id:'globulos',  name:'Glóbulos (inmunidad)' },
-  { id:'presion',   name:'Presión arterial' },
-  { id:'detox',     name:'Detox hepático' }
-];
+function loadMusicOnce(){
+  return new Promise((resolve)=>{
+    if (musicLoaded) return resolve();
+    musicEl = new Audio("music.mp3");
+    musicEl.loop = true;
+    musicEl.preload = "auto";
+    musicEl.addEventListener("canplaythrough", ()=>{
+      musicLoaded = true; resolve();
+    }, {once:true});
+    musicEl.load();
+  });
+}
+function startMusic(){ if (musicEl) musicEl.play().catch(()=>{}); }
+function stopMusic(){ if (musicEl) try{ musicEl.pause(); }catch{} }
 
+function setSonido(on){
+  sonidoOn = !!on;
+  if (!on){ stopHum(); stopMusic(); }
+  else {
+    ensureAudio();
+    startHum();
+    if (sistemaEncendido){
+      loadMusicOnce().then(startMusic);
+    }
+  }
+}
+$("#btn-sonido")?.addEventListener("click", ()=> setSonido(!sonidoOn));
+
+/*********************************************************
+ * POWER ON / OFF
+ *********************************************************/
+$("#btn-encender")?.addEventListener("click", async ()=>{
+  if (sistemaEncendido) return;
+  sistemaEncendido = true;
+  $("#estado-led").style.background = "#1df254";
+  $("#estado-led").style.boxShadow = "0 0 10px #1df254";
+
+  ensureAudio();
+  if (audioCtx.state === "suspended") await audioCtx.resume();
+
+  if (sonidoOn){
+    startHum();
+    await loadMusicOnce();
+    startMusic(); // música comienza al ENCENDER (tu preferencia)
+  }
+
+  iniciarGauges();
+  iniciarOptimizer();
+  startTicker();
+});
+
+$("#btn-apagar")?.addEventListener("click", ()=>{
+  if (!sistemaEncendido) return;
+  sistemaEncendido = false;
+  $("#estado-led").style.background = "#ff4d4f";
+  $("#estado-led").style.boxShadow = "0 0 10px #ff4d4f";
+
+  stopMusic();
+  stopHum();
+  detenerGauges();
+  detenerOptimizer();
+  stopTicker();
+});
+
+/*********************************************************
+ * CANVAS “TORRENTE SANGUÍNEO”
+ *********************************************************/
+const canvas = $("#canvas");
+const ctx = canvas.getContext("2d",{alpha:true});
+let W=0,H=0, particles=[];
+
+function resize(){
+  W = canvas.width  = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+window.addEventListener("resize", resize);
+resize();
+
+function mkParticle(){
+  const t = Math.random()<0.12? "nanobot":"celula";
+  return {
+    t,
+    x: Math.random()*W,
+    y: Math.random()*H,
+    r: t==="nanobot"? 2.2+Math.random()*1.4 : 3.5+Math.random()*2.0,
+    vx: 0.3 + Math.random()*1.2,
+    vy: (Math.random()-0.5)*0.4,
+    a: Math.random()*Math.PI*2
+  };
+}
+for (let i=0;i<180;i++) particles.push(mkParticle());
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  // leve tinte
+  ctx.fillStyle = "rgba(5,20,28,0.35)";
+  ctx.fillRect(0,0,W,H);
+
+  for (const p of particles){
+    p.x += p.vx;
+    p.y += p.vy + Math.sin((p.a+=0.02))*0.05;
+    if (p.x>W+20) { p.x=-20; p.y=Math.random()*H; }
+
+    if (p.t==="nanobot"){
+      ctx.fillStyle = "rgba(0,255,200,0.9)";
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
+      // “antenas”
+      ctx.strokeStyle="rgba(0,255,200,0.6)";
+      ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p.x+p.r+2,p.y-2); ctx.stroke();
+    } else {
+      ctx.fillStyle = "rgba(255,60,60,0.6)";
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
+    }
+  }
+  requestAnimationFrame(draw);
+}
+requestAnimationFrame(draw);
+
+/*********************************************************
+ * GAUGES POR MÓDULO
+ *********************************************************/
+const estados = {}; // {modId:{val, tgt, running, txtEl}}
+function toAngle(v){ // v:0..100 -> ángulo  -90°..+90°
+  return (v/100)*Math.PI - Math.PI/2;
+}
 function interpText(modId, v){
   const pct = Math.round(v);
-  const low = pct < 40, mid = pct >= 40 && pct < 75, high = pct >= 75;
-  const ok  = pct >= 85;
+  const low = pct<40, mid = pct>=40 && pct<75, ok = pct>=85;
   switch(modId){
-    case 'glucosa':
-      if(low)  return 'Glucemia baja/irregular: revisar ingesta y ritmo.';
-      if(mid)  return 'Glucemia modulándose; evitar picos azucarados.';
-      return ok ? 'Glucemia estable y en rango óptimo.' : 'Glucemia estable.';
-    case 'presion':
-      if(low)  return 'Presión inestable o baja; hidratarse y descansar.';
-      if(mid)  return 'Presión ajustándose; monitoreo recomendado.';
-      return ok ? 'Presión arterial estable y óptima.' : 'Presión estable.';
-    case 'globulos':
-      if(low)  return 'Inmunidad baja; priorizar descanso y micronutrientes.';
-      if(mid)  return 'Sistema inmune activándose.';
-      return ok ? 'Inmunidad fuerte y balanceada.' : 'Inmunidad adecuada.';
-    case 'organos':
-      if(low)  return 'Funciones orgánicas en recuperación.';
-      if(mid)  return 'Funciones estabilizando.';
-      return ok ? 'Órganos en óptimo rendimiento.' : 'Funciones estables.';
-    case 'piel':
-      if(low)  return 'Tejidos resecos/estresados; hidratar y nutrir.';
-      if(mid)  return 'Regeneración en curso.';
-      return ok ? 'Piel y tejido en excelente estado.' : 'Piel/tejido estables.';
-    case 'detox':
-      if(low)  return 'Detox lento; reducir cargas y favorecer hígado.';
-      if(mid)  return 'Depuración en progreso.';
-      return ok ? 'Depuración eficiente y limpia.' : 'Depuración estable.';
+    case "glucosa":
+      if(low) return "Glucemia baja/irregular: revisar ingesta y ritmo.";
+      if(mid) return "Glucemia modulándose; evitar picos azucarados.";
+      return ok? "Glucemia estable y en rango óptimo." : "Glucemia estable.";
+    case "presion":
+      if(low) return "Presión inestable o baja; hidratarse y descansar.";
+      if(mid) return "Presión ajustándose; monitoreo recomendado.";
+      return ok? "Presión arterial estable y óptima." : "Presión estable.";
+    case "globulos":
+      if(low) return "Hematíes/Leucocitos ajustándose.";
+      if(mid) return "Recuento en estabilización.";
+      return ok? "Hematología en rango ideal." : "Hematología estable.";
+    case "detox":
+      if(low) return "Inicio de depuración: fase lenta.";
+      if(mid) return "Detox en progreso; soporte hepático.";
+      return ok? "Depuración avanzada y eficiente." : "Detox estable.";
     default:
-      return '';
+      return "Estabilizando…";
   }
 }
 
-function makeGaugeDom(mod){
-  const card = document.createElement('div');
-  card.className = 'card';
-  card.innerHTML = `
-    <h3>${mod.name}</h3>
-    <div class="gauge" id="g-${mod.id}">
-      <svg width="180" height="120" viewBox="0 0 180 120" aria-hidden="true">
-        <path d="M20 100 A70 70 0 1 1 160 100" fill="none" stroke="#20304f" stroke-width="10" />
-        <path id="arc-${mod.id}" d="M20 100 A70 70 0 1 1 160 100" fill="none" stroke="#39f" stroke-width="10" stroke-linecap="round" stroke-dasharray="0 439"/>
-        <circle id="needle-${mod.id}" cx="90" cy="100" r="5" fill="#2fd184"/>
-      </svg>
-    </div>
-    <div class="status">Estado: <span id="st-${mod.id}">En espera</span> · Valor: <strong id="val-${mod.id}">0%</strong></div>
-    <div class="interp" id="tx-${mod.id}">—</div>
-  `;
-  return card;
-}
+function drawGauge(ctx, v){
+  const w = ctx.canvas.width, h = ctx.canvas.height;
+  const cx = w/2, cy = h*0.95, r = Math.min(w*0.48, h*0.95);
+  ctx.clearRect(0,0,w,h);
 
-function animateTo(modId, from, to, ms){
-  const arc = document.getElementById(`arc-${modId}`);
-  const needle = document.getElementById(`needle-${modId}`);
-  const valEl = document.getElementById(`val-${modId}`);
-  const tx = document.getElementById(`tx-${modId}`);
-  const start = performance.now();
-  const totalLen = 439; // aprox arco
-  function step(t){
-    const k = clamp((t-start)/ms,0,1);
-    const v = Math.round(lerp(from,to,k));
-    const dash = Math.round(totalLen * v/100);
-    arc.setAttribute('stroke-dasharray', `${dash} ${totalLen-dash}`);
-    const ang = Math.PI + Math.PI * v/100; // 180° -> 360°
-    const cx = 90 + Math.cos(ang)*70;
-    const cy = 100 + Math.sin(ang)*70;
-    needle.setAttribute('cx', cx.toFixed(1));
-    needle.setAttribute('cy', cy.toFixed(1));
-    valEl.textContent = `${v}%`;
-    tx.textContent = interpText(modId, v);
-    if(k<1) requestAnimationFrame(step);
+  // arco base
+  ctx.strokeStyle="#0b3a4f"; ctx.lineWidth=8;
+  ctx.beginPath(); ctx.arc(cx,cy,r,-Math.PI,0); ctx.stroke();
+
+  // ticks
+  ctx.strokeStyle="#0ff6"; ctx.lineWidth=2;
+  for (let i=0;i<=10;i++){
+    const a = -Math.PI + i*(Math.PI/10);
+    const x1 = cx + Math.cos(a)* (r-10);
+    const y1 = cy + Math.sin(a)* (r-10);
+    const x2 = cx + Math.cos(a)* (r);
+    const y2 = cy + Math.sin(a)* (r);
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
   }
-  requestAnimationFrame(step);
+
+  // aguja
+  const a = toAngle(v)+Math.PI/2; // convertir a arco inferior
+  ctx.strokeStyle="#00ffd0"; ctx.lineWidth=3;
+  ctx.beginPath();
+  ctx.moveTo(cx,cy);
+  ctx.lineTo(cx + Math.cos(a)*(r-14), cy + Math.sin(a)*(r-14));
+  ctx.stroke();
+
+  // valor
+  ctx.fillStyle="#bfefff";
+  ctx.font="bold 14px ui-monospace,monospace";
+  ctx.textAlign="center";
+  ctx.fillText(Math.round(v)+"%", cx, cy-8);
 }
 
-/** ===================
- *  Ticker
- *  =================== */
-const CHECKS = ['escaneo','recuento','operativos','autorreparacion','depuracion'];
-function setCheck(id, pct){
-  const el = document.getElementById(`check-${id}`);
-  if(!el) return;
-  el.style.width = `${clamp(pct,0,100)}%`;
+function iniciarGauges(){
+  $$(".modulo").forEach(mod=>{
+    const id = mod.getAttribute("data-id");
+    const c = $(".gauge", mod);
+    const ctx = c.getContext("2d");
+    const txt = $("#"+id+"-txt");
+    c.width = 160; c.height = 100;
+
+    estados[id] = {val: 25+Math.random()*10, tgt: 25, running:false, ctx, txt};
+
+    drawGauge(ctx, estados[id].val);
+
+    $(".btn-activar", mod).onclick = ()=>{
+      estados[id].tgt = 75 + Math.random()*20;
+      estados[id].running = true;
+      txt.textContent = "Calibrando…";
+    };
+    $(".btn-detener", mod).onclick = ()=>{
+      estados[id].tgt = 30 + Math.random()*10;
+      estados[id].running = false;
+      txt.textContent = "En espera";
+    };
+  });
 }
 
-/** ===================
- *  Optimizer
- *  =================== */
+function stepGauges(){
+  for (const id in estados){
+    const st = estados[id];
+    if (!st) continue;
+    const spd = 0.35;
+    if (Math.abs(st.val - st.tgt)>0.05){
+      st.val += (st.tgt - st.val)*0.03 + (Math.random()-0.5)*spd*0.02;
+      st.val = Math.max(0, Math.min(100, st.val));
+      drawGauge(st.ctx, st.val);
+      if (st.running){
+        st.txt.textContent = interpText(id, st.val);
+      }
+    } else if (st.running) {
+      st.txt.textContent = interpText(id, st.val);
+    }
+  }
+  requestAnimationFrame(stepGauges);
+}
+requestAnimationFrame(stepGauges);
+
+function detenerGauges(){
+  for (const id in estados){
+    if (estados[id]){
+      estados[id].tgt = 25 + Math.random()*10;
+      estados[id].running = false;
+      estados[id].txt.textContent = "En espera";
+    }
+  }
+}
+
+/*********************************************************
+ * OPTIMIZER (cola de tareas con barra general)
+ *********************************************************/
+let optimizerTimer=null, optimizerPct=0;
+
 const OPT_ITEMS = [
-  'Agua celular','Oxígeno','Neurotransmisores','Hormonas','Estilo de vida','Núcleo celular'
+  "Hidratación celular","Oxigenación tisular","Nutrientes esenciales",
+  "Sistema inmune","Homeostasis energética","Hábitos circadianos",
+  "Reparación de ADN","Autofagia regulada","Depuración hepática",
+  "Microbiota equilibrada","Inflamación controlada","Regeneración tisular"
 ];
 
-function runOptimizer(){
-  const queue = document.getElementById('opt-queue');
-  queue.innerHTML = '';
-  let done = 0;
-  OPT_ITEMS.forEach((name, i)=>{
-    const item = document.createElement('div');
-    item.className = 'opt-item';
-    item.innerHTML = `
-      <div>${name}</div>
-      <div class="mini"><div id="mini-${i}"></div></div>
-    `;
-    queue.appendChild(item);
-  });
+function iniciarOptimizer(){
+  const cola = $("#cola");
+  cola.innerHTML = "";
+  optimizerPct = 0;
+  $("#barra-general").style.width = "0%";
 
-  function fillMini(i){
-    const bar = document.getElementById(`mini-${i}`);
-    let v = 0;
-    const h = setInterval(()=>{
-      v += 5 + Math.random()*10;
-      if(v>=100){ v=100; clearInterval(h); done++; maybeUpdateProgress(); if(i+1<OPT_ITEMS.length) fillMini(i+1); }
-      bar.style.width = `${v}%`;
+  let i=0;
+  optimizerTimer && clearInterval(optimizerTimer);
+  optimizerTimer = setInterval(()=>{
+    if (i>=OPT_ITEMS.length){
+      clearInterval(optimizerTimer);
+      optimizerTimer=null;
+      return;
+    }
+    const row = document.createElement("div");
+    row.className="row";
+    row.innerHTML = `<span>• ${OPT_ITEMS[i]}</span><div class="barra" style="flex:1"><div style="width:0%"></div></div>`;
+    cola.appendChild(row);
+
+    let p=0; const bar = row.querySelector(".barra>div");
+    const t = setInterval(()=>{
+      p += 10+Math.random()*12;
+      if (p>=100){ p=100; clearInterval(t); }
+      bar.style.width = p+"%";
     }, 120);
-  }
-  fillMini(0);
 
-  function maybeUpdateProgress(){
-    const pct = Math.round(done/OPT_ITEMS.length*100);
-    const fill = document.getElementById('opt-progress-fill');
-    const lab  = document.getElementById('opt-progress-label');
-    fill.style.width = `${pct}%`;
-    lab.textContent = `${pct}%`;
-  }
+    i++;
+    optimizerPct = Math.round((i/OPT_ITEMS.length)*100);
+    $("#barra-general").style.width = optimizerPct+"%";
+  }, 800);
 }
 
-/** ===================
- *  Estado / Wiring
- *  =================== */
-document.addEventListener('DOMContentLoaded', ()=>{
-  const fx = new BloodstreamFX(document.getElementById('fx-canvas'));
+function detenerOptimizer(){
+  optimizerTimer && clearInterval(optimizerTimer);
+  optimizerTimer=null;
+  $("#cola").innerHTML = "";
+  $("#barra-general").style.width = "0%";
+}
 
-  // edad en vivo
-  const birth = new Date(Date.UTC(1976,11,4,3,43-3)); // 1976-12-04 00:43 -03:00
-  setInterval(()=>{ document.getElementById('live-age').textContent = toLiveAgeString(birth); }, 1000);
-
-  // HUD cada 1s
-  setInterval(()=>{
-    const now = new Date();
-    document.getElementById('hud-west').textContent = zodiacWest(now);
-    document.getElementById('hud-chinese').textContent = zodiacChinese(now.getFullYear());
-    document.getElementById('hud-moon').textContent = moonPhase(now);
-    document.getElementById('hud-circ').textContent = circadianNow(now);
-    const bio = biorhythm(birth, now);
-    document.getElementById('bio-f').textContent = `${bio.phys}%`;
-    document.getElementById('bio-e').textContent = `${bio.emo}%`;
-    document.getElementById('bio-i').textContent = `${bio.intel}%`;
-  }, 1000);
-
-  // construir módulos
-  const grid = document.getElementById('grid');
-  MODULES.forEach(mod=>{
-    const card = makeGaugeDom(mod);
-    grid.append(card);
-  });
-
-  // Overlay iniciar
-  const overlay = document.getElementById('overlay');
-  const startBtn = document.getElementById('opt-start-btn');
-  const updateOverlayBars = ()=>{
-    let a=0,b=0;
-    const h = setInterval(()=>{
-      a = clamp(a+8,0,100);
-      b = clamp(b+12,0,100);
-      document.getElementById('bar-total').style.width = `${a}%`;
-      document.getElementById('bar-oper').style.width = `${b}%`;
-      document.getElementById('stat-total').textContent = `${Math.round(10000 * a/100)}`;
-      document.getElementById('stat-oper').textContent  = `${Math.round(7500  * b/100)}`;
-      if(a>=100 && b>=100) clearInterval(h);
-    }, 80);
-  };
-  updateOverlayBars();
-
-  startBtn.addEventListener('click', ()=>{
-    overlay.style.display='none';
-    document.getElementById('power-btn').click(); // enciende
-    if(soundOn){ startMusic(); }
-  });
-
-  // Power / Sonido / Ayuda
-  const powerBtn = document.getElementById('power-btn');
-  powerBtn.addEventListener('click', ()=>{
-    const on = powerBtn.dataset.on === '1';
-    if(on){
-      powerBtn.dataset.on='0'; powerBtn.textContent='Encender';
-      fx.stop();
-      // status
-      MODULES.forEach(m=>{ document.getElementById(`st-${m.id}`).textContent='En espera'; });
-    }else{
-      powerBtn.dataset.on='1'; powerBtn.textContent='Apagar';
-      fx.start();
-      // animar gauges con valores aleatorios
-      MODULES.forEach(m=>{
-        document.getElementById(`st-${m.id}`).textContent='Estable';
-        const target = 55 + Math.random()*40; // 55-95%
-        animateTo(m.id, 0, Math.round(target), 1400 + Math.random()*600);
-      });
-      // ticker
-      setCheck('escaneo', 60);
-      setTimeout(()=>setCheck('recuento', 45), 600);
-      setTimeout(()=>setCheck('operativos', 72), 1100); // <- id correcto
-      setTimeout(()=>setCheck('autorreparacion', 38), 1500);
-      setTimeout(()=>setCheck('depuracion', 50), 1900);
-    }
-  });
-
-  const soundBtn = document.getElementById('sound-btn');
-  soundBtn.addEventListener('click', async ()=>{
-    if(!soundOn){
-      // activar
-      if(humCtx.state === 'suspended'){ await humCtx.resume(); }
-      startHum();
-      soundOn = true;
-      soundBtn.textContent = 'Sonido: ON';
-      // no arrancamos música automáticamente; requiere interacción explícita (overlay ya lo contempla)
-    }else{
-      stopHum(); stopMusic();
-      soundOn = false;
-      soundBtn.textContent = 'Sonido: OFF';
-    }
-  });
-
-  const helpBtn = document.getElementById('help-btn');
-  const help = document.getElementById('help-panel');
-  helpBtn.addEventListener('click', ()=>{
-    help.classList.toggle('hidden');
-  });
-
-  // Optimizer
-  document.getElementById('opt-btn').addEventListener('click', runOptimizer);
-
-  // página oculta/visible pausa/reanuda FX y música
-  document.addEventListener('visibilitychange', ()=>{
-    if(document.hidden){ fx.stop(); musicEl.pause(); }
-    else{
-      if(powerBtn.dataset.on==='1') fx.start();
-      if(soundOn) musicEl.play().catch(()=>{});
-    }
-  });
-});
+/*********************************************************
+ * TICKER INFERIOR
+ *********************************************************/
+let tickerTimer=null;
+function startTicker(){
+  const el = $("#ticker-texto");
+  const base = [
+    ()=>`Escaneo sistémico ${Math.floor(Math.random()*9999)} pkt/s`,
+    ()=>`Nanorobots en torrente: ${ (4500+Math.floor(Math.random()*2000)).toLocaleString("es-UY") }`,
+    ()=>`Operativos: ${ (3200+Math.floor(Math.random()*1400)).toLocaleString("es-UY") }`,
+    ()=>`Autorreparación: ${ (70+Math.floor(Math.random()*20)) }%`,
+    ()=>`Depuración activa: ${ (60+Math.floor(Math.random()*35)) }%`
+  ];
+  function feed(){
+    el.textContent = base.map(fn=>fn()).join("  •  ");
+  }
+  feed();
+  tickerTimer && clearInterval(tickerTimer);
+  tickerTimer = setInterval(feed, 2500);
+}
+function stopTicker(){
+  tickerTimer && clearInterval(tickerTimer);
+  tickerTimer=null;
+  $("#ticker-texto").textContent="";
+}
