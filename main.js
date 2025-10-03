@@ -266,6 +266,46 @@ const MODULES=[
 const grid=document.getElementById('grid');
 function clamp(n,min,max){return Math.max(min,Math.min(max,n));}
 function toAngle(v){return -120 + clamp(v,0,100)*2.4;}
+
+// (1) Interpretaciones por módulo (helper)
+function interpText(modId, v){
+  // v es 0..100 (aprox)
+  const pct = Math.round(v);
+  const low = pct < 40, mid = pct >= 40 && pct < 75, high = pct >= 75;
+  const ok  = pct >= 85;
+
+  switch(modId){
+    case 'glucosa':
+      if(low)  return 'Glucemia baja/irregular: revisar ingesta y ritmo.';
+      if(mid)  return 'Glucemia modulándose; evitar picos azucarados.';
+      return ok ? 'Glucemia estable y en rango óptimo.' : 'Glucemia estable.';
+    case 'presion':
+      if(low)  return 'Presión inestable o baja; hidratarse y descansar.';
+      if(mid)  return 'Presión ajustándose; monitoreo recomendado.';
+      return ok ? 'Presión arterial estable y óptima.' : 'Presión estable.';
+    case 'globulos':
+      if(low)  return 'Respuesta inmune reducida; priorizar descanso.';
+      if(mid)  return 'Sistema inmune activándose.';
+      return ok ? 'Inmunidad fuerte y equilibrada.' : 'Inmunidad estable.';
+    case 'detox':
+      if(low)  return 'Detox lento; favorecer hidratación.';
+      if(mid)  return 'Depuración en marcha.';
+      return ok ? 'Detox hepático alto — buen clearance.' : 'Depuración estable.';
+    case 'org-internos':
+      if(low)  return 'Órganos internos en calibración.';
+      if(mid)  return 'Rejuvenecimiento avanzando.';
+      return ok ? 'Órganos internos rejuvenecidos/estables.' : 'Buen estado interno.';
+    case 'org-externos':
+      if(low)  return 'Tejido/piel en ajuste inicial.';
+      if(mid)  return 'Regeneración cutánea en progreso.';
+      return ok ? 'Piel y tejidos externos en óptimo estado.' : 'Tejido externo estable.';
+    default:
+      if(low)  return 'En calibración.';
+      if(mid)  return 'Ajustando.';
+      return 'Estable.';
+  }
+}
+
 function setStatus(card,text,level){
   const dot=card.querySelector('.dot'), st=card.querySelector('.status span');
   if(dot) dot.className='dot '+level; if(st) st.textContent=text;
@@ -278,6 +318,11 @@ function setVisual(card,v,active){
   if(v<40) setStatus(card, active?'Calibrando':'En espera', 'bad');
   else if(v<75) setStatus(card, active?'Calibrando':'Ajustando', 'warn');
   else setStatus(card, 'Estable', 'good');
+
+  // (2) Interpretación
+  const modId = card.dataset.modid || '';
+  const interpEl = card.querySelector('.interp');
+  if(interpEl) interpEl.textContent = interpText(modId, v);
 }
 function animateTo(card,goal){
   clearInterval(card._timer);
@@ -309,6 +354,16 @@ function createCard(mod){
   ctrls.append(bStart,bStop);
 
   card.append(title,status,gauge,ctrls);
+
+  // (2) Texto interpretativo
+  const interp = document.createElement('p'); 
+  interp.className = 'interp';
+  interp.textContent = '—';
+  card.append(interp);
+
+  // (2) Guarda el id del módulo para el helper
+  card.dataset.modid = mod.id;
+
   card._timer=null; card._active=false; card.dataset.current=0;
   const goal=clamp(mod.target??92,70,100);
 
@@ -587,3 +642,10 @@ document.addEventListener('visibilitychange', ()=>{
     }
   }
 });
+
+// (3) Botón “Ayuda” abre/cierra la leyenda
+const helpBtn = document.getElementById('help-btn');
+const legendPanel = document.getElementById('legend');
+const legendClose = document.getElementById('legend-close');
+helpBtn?.addEventListener('click', ()=> legendPanel?.classList.toggle('hidden'));
+legendClose?.addEventListener('click', ()=> legendPanel?.classList.add('hidden'));
