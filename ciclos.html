@@ -58,6 +58,18 @@
       return Math.sin((2 * PI * days) / period);
     };
 
+    // === Helpers nuevos ===
+    function labelFromPct(x){
+      if(x >= 60) return 'alto';
+      if(x >= 35) return 'medio';
+      return 'bajo';
+    }
+    function scoreFromBio(bf,be,bi){
+      // media simple 0..100 a partir de -100..100
+      const norm = (v)=> (v+100)/2;
+      return Math.round((norm(bf)+norm(be)+norm(bi))/3);
+    }
+
     // === Numerología (pitagórica) ===
     const vowels = new Set(["A","E","I","O","U","Y"]);
     const pythMap = new Map([
@@ -435,6 +447,59 @@
                 </ul>
               </Card>
             </div>
+
+            {/* Interpretaciones de hoy */}
+            <Card title="Interpretaciones de hoy">
+              <ul className="text-sm leading-7">
+                {(() => {
+                  const score = scoreFromBio(bio.physical, bio.emotional, bio.intellectual);
+                  const bTxt = `Energía global: ${labelFromPct(score)} (${score}%).`;
+                  const occTxt = `Occidental: ${occidental}.`;
+                  const jyTxt = jyotish.error ? `Jyotish: —` : `Nakshatra: ${jyotish.nakshatra?.name} (regente: ${jyotish.nakshatra?.lord}).`;
+                  const hdTxt = hd.error ? `Human Design: —` : `Perfil ${hd.profile} — Sol P ${hd.gatePers?.gate} l${hd.gatePers?.line} / D ${hd.gateDes?.gate} l${hd.gateDes?.line}.`;
+                  const phTxt = planetHours.error ? `Horas planetarias: —` : `Día regido por ${planetHours.lord}.`;
+                  return (
+                    <>
+                      <li>{bTxt}</li>
+                      <li>{occTxt}</li>
+                      <li>{jyTxt}</li>
+                      <li>{hdTxt}</li>
+                      <li>{phTxt}</li>
+                      <li>Maya: Tono {maya.tone} — {maya.toneDesc} | {maya.seal}.</li>
+                    </>
+                  );
+                })()}
+              </ul>
+              <p className="text-xs text-gray-500 mt-2">Orientativo y lúdico; no diagnóstico.</p>
+            </Card>
+
+            {/* Top 5 días próximos (según media de biorritmos) */}
+            <Card title="Top 5 días energéticos">
+              {(() => {
+                const rows = [...dashboard].map(r => ({ ...r, score: scoreFromBio(r.bf, r.be, r.bi) }));
+                rows.sort((a,b)=> b.score - a.score);
+                const top = rows.slice(0,5);
+                return (
+                  <ul className="text-sm leading-7">
+                    {top.map(r => (
+                      <li key={r.date}><b>{r.date}</b> — {r.score}% · Día Pers. {r.pd} · {r.seal}</li>
+                    ))}
+                  </ul>
+                );
+              })()}
+            </Card>
+
+            {/* Leyendas y cómo leer */}
+            <Card title="Leyendas — ¿Cómo leer cada bloque?">
+              <ul className="text-sm leading-7">
+                <li><b>Biorritmos</b>: físico, emocional e intelectual en −100..100. La barra resume en %.</li>
+                <li><b>Numerología</b>: Camino de Vida (fecha); Expresión/Destino (nombre); Alma/Personalidad (vocales/consonantes).</li>
+                <li><b>Horas planetarias</b>: 12 del día + 12 de la noche, regidas por el planeta del día.</li>
+                <li><b>Jyotish</b>: Sol/Luna siderales; Nakshatra (y regente) y Mahadasha actual (orientativo).</li>
+                <li><b>Human Design</b>: “Perfil” con líneas 1..6 (básico con gates uniformes).</li>
+              </ul>
+              <p className="text-xs text-gray-500 mt-2">Nota: contenido interpretativo y no médico.</p>
+            </Card>
 
             <Card title={`Horas planetarias – ${dateStr}`}>
               {planetHours.error ? (
