@@ -3,125 +3,122 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>BioHealing Monitor</title>
-  <link rel="preload" as="style" href="./style.css" />
-  <link rel="stylesheet" href="./style.css" />
-  <link rel="preload" as="audio" href="./music.mp3" />
+  <title>BioHealing Monitor — Nanorobots</title>
+  <link rel="stylesheet" href="style.css?v=1" />
+  <style>
+    /* ayudas mínimas por si tu CSS no las define (no rompe tu estilo) */
+    .btn{cursor:pointer}
+    .grid{display:grid;gap:12px}
+    .card{border:1px solid #0ff4;border-radius:12px;padding:12px;background:#06131a80}
+    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .mono{font-family:ui-monospace,Menlo,Consolas,monospace}
+    .led{width:10px;height:10px;border-radius:50%;display:inline-block;background:#f33;box-shadow:0 0 8px #f33}
+    .barra{height:10px;background:#0a2230;border:1px solid #0ff2;border-radius:999px;overflow:hidden}
+    .barra>div{height:100%;width:0;background:linear-gradient(90deg,#00e5ff,#00ffa6)}
+    .gauge{width:160px;height:100px}
+    #canvas{position:fixed;inset:0;z-index:-1;background:radial-gradient(1200px 600px at 30% -10%,#07263388,transparent),#030b10}
+    #modulos{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+    #hud{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:start}
+    #ticker{position:fixed;left:0;right:0;bottom:0}
+    #overlay{position:fixed;inset:0;display:grid;place-items:center;background:#031019f0;backdrop-filter:blur(3px);z-index:10}
+    #overlay .welcome{max-width:680px}
+    .btn-sec{border-color:#7dd3fc;color:#cfefff}
+  </style>
 </head>
 <body>
-  <!-- Fondo animado -->
-  <canvas id="fx-canvas" aria-hidden="true"></canvas>
-
   <!-- Overlay de bienvenida -->
-  <div id="overlay" class="overlay">
-    <div class="overlay-card">
-      <h1 class="title">SISTEMA DE BIO-OPTIMIZACIÓN</h1>
-      <p class="sub">Nanorobots totales: <span id="stat-total">—</span> • Operativos: <span id="stat-oper">—</span></p>
-      <div class="bars">
-        <div class="bar">
-          <div class="bar-fill" id="bar-total" style="width:0%"></div>
-        </div>
-        <div class="bar">
-          <div class="bar-fill ok" id="bar-oper" style="width:0%"></div>
-        </div>
+  <div id="overlay">
+    <div class="welcome card">
+      <h1 class="titulo">BioHealing Monitor</h1>
+      <p class="mono">Nanorobots totales: <span id="nano-total">0</span> · Operativos: <span id="nano-activos">0</span></p>
+      <div class="barra"><div id="barra-progreso"></div></div>
+      <div class="row" style="margin-top:12px">
+        <button id="btn-comenzar" class="btn">Comenzar</button>
+        <button id="btn-optimizar" class="btn">Optimizar ahora</button>
       </div>
-      <button id="opt-start-btn" class="btn btn-primary">INICIAR</button>
-      <p class="hint">Consejo: sube el volumen si quieres ambiente inmersivo.</p>
     </div>
   </div>
 
-  <!-- Cabecera -->
-  <header class="header">
-    <div class="left">
-      <div class="badge">Paciente</div>
-      <div class="patient">
-        <strong id="patient-name">Jonathan Fumero Mesa</strong>
-        <small>Nac: 1976-12-04 00:43 • Ciudad de la Costa (UY)</small>
-        <small>Edad exacta: <span id="live-age">—</span></small>
-      </div>
+  <!-- HUD -->
+  <header id="hud" class="card">
+    <div class="hud-col">
+      <p>Paciente: <b id="paciente"></b></p>
+      <p>Edad viva: <span id="edad" class="mono">—</span></p>
     </div>
-
-    <div class="controls">
-      <button id="power-btn" class="btn">Encender</button>
-      <button id="sound-btn" class="btn">Sonido: OFF</button>
-      <button id="help-btn" class="btn">Ayuda</button>
+    <div class="hud-col row">
+      <span id="estado-led" class="led" title="Estado"></span>
+      <button id="btn-encender" class="btn">Encender</button>
+      <button id="btn-apagar" class="btn">Apagar</button>
+      <button id="btn-sonido" class="btn">Sonido ON/OFF</button>
+      <a href="ciclos.html" target="_blank" rel="noopener" class="btn btn-sec">Ciclos personales ↗</a>
+    </div>
+    <div class="hud-col">
+      <p>Zodiaco: <span id="zodiaco" class="mono">—</span></p>
+      <p>Chino: <span id="chino" class="mono">—</span></p>
+      <p>Luna: <span id="luna" class="mono">—</span></p>
+      <p>Circadiano: <span id="circadiano" class="mono">—</span></p>
+      <p>Biorritmos: <span id="biorritmos" class="mono">—</span></p>
     </div>
   </header>
 
-  <!-- HUD -->
-  <section class="hud" id="hud">
-    <div class="hud-chip"><span>Occidental</span><strong id="hud-west">—</strong></div>
-    <div class="hud-chip"><span>Chino</span><strong id="hud-chinese">—</strong></div>
-    <div class="hud-chip"><span>Luna</span><strong id="hud-moon">—</strong></div>
-    <div class="hud-chip"><span>Circadiano</span><strong id="hud-circ">—</strong></div>
-    <div class="hud-chip">
-      <span>Biorritmos</span>
-      <strong>
-        F <span id="bio-f">—</span> ·
-        E <span id="bio-e">—</span> ·
-        I <span id="bio-i">—</span>
-      </strong>
-    </div>
-  </section>
+  <!-- Canvas animado -->
+  <canvas id="canvas"></canvas>
 
-  <!-- Grid de módulos -->
-  <main class="grid" id="grid">
-    <!-- tarjetas generadas por JS -->
+  <!-- Módulos con gauges -->
+  <main id="modulos" class="grid" style="margin:12px 0 96px">
+    <div class="card modulo" data-id="glucosa">
+      <h2>Glucosa</h2>
+      <canvas class="gauge"></canvas>
+      <p id="glucosa-txt" class="mono">En espera</p>
+      <div class="row">
+        <button class="btn-activar btn">Activar</button>
+        <button class="btn-detener btn">Detener</button>
+      </div>
+    </div>
+
+    <div class="card modulo" data-id="presion">
+      <h2>Presión</h2>
+      <canvas class="gauge"></canvas>
+      <p id="presion-txt" class="mono">En espera</p>
+      <div class="row">
+        <button class="btn-activar btn">Activar</button>
+        <button class="btn-detener btn">Detener</button>
+      </div>
+    </div>
+
+    <div class="card modulo" data-id="globulos">
+      <h2>Glóbulos</h2>
+      <canvas class="gauge"></canvas>
+      <p id="globulos-txt" class="mono">En espera</p>
+      <div class="row">
+        <button class="btn-activar btn">Activar</button>
+        <button class="btn-detener btn">Detener</button>
+      </div>
+    </div>
+
+    <div class="card modulo" data-id="detox">
+      <h2>Detox</h2>
+      <canvas class="gauge"></canvas>
+      <p id="detox-txt" class="mono">En espera</p>
+      <div class="row">
+        <button class="btn-activar btn">Activar</button>
+        <button class="btn-detener btn">Detener</button>
+      </div>
+    </div>
   </main>
 
-  <!-- Panel Optimización -->
-  <section class="optimizer">
-    <div class="opt-header">
-      <h2>OPTIMIZACIÓN</h2>
-      <button id="opt-btn" class="btn btn-primary">Optimizar cuerpo humano</button>
-    </div>
-
-    <div class="opt-queue" id="opt-queue">
-      <!-- ítems en cola (agua, oxígeno, etc) se inyectan por JS -->
-    </div>
-
-    <div class="opt-progress">
-      <div class="opt-progress-bar">
-        <div id="opt-progress-fill" class="opt-progress-fill" style="width:0%"></div>
-      </div>
-      <span id="opt-progress-label" class="opt-progress-label">0%</span>
-    </div>
+  <!-- Optimizer -->
+  <section id="optimizer" class="card">
+    <h2>Optimizer</h2>
+    <div id="cola" class="grid"></div>
+    <div class="barra" style="margin-top:8px"><div id="barra-general"></div></div>
   </section>
 
-  <!-- Ticker -->
-  <footer class="ticker">
-    <div class="check">
-      <span>Escaneo</span>
-      <div class="check-bar"><div id="check-escaneo" class="check-fill" style="width:0%"></div></div>
-    </div>
-    <div class="check">
-      <span>Recuento torrente</span>
-      <div class="check-bar"><div id="check-recuento" class="check-fill" style="width:0%"></div></div>
-    </div>
-    <div class="check">
-      <span>Operativos</span>
-      <div class="check-bar"><div id="check-operativos" class="check-fill ok" style="width:0%"></div></div>
-    </div>
-    <div class="check">
-      <span>Autorreparación</span>
-      <div class="check-bar"><div id="check-autorreparacion" class="check-fill" style="width:0%"></div></div>
-    </div>
-    <div class="check">
-      <span>Depuración</span>
-      <div class="check-bar"><div id="check-depuracion" class="check-fill" style="width:0%"></div></div>
-    </div>
+  <!-- Ticker inferior -->
+  <footer id="ticker" class="card">
+    <marquee id="ticker-texto" behavior="scroll" direction="left" scrollamount="6"></marquee>
   </footer>
 
-  <!-- Panel ayudas/leyendas -->
-  <aside id="help-panel" class="help hidden">
-    <h3>Leyendas</h3>
-    <ul>
-      <li>Los gauges van de 0% a 100%. Verde intenso &gt;= 85%.</li>
-      <li>Contenido lúdico/educativo. No es diagnóstico médico.</li>
-      <li>El sonido puede requerir un clic previo para activarse.</li>
-    </ul>
-  </aside>
-
-  <script src="./main.js" defer></script>
+  <script src="main.js?v=1"></script>
 </body>
 </html>
