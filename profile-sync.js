@@ -1,10 +1,9 @@
 /* profile-sync.js
-   Sincroniza el HUD principal con los datos guardados por ciclos.html en localStorage.
+   Sincroniza el HUD con los datos guardados por ciclos.html en localStorage.
    - Lee localStorage["cycles_app_state"] → { name, birthDate, birthTime, tz? }
    - Si existen, reemplaza el "Paciente" y calcula la edad en tiempo real.
-   - Si no existen, no toca nada (deja el comportamiento actual del HUD).
+   - Si no existen, no toca nada (queda tu HUD como está).
 */
-
 (function(){
   'use strict';
 
@@ -47,7 +46,6 @@
     if (H < 0) { H += 24; d--; }
 
     if (d < 0) {
-      // días del mes anterior
       const prevDays = new Date(now.getFullYear(), now.getMonth(), 0).getDate();
       d += prevDays; m--;
     }
@@ -67,7 +65,6 @@
     function tick(){
       const txt = ageTextDetailed(birth, new Date());
       if (metaEl){
-        // Si el meta ya tiene HTML con "Paciente:", lo respetamos y solo reemplazamos el contenido
         metaEl.innerHTML = `Paciente: <b>${name}</b> · Edad: ${txt}`;
       }
       if (ageEl){
@@ -76,11 +73,9 @@
     }
 
     tick();
-    // Actualiza cada segundo
     setInterval(tick, 1000);
   }
 
-  // Arranque tras DOM listo (importante si main.js también escribe)
   function onReady(fn){
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', fn, { once: true });
@@ -93,7 +88,6 @@
     const prof = readCyclesProfile();
     if(!prof) return; // No hay perfil guardado → no tocamos nada
 
-    // Datos mínimos
     const name = prof.name;
     const birthDate = prof.birthDate;       // "YYYY-MM-DD"
     const birthTime = prof.birthTime || ""; // "HH:MM" opcional

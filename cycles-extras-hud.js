@@ -132,7 +132,7 @@
     const btn = document.createElement("button");
     btn.id = "cycles-refresh-btn";
     btn.textContent = "Refrescar datos";
-    btn.className = "btn"; // si existe tu clase .btn, se verá coherente
+    btn.className = "btn";
     btn.style.position = "fixed";
     btn.style.top = "12px";
     btn.style.right = "12px";
