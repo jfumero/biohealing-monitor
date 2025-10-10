@@ -1,13 +1,13 @@
-/* ===== Config paciente ===== */
+/* ========= Config paciente ========= */
 const PATIENT_NAME = 'Jonathan Fumero Mesa';
 const BIRTH = { y:1976, m:12, d:4, hh:0, mm:50, place:'Montevideo, UY' }; // m=1..12
 
-/* ===== Utiles DOM ===== */
+/* ========= Utils DOM ========= */
 const $id = (...ids) => ids.map(i=> i && document.getElementById(i)).find(Boolean);
 const $q  = (sel) => document.querySelector(sel);
-
-/* ===== Edad viva + cabecera ===== */
 function pad(n){ return String(n).padStart(2,'0'); }
+
+/* ========= Edad viva + cabecera ========= */
 const birthDate = new Date(BIRTH.y, BIRTH.m-1, BIRTH.d, BIRTH.hh, BIRTH.mm, 0);
 function ageTextDetailed(now=new Date()){
   let y=now.getFullYear()-birthDate.getFullYear();
@@ -31,7 +31,7 @@ function renderAge(){
   if(meta) meta.innerHTML = `Paciente: <b>${PATIENT_NAME}</b> · Nac.: ${pad(BIRTH.d)}/${pad(BIRTH.m)}/${BIRTH.y} ${pad(BIRTH.hh)}:${pad(BIRTH.mm)}h (${BIRTH.place}) · Edad: ${txt}`;
 }
 
-/* ===== HUD (zodiaco/luna/circadiano/biorritmos) ===== */
+/* ========= HUD (zodiaco/luna/circadiano/biorritmos) ========= */
 const CHINESE=['Rata','Buey','Tigre','Conejo','Dragón','Serpiente','Caballo','Cabra','Mono','Gallo','Perro','Cerdo'];
 function chineseAnimal(y){ return CHINESE[(y-1900)%12]; }
 function chineseElement(y){ const e=(y-4)%10; return ['Madera','Madera','Fuego','Fuego','Tierra','Tierra','Metal','Metal','Agua','Agua'][e]; }
@@ -88,7 +88,7 @@ function renderHeaderInfo(now=new Date()){
   set('hd-bio-f', `${f.html} 💪`); set('hd-bio-e', `${e.html} 💖`); set('hd-bio-i', `${i.html} 🧠`);
 }
 
-/* ===== Recuento inicial (overlay) ===== */
+/* ========= Recuento inicial (overlay) ========= */
 function animateCounter(el,to,ms=3200){
   if(!el) return;
   const start=0, t0=performance.now();
@@ -115,7 +115,7 @@ function initWelcome(){
   if(opBar) setTimeout(()=>{ opBar.style.width=Math.round(ops/base*100)+'%'; }, 600);
 }
 
-/* ===== Ticker ===== */
+/* ========= Ticker ========= */
 const CHECKS=[
   { id:'scan', label:'Escaneo sistémico' },
   { id:'torrente', label:'Recuento en torrente sanguíneo' },
@@ -135,7 +135,7 @@ function renderSysTicker(){
 }
 function setCheck(id, pct){ CHECK_STATE[id]=Math.max(0,Math.min(100,pct)); renderSysTicker(); }
 
-/* ===== Gauges ===== */
+/* ========= Gauges ========= */
 const MODULES=[
   { id:'org-internos', title:'Rejuvenecimiento — Órganos internos', target:95 },
   { id:'org-externos', title:'Rejuvenecimiento — Piel & tejido externo', target:92 },
@@ -192,13 +192,10 @@ function createCard(mod){
   card._timer=null; card._active=false; card.dataset.current=0;
   const goal=clamp(mod.target??92,70,100);
 
-  function start(){
-    if(!isOn||card._active) return;
-    card._active=true; animateTo(card,goal);
-    gauge.classList.add('neon');
+  function start(){ if(!isOn||card._active) return;
+    card._active=true; animateTo(card,goal); gauge.classList.add('neon');
   }
-  function stop(){
-    gauge.classList.remove('neon'); clearInterval(card._timer); card._active=false;
+  function stop(){ gauge.classList.remove('neon'); clearInterval(card._timer); card._active=false;
     card._timer=setInterval(()=>{
       let cur=Number(card.dataset.current||10);
       cur -= Math.max(0.8,(cur-10)*0.06);
@@ -208,16 +205,23 @@ function createCard(mod){
   }
   bStart.addEventListener('click',start);
   bStop.addEventListener('click',stop);
-  bStart.disabled=true; bStop.disabled=true;
+  // se habilitan/inhabilitan con toggleModules()
   return card;
 }
 function buildGrid(){
   if(!gridEl) return;
-  gridEl.innerHTML='';               // evita duplicados
+  gridEl.innerHTML=''; // evita duplicados
   MODULES.forEach(m=> gridEl.appendChild(createCard(m)));
 }
+function toggleModules(on){
+  document.querySelectorAll('.card').forEach(card=>{
+    const btns=card.querySelectorAll('.btn.mod');
+    btns.forEach(b=> b.disabled=!on);
+    if(!on){ clearInterval(card._timer); setVisual(card,0,false); setStatus(card,'En espera','bad'); card._active=false; card.querySelector('.gauge')?.classList.remove('neon'); }
+  });
+}
 
-/* ===== Optimizer ===== */
+/* ========= Optimizer ========= */
 const OPT_QUEUE = [
   'Agua','Oxígeno','Carbohidratos','Grasas saludables','Proteínas',
   'Minerales','Vitaminas',
@@ -274,9 +278,10 @@ async function runOptimizer(){
       fill.style.background=colorForPct(v);
     });
 
-    // Eco al ticker
-    ['scan','torrente','operativos','autorreparacion','depuracion']
-      .forEach((k,i)=> i===0 && setCheck(k, Math.round(60+Math.random()*40)));
+    // Eco al ticker (uno por paso)
+    const keys=['scan','torrente','operativos','autorreparacion','depuracion'];
+    const k=keys[Math.floor(Math.random()*keys.length)];
+    setCheck(k, Math.round(60+Math.random()*40));
 
     // Progreso general
     processed++;
@@ -298,39 +303,95 @@ async function runOptimizer(){
   optRunning=false; if(optBtn) optBtn.disabled=false;
 }
 
-/* ===== Power + Overlay + FX mínimos ===== */
+/* ========= Audio / Música ========= */
+// MUY IMPORTANTE: los navegadores solo permiten audio tras un gesto del usuario.
+// Por eso empezamos con el sonido en OFF y recién al hacer click lo activamos.
+let audioCtx=null, masterGain=null, humOsc=null, humGain=null;
+let soundOn=false; // <-- empieza en OFF para coincidir con el botón
+let musicBuffer=null, musicSource=null, musicGain=null; const MUSIC_URL='music.mp3';
+
+function ensureAudio(){ if(audioCtx) return; audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+  masterGain=audioCtx.createGain(); masterGain.gain.value=0.0009; masterGain.connect(audioCtx.destination);
+}
+async function loadMusicOnce(){
+  try{ ensureAudio(); if(musicBuffer) return;
+    const res=await fetch(MUSIC_URL); if(!res.ok) throw new Error('No se pudo cargar music.mp3');
+    const ab=await res.arrayBuffer(); musicBuffer=await audioCtx.decodeAudioData(ab);
+  }catch(err){ console.warn('Música: ',err.message); }
+}
+function startHum(){ if(!audioCtx||humOsc||!soundOn) return;
+  humOsc=audioCtx.createOscillator(); humGain=audioCtx.createGain();
+  humOsc.type='sawtooth'; humOsc.frequency.value=110; humGain.gain.value=0.0005;
+  humOsc.connect(humGain).connect(masterGain); humOsc.start();
+}
+function stopHum(){ if(!humOsc) return; try{ humGain.gain.exponentialRampToValueAtTime(0.00001,audioCtx.currentTime+0.2); humOsc.stop(audioCtx.currentTime+0.25);}catch{} humOsc=null; humGain=null; }
+function startMusic(){ if(!audioCtx||!soundOn||!musicBuffer) return; stopMusic();
+  musicSource=audioCtx.createBufferSource(); musicSource.buffer=musicBuffer; musicSource.loop=true;
+  if(!musicGain){ musicGain=audioCtx.createGain(); musicGain.gain.value=0.12; musicGain.connect(audioCtx.destination); }
+  musicSource.connect(musicGain); musicSource.start(0);
+}
+function stopMusic(){ try{ musicSource?.stop(0); musicSource?.disconnect(); }catch{} musicSource=null; }
+
+/* ========= Flujo de inicio ========= */
 let isOn=false;
 function startAppFlow(){
-  // Pasa overlay
-  const overlay=$id('overlay');
-  overlay && overlay.classList.add('is-hidden');
-  // Recuento inicial
+  // Oculta overlay
+  const overlay=$id('overlay'); overlay && overlay.classList.add('is-hidden');
+
+  // Recuento en overlay
   initWelcome();
-  // Gauges
+
+  // Construye gauges y los habilita
   buildGrid();
-  // Render inicial ticker/HUD/edad
-  renderSysTicker(); renderHeaderInfo(new Date()); renderAge();
-  // Marca encendido
   isOn=true;
+  toggleModules(true);
+
+  // Estado base del ticker
+  setCheck('scan',10); setCheck('torrente',20); setCheck('operativos',25); setCheck('autorreparacion',8); setCheck('depuracion',12);
+
+  // Primer render de HUD/Edad
+  renderHeaderInfo(new Date()); renderAge();
 }
 
+/* ========= Wiring de botones ========= */
 document.addEventListener('DOMContentLoaded', ()=>{
-  // Render loops de header
+  // Textos iniciales coherentes
+  const sb = $id('btn-sound'); if(sb) sb.textContent = 'Sonido: OFF';
+
+  // Refrescos en vivo
   setInterval(renderAge,1000);
   setInterval(()=>renderHeaderInfo(new Date()),1000);
 
-  // Botones
+  // Botón Comenzar
   $id('btn-start')?.addEventListener('click', startAppFlow);
+
+  // Botón Power
   $id('btn-power')?.addEventListener('click', ()=>{
     isOn=!isOn;
     if(isOn){ startAppFlow(); } else {
-      // “Apagar”: dejar gauges en espera
+      // Apagar: dejar gauges en espera
       document.querySelectorAll('.card').forEach(c=>{ c.querySelector('.gauge')?.classList.remove('neon'); setVisual(c,0,false); setStatus(c,'En espera','bad'); });
+      toggleModules(false);
     }
     $id('btn-power').textContent = isOn ? 'Apagar' : 'Encender';
   });
+
+  // Botón Optimizer
   $id('btn-optimize')?.addEventListener('click', runOptimizer);
 
-  // Estado inicial del ticker mientras se ve overlay
-  setTimeout(()=>{ setCheck('scan',10); setCheck('torrente',20); setCheck('operativos',25); setCheck('autorreparacion',8); setCheck('depuracion',12); }, 400);
+  // Botón Sonido (habilita audio y música con gesto del usuario)
+  $id('btn-sound')?.addEventListener('click', async ()=>{
+    ensureAudio();
+    try{ await audioCtx.resume(); }catch{}
+    soundOn = !soundOn;
+    $id('btn-sound').textContent = 'Sonido: ' + (soundOn ? 'ON' : 'OFF');
+    if(soundOn){
+      startHum();
+      await loadMusicOnce();
+      startMusic();
+    }else{
+      stopMusic();
+      stopHum();
+    }
+  });
 });
