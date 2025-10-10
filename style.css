@@ -276,3 +276,86 @@ main{position:relative; z-index:5}
 .swarm-row{ display: grid; grid-template-columns: 88px 1fr; align-items: center; gap: .5rem; }
 .swarm-meter{ position: relative; height: 10px; border-radius: 999px; background: rgba(255,255,255,0.08); overflow: hidden; }
 .swarm-fill{ position: absolute; inset: 0 auto 0 0; width: 0%; background: linear-gradient(90deg, hsl(160 80% 45%), hsl(160 80% 45%)); transition: width .6s ease; }
+/* ===== OVERRIDES: visibilidad de barras, HUD cabecera y gauges en una fila ===== */
+
+/* --- 2.1 Optimizer: barritas por componente visibles --- */
+#optimizer .opt-meter .opt-bar{
+  position: relative;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.10) !important;
+  overflow: hidden;
+}
+#optimizer .opt-meter .opt-fill{
+  height: 100% !important;
+  transform-origin: left center !important;
+  /* el color lo pone JS con linear-gradient(...) */
+}
+#optimizer .opt-meter .opt-mini-label{
+  position: absolute;
+  right: .4rem; top: 50%;
+  transform: translateY(-50%);
+  font-size: .7rem; opacity: .85;
+}
+
+/* --- 2.2 HUD de cabecera (zodiaco, chino, luna, biorritmos) --- */
+.hud-strip{
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  gap: .75rem 1rem;
+  align-items: center;
+  margin-top: .5rem;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+.hud-strip .hud-item{ opacity: .9; font-size: .9rem; }
+.hud-strip strong{ opacity: .8; margin-right: .25rem; }
+
+/* --- 2.3 Gauges en UNA SOLA LÍNEA (con scroll horizontal si no entra) --- */
+.modules-row{
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+
+/* Tarjetas/gauges compactos */
+.modules-row .card{
+  min-width: 220px;   /* ancho fijo por tarjeta */
+  max-width: 240px;
+  flex: 0 0 auto;
+}
+.modules-row .gauge{
+  width: 160px;       /* tamaño del gauge */
+  height: 160px;
+  margin: 0 auto;
+  position: relative;
+}
+.modules-row .gauge .dial,
+.modules-row .gauge .needle,
+.modules-row .gauge .hub,
+.modules-row .gauge .value{
+  /* Si tu CSS base ya define estos, esto solo asegura proporción */
+  box-sizing: border-box;
+}
+
+/* Si tu implementación de gauge usa canvas, limita el tamaño visual */
+.modules-row canvas.gauge-canvas{
+  width: 160px !important;
+  height: 160px !important;
+  display: block;
+  margin: 0 auto;
+}
+
+/* Botones dentro de cada card en una línea */
+.modules-row .card .controls{
+  display: flex;
+  gap: .5rem;
+  justify-content: center;
+}
+
+/* --- 2.4 Ajustes menores --- */
+.sys-ticker{ position: relative !important; bottom: auto !important; }
+#optimizer{ margin-top: 1rem; }

@@ -57,6 +57,17 @@
       <a href="ciclos.html" class="btn link">Ciclos personales</a>
       <a href="diag.html" class="btn link">Diagnóstico</a>
     </nav>
+
+    <!-- ===== HUD de cabecera (restaurado) ===== -->
+    <div class="hud-strip">
+      <div class="hud-item"><strong>Zodiaco:</strong> <span id="hd-zodiac">—</span></div>
+      <div class="hud-item"><strong>Chino:</strong> <span id="hd-czodiac">—</span></div>
+      <div class="hud-item"><strong>Luna:</strong> <span id="hd-moon">—</span></div>
+      <div class="hud-item"><strong>Circadiano:</strong> <span id="hd-circ">—</span></div>
+      <div class="hud-item"><strong>Bio F:</strong> <span id="hd-bio-f">—</span></div>
+      <div class="hud-item"><strong>Bio E:</strong> <span id="hd-bio-e">—</span></div>
+      <div class="hud-item"><strong>Bio I:</strong> <span id="hd-bio-i">—</span></div>
+    </div>
   </header>
 
   <!-- Optimizer debajo del header -->
@@ -69,7 +80,7 @@
       <span id="opt-progress-label" class="opt-progress-label">0%</span>
     </div>
 
-    <!-- Lista (las filas se agregan/animan por JS) -->
+    <!-- Lista (filas por componente; se agregan/animan por JS) -->
     <div id="opt-list" class="opt-list"></div>
 
     <button id="opt-cancel" class="btn alt">Cancelar</button>
@@ -89,8 +100,8 @@
       </div>
     </section>
 
-    <!-- Grilla de módulos: el JS rellenará aquí -->
-    <section id="grid" class="modules-grid"></section>
+    <!-- Grilla de módulos: UNA SOLA LÍNEA (el JS rellena aquí) -->
+    <section id="grid" class="modules-row"></section>
 
     <section class="system-panel card-glass">
       <h3>Estado del sistema</h3>
