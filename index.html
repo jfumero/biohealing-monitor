@@ -18,18 +18,6 @@
         <div class="stat"><span>Operativos</span><strong id="nb-active">—</strong></div>
       </div>
 
-      <!-- Barras del recuento inicial -->
-      <div class="swarm-bars">
-        <div class="swarm-row">
-          <span>Total</span>
-          <div class="swarm-meter"><div id="swarm-total-bar" class="swarm-fill" style="width:0%"></div></div>
-        </div>
-        <div class="swarm-row">
-          <span>Operativos</span>
-          <div class="swarm-meter"><div id="swarm-bar" class="swarm-fill" style="width:0%"></div></div>
-        </div>
-      </div>
-
       <div class="welcome-actions">
         <button id="btn-start" class="btn primary">Comenzar</button>
         <button id="btn-sound" class="btn">Sonido: OFF</button>
@@ -57,51 +45,93 @@
       <a href="ciclos.html" class="btn link">Ciclos personales</a>
       <a href="diag.html" class="btn link">Diagnóstico</a>
     </nav>
-
-    <!-- ===== HUD de cabecera (restaurado) ===== -->
-    <div class="hud-strip">
-      <div class="hud-item"><strong>Zodiaco:</strong> <span id="hd-zodiac">—</span></div>
-      <div class="hud-item"><strong>Chino:</strong> <span id="hd-czodiac">—</span></div>
-      <div class="hud-item"><strong>Luna:</strong> <span id="hd-moon">—</span></div>
-      <div class="hud-item"><strong>Circadiano:</strong> <span id="hd-circ">—</span></div>
-      <div class="hud-item"><strong>Bio F:</strong> <span id="hd-bio-f">—</span></div>
-      <div class="hud-item"><strong>Bio E:</strong> <span id="hd-bio-e">—</span></div>
-      <div class="hud-item"><strong>Bio I:</strong> <span id="hd-bio-i">—</span></div>
-    </div>
   </header>
 
-  <!-- Optimizer debajo del header -->
+  <!-- === NUEVA POSICIÓN: justo debajo del header === -->
+
+  <!-- Optimizer con barra general + lista por elementos -->
   <section id="optimizer" class="optimizer card-glass" aria-label="Optimización del cuerpo humano">
     <h3>Optimización del cuerpo humano</h3>
 
-    <!-- Barra general del Optimizer -->
+    <!-- Barra GENERAL del Optimizer (el JS actualiza #opt-progress-fill y #opt-progress-label) -->
     <div class="opt-progress">
       <div id="opt-progress-fill" class="opt-progress-fill"></div>
       <span id="opt-progress-label" class="opt-progress-label">0%</span>
     </div>
 
-    <!-- Lista (filas por componente; se agregan/animan por JS) -->
-    <div id="opt-list" class="opt-list"></div>
+    <!-- Lista de elementos (cada fila tiene su barrita propia) -->
+    <div id="opt-list" class="opt-list">
+      <!-- Ejemplo de fila (tu JS puede reemplazar/inyectar dinámicamente) -->
+      <div class="opt-row">
+        <span>Células madre</span>
+        <div class="opt-meter">
+          <div class="opt-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="76">
+            <div class="opt-fill" style="transform: scaleX(0.760563); background: linear-gradient(90deg, rgb(124, 242, 13), rgb(124, 242, 13));"></div>
+            <div class="opt-mini-label">76%</div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <button id="opt-cancel" class="btn alt">Cancelar</button>
   </section>
 
-  <!-- Ticker debajo del optimizer -->
+  <!-- Ticker del sistema debajo del optimizer -->
   <div id="sys-ticker" class="sys-ticker" aria-live="polite" aria-label="Estado del sistema">
-    <div id="sys-ticker-track" class="sys-ticker-track"></div>
+    <div id="sys-ticker-track" class="sys-ticker-track">
+      <span class="nb-item"><span>Escaneo sistémico:</span> <strong class="nb-pos">80%</strong></span>
+      <span class="nb-sep">•</span>
+      <span class="nb-item"><span>Recuento en torrente sanguíneo:</span> <strong class="nb-pos">77%</strong></span>
+      <span class="nb-sep">•</span>
+      <span class="nb-item"><span>Nanorobots operativos:</span> <strong class="nb-warn">68%</strong></span>
+      <span class="nb-sep">•</span>
+      <span class="nb-item"><span>Autorreparación celular:</span> <strong class="nb-warn">62%</strong></span>
+      <span class="nb-sep">•</span>
+      <span class="nb-item"><span>Depuración de toxinas:</span> <strong class="nb-pos">83%</strong></span>
+    </div>
   </div>
 
   <!-- Contenido principal -->
   <main id="app" class="app">
+    <!-- Barra de optimización global (si tu UI la usa) -->
     <section class="global-opt card-glass">
       <label>Optimización general</label>
       <div class="bar">
-        <div id="opt-global-fill" class="fill" style="transform:scaleX(0)"></div>
+        <div id="opt-global-fill" class="fill" style="transform:scaleX(0.35)"></div>
       </div>
     </section>
 
-    <!-- Grilla de módulos: UNA SOLA LÍNEA (el JS rellena aquí) -->
-    <section id="grid" class="modules-row"></section>
+    <!-- Grid de módulos (ejemplo; conserva IDs y data-mod que usa tu JS) -->
+    <section class="modules-grid">
+      <article class="module card-glass" data-mod="rejuvenecimiento">
+        <header><h3>Rejuvenecimiento</h3></header>
+        <div class="gauge"><canvas class="gauge-canvas" width="160" height="160"></canvas></div>
+        <footer>
+          <button class="btn mod-start">Activar</button>
+          <button class="btn mod-stop">Detener</button>
+        </footer>
+      </article>
+
+      <article class="module card-glass" data-mod="glucosa">
+        <header><h3>Glucosa</h3></header>
+        <div class="gauge"><canvas class="gauge-canvas" width="160" height="160"></canvas></div>
+        <footer>
+          <button class="btn mod-start">Activar</button>
+          <button class="btn mod-stop">Detener</button>
+        </footer>
+      </article>
+
+      <article class="module card-glass" data-mod="presion">
+        <header><h3>Presión</h3></header>
+        <div class="gauge"><canvas class="gauge-canvas" width="160" height="160"></canvas></div>
+        <footer>
+          <button class="btn mod-start">Activar</button>
+          <button class="btn mod-stop">Detener</button>
+        </footer>
+      </article>
+
+      <!-- Agregá aquí los demás módulos que ya tenías -->
+    </section>
 
     <section class="system-panel card-glass">
       <h3>Estado del sistema</h3>
