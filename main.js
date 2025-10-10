@@ -262,7 +262,9 @@ const MODULES=[
   { id:'globulos',     title:'Glóbulos (inmunidad)', target:90 },
   { id:'presion',      title:'Presión arterial', target:88 },
   { id:'detox',        title:'Detox hepático', target:93 },
+  { id:'metabolismo',  title:'Acelerar Metabolismo', target:95 }, // ← NUEVO
 ];
+
 const grid=document.getElementById('grid');
 function clamp(n,min,max){return Math.max(min,Math.min(max,n));}
 function toAngle(v){return -120 + clamp(v,0,100)*2.4;}
