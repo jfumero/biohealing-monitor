@@ -189,3 +189,85 @@ main{position:relative; z-index:5}
   clear: both;
   order: 0; /* por si está en un contenedor flex/grid con order */
 }
+/* ======= OVERRIDES: Optimizer + Ticker debajo del header ======= */
+
+/* El ticker participa del flujo (no fijo al pie) */
+.sys-ticker{
+  position: relative !important;
+  bottom: auto !important;
+  left: 0; right: 0;
+  width: 100%;
+  z-index: 15;
+  overflow: hidden;
+  white-space: nowrap;
+  margin-top: 0.5rem;
+  /* Si tu tema usa "glass", podés reactivar un fondo suave: */
+  /* background: rgba(255,255,255,0.08); */
+}
+
+/* Por si algún layout lo estaba empujando */
+#optimizer{
+  position: relative !important;
+  bottom: auto !important;
+  top: auto !important;
+  display: block !important;
+  float: none !important;
+  clear: both;
+  order: 0;
+  margin-top: 1rem;
+}
+
+/* Pista del ticker en línea única */
+.sys-ticker-track{
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* === Barra GENERAL del Optimizer (la grande de arriba) === */
+#optimizer .opt-progress{
+  position: relative;
+  height: 12px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 999px;
+  overflow: hidden;
+  margin: .5rem 0 .75rem;
+}
+
+#optimizer .opt-progress-fill{
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0%;
+  background: linear-gradient(90deg, hsl(0 90% 50%), hsl(0 90% 50%));
+  transition: width .25s ease-out;
+}
+
+#optimizer .opt-progress-label{
+  position: absolute;
+  right: .5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .75rem;
+  opacity: .8;
+}
+
+/* === Barritas por elemento (dentro de cada opt-row) — tu JS ya las anima === */
+#optimizer .opt-meter .opt-bar{
+  position: relative;
+  height: 10px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 999px;
+  overflow: hidden;
+}
+#optimizer .opt-meter .opt-fill{
+  transform-origin: left center;
+  height: 100%;
+}
+#optimizer .opt-mini-label{
+  position: absolute;
+  right: .35rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .7rem;
+  opacity: .8;
+}

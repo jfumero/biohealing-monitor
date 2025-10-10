@@ -13,88 +13,136 @@
       <h1>BioHealing Monitor</h1>
       <p id="project-meta">Paciente: <b>Jonathan Fumero Mesa</b> · Edad: —</p>
 
-      <!-- Panel de nanorobots (Totales + Operativos) -->
-      <div class="swarm">
-        <div class="swarm-row">
-          <div class="swarm-head">
-            <span class="swarm-k">Nanorobots totales</span>
-            <span class="swarm-v" id="n-total">—</span>
-          </div>
-          <div class="swarm-bar">
-            <div id="swarm-total-bar" class="swarm-fill"></div>
-          </div>
-        </div>
-        <div class="swarm-row">
-          <div class="swarm-head">
-            <span class="swarm-k">Nanorobots operativos</span>
-            <span class="swarm-v" id="n-op">—</span>
-          </div>
-          <div class="swarm-bar">
-            <div id="swarm-bar" class="swarm-fill alt"></div>
-          </div>
-        </div>
+      <div class="nano-stats">
+        <div class="stat"><span>Nanorobots totales</span><strong id="nb-total">—</strong></div>
+        <div class="stat"><span>Operativos</span><strong id="nb-active">—</strong></div>
       </div>
 
-      <div class="welcome-ctas">
-        <button id="startBtn" class="btn">Comenzar</button>
-        <button id="opt-start-btn" class="btn alt">Optimizar ahora</button>
+      <div class="welcome-actions">
+        <button id="btn-start" class="btn primary">Comenzar</button>
+        <button id="btn-sound" class="btn">Sonido: OFF</button>
       </div>
+
+      <div class="welcome-links">
+        <a href="ciclos.html" class="link">Ciclos personales</a>
+        <a href="diag.html" class="link">Diagnóstico</a>
+      </div>
+
+      <p class="disclaimer">Experiencia lúdica / no médica.</p>
     </div>
   </div>
 
-  <!-- Cabecera (segunda web) -->
-  <header class="header">
-    <h2 class="brand">BioHealing Monitor</h2>
-
-    <div class="patient">
-      <div class="pill">Paciente: <b>Jonathan Fumero Mesa</b></div>
-      <div class="pill">Edad: <span id="age">—</span></div>
+  <!-- Cabecera -->
+  <header id="app-header" class="header card-glass">
+    <div class="brand">
+      <h2>BioHealing Monitor</h2>
+      <small id="hud-age">Edad viva: —</small>
     </div>
 
-    <div class="header-ctrls">
-      <div id="led" class="led" title="Estado"></div>
-      <button id="power-btn" class="btn">Encender</button>
-      <button id="sound-btn" class="btn" aria-pressed="true">Sonido: ON</button>
-      <button id="opt-btn" class="btn alt" aria-controls="optimizer">Optimizar cuerpo humano</button>
-    </div>
-
-    <!-- HUD con datos bio/astro -->
-    <div class="hud">
-      <div class="hud-item"><span class="k">Zodiaco</span><span class="v" id="hd-zodiac">—</span></div>
-      <div class="hud-item"><span class="k">Chino</span><span class="v" id="hd-czodiac">—</span></div>
-      <div class="hud-item"><span class="k">Luna</span><span class="v" id="hd-moon">—</span></div>
-      <div class="hud-item"><span class="k">Circadiano</span><span class="v" id="hd-circ">—</span></div>
-      <div class="hud-item"><span class="k">Físico</span><span class="v" id="hd-bio-f">—</span></div>
-      <div class="hud-item"><span class="k">Emocional</span><span class="v" id="hd-bio-e">—</span></div>
-      <div class="hud-item"><span class="k">Intelectual</span><span class="v" id="hd-bio-i">—</span></div>
-    </div>
+    <nav class="controls">
+      <button id="btn-power" class="btn">Encender</button>
+      <button id="btn-optimize" class="btn alt">Optimizar cuerpo humano</button>
+      <a href="ciclos.html" class="btn link">Ciclos personales</a>
+      <a href="diag.html" class="btn link">Diagnóstico</a>
+    </nav>
   </header>
 
-  <section id="optimizer" class="optimizer hidden card-glass">
+  <!-- === NUEVA POSICIÓN: justo debajo del header === -->
+
+  <!-- Optimizer con barra general + lista por elementos -->
+  <section id="optimizer" class="optimizer card-glass" aria-label="Optimización del cuerpo humano">
     <h3>Optimización del cuerpo humano</h3>
-    <div id="opt-list" class="opt-list"></div>
+
+    <!-- Barra GENERAL del Optimizer (el JS actualiza #opt-progress-fill y #opt-progress-label) -->
+    <div class="opt-progress">
+      <div id="opt-progress-fill" class="opt-progress-fill"></div>
+      <span id="opt-progress-label" class="opt-progress-label">0%</span>
+    </div>
+
+    <!-- Lista de elementos (cada fila tiene su barrita propia) -->
+    <div id="opt-list" class="opt-list">
+      <!-- Ejemplo de fila (tu JS puede reemplazar/inyectar dinámicamente) -->
+      <div class="opt-row">
+        <span>Células madre</span>
+        <div class="opt-meter">
+          <div class="opt-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="76">
+            <div class="opt-fill" style="transform: scaleX(0.760563); background: linear-gradient(90deg, rgb(124, 242, 13), rgb(124, 242, 13));"></div>
+            <div class="opt-mini-label">76%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <button id="opt-cancel" class="btn alt">Cancelar</button>
   </section>
 
-  <div id="sys-ticker" class="sys-ticker">
-    <div id="sys-ticker-track" class="sys-ticker-track"></div>
-
-
-  <!-- Módulos/Gauges -->
-  <main>
-    <div id="grid" class="grid"></div>
-  </main>
-
-  <!-- Panel Optimización -->
-  
-
-  <!-- Ticker inferior -->
-  
+  <!-- Ticker del sistema debajo del optimizer -->
+  <div id="sys-ticker" class="sys-ticker" aria-live="polite" aria-label="Estado del sistema">
+    <div id="sys-ticker-track" class="sys-ticker-track">
+      <span class="nb-item"><span>Escaneo sistémico:</span> <strong class="nb-pos">80%</strong></span>
+      <span class="nb-sep">•</span>
+      <span class="nb-item"><span>Recuento en torrente sanguíneo:</span> <strong class="nb-pos">77%</strong></span>
+      <span class="nb-sep">•</span>
+      <span class="nb-item"><span>Nanorobots operativos:</span> <strong class="nb-warn">68%</strong></span>
+      <span class="nb-sep">•</span>
+      <span class="nb-item"><span>Autorreparación celular:</span> <strong class="nb-warn">62%</strong></span>
+      <span class="nb-sep">•</span>
+      <span class="nb-item"><span>Depuración de toxinas:</span> <strong class="nb-pos">83%</strong></span>
+    </div>
   </div>
+
+  <!-- Contenido principal -->
+  <main id="app" class="app">
+    <!-- Barra de optimización global (si tu UI la usa) -->
+    <section class="global-opt card-glass">
+      <label>Optimización general</label>
+      <div class="bar">
+        <div id="opt-global-fill" class="fill" style="transform:scaleX(0.35)"></div>
+      </div>
+    </section>
+
+    <!-- Grid de módulos (ejemplo; conserva IDs y data-mod que usa tu JS) -->
+    <section class="modules-grid">
+      <article class="module card-glass" data-mod="rejuvenecimiento">
+        <header><h3>Rejuvenecimiento</h3></header>
+        <div class="gauge"><canvas class="gauge-canvas" width="160" height="160"></canvas></div>
+        <footer>
+          <button class="btn mod-start">Activar</button>
+          <button class="btn mod-stop">Detener</button>
+        </footer>
+      </article>
+
+      <article class="module card-glass" data-mod="glucosa">
+        <header><h3>Glucosa</h3></header>
+        <div class="gauge"><canvas class="gauge-canvas" width="160" height="160"></canvas></div>
+        <footer>
+          <button class="btn mod-start">Activar</button>
+          <button class="btn mod-stop">Detener</button>
+        </footer>
+      </article>
+
+      <article class="module card-glass" data-mod="presion">
+        <header><h3>Presión</h3></header>
+        <div class="gauge"><canvas class="gauge-canvas" width="160" height="160"></canvas></div>
+        <footer>
+          <button class="btn mod-start">Activar</button>
+          <button class="btn mod-stop">Detener</button>
+        </footer>
+      </article>
+
+      <!-- Agregá aquí los demás módulos que ya tenías -->
+    </section>
+
+    <section class="system-panel card-glass">
+      <h3>Estado del sistema</h3>
+      <ul id="sys-log" class="sys-log"></ul>
+    </section>
+  </main>
 
   <!-- Canvas FX de fondo -->
   <canvas id="fx-bloodstream"></canvas>
 
+  <!-- Script principal -->
   <script src="main.js"></script>
 </body>
 </html>
