@@ -178,3 +178,14 @@ main{position:relative; z-index:5}
   white-space: nowrap;
   overflow: hidden;
 }
+/* Forzar optimizer debajo del header, en flujo normal */
+#optimizer {
+  position: relative !important;
+  bottom: auto !important;
+  top: auto !important;
+  margin-top: 1rem;
+  display: block;
+  float: none;
+  clear: both;
+  order: 0; /* por si está en un contenedor flex/grid con order */
+}

@@ -587,3 +587,29 @@ document.addEventListener('visibilitychange', ()=>{
     }
   }
 });
+// Anclar optimizer y ticker justo debajo del header, incluso si otros scripts intentan moverlos
+(function(){
+  function placePanels(){
+    const header = document.querySelector('header,#app-header,.header');
+    const opt = document.getElementById('optimizer');
+    const tick = document.getElementById('sys-ticker');
+    if (!header) return;
+    if (opt && opt.previousElementSibling !== header) {
+      header.parentNode.insertBefore(opt, header.nextSibling);
+    }
+    if (tick) {
+      const after = opt || header;
+      if (tick.previousElementSibling !== after) {
+        header.parentNode.insertBefore(tick, after.nextSibling);
+      }
+    }
+  }
+
+  // 1) Al cargar
+  document.addEventListener('DOMContentLoaded', placePanels);
+  window.addEventListener('load', ()=> setTimeout(placePanels, 0));
+
+  // 2) Si otro script los reubica, los volvemos a poner debajo del header
+  const mo = new MutationObserver(() => placePanels());
+  mo.observe(document.body, {childList:true, subtree:true});
+})();
