@@ -58,6 +58,10 @@ class BloodstreamFX{
   }
 }
 
+// ===== Util: tomar IDs nuevos o viejos =====
+const $id = (...ids) => ids.map(i=> i && document.getElementById(i)).find(Boolean);
+const $q  = (sel) => document.querySelector(sel);
+
 // ===== Edad (detallada Y-M-D h:m:s) =====
 const birth = new Date(1976,11,4,0,50,0); // 4/12/1976 00:50 local
 function ageTextDetailed(now=new Date()){
@@ -74,8 +78,8 @@ function ageTextDetailed(now=new Date()){
 }
 function renderAge(){
   const txt=ageTextDetailed();
-  const ageEl=document.getElementById('age'); if(ageEl) ageEl.textContent=txt;
-  const meta=document.getElementById('project-meta'); if(meta) meta.innerHTML=`Paciente: <b>Jonathan Fumero Mesa</b> · Edad: ${txt}`;
+  const ageEl=$id('age'); if(ageEl) ageEl.textContent=txt;
+  const meta=$id('project-meta'); if(meta) meta.innerHTML=`Paciente: <b>Jonathan Fumero Mesa</b> · Edad: ${txt}`;
 }
 setInterval(renderAge,1000); renderAge();
 
@@ -105,63 +109,34 @@ function stopHum(){
 }
 
 // ===== Música MP3 (Web Audio) =====
-// Cambiá el nombre si tu archivo se llama distinto:
 const MUSIC_URL = 'music.mp3';
-
-let musicBuffer = null;   // se carga una vez
-let musicSource = null;   // instancia en reproducción
-let musicGain = null;     // volumen de la música
-let musicOn = true;       // (opcional) podés poner false si querés que arranque apagada
+let musicBuffer=null, musicSource=null, musicGain=null; let musicOn=true;
 
 async function loadMusicOnce(){
   try{
     ensureAudio();
-    if(musicBuffer) return; // ya cargada
+    if(musicBuffer) return;
     const res = await fetch(MUSIC_URL);
     if(!res.ok) throw new Error('No se pudo cargar el MP3');
     const ab = await res.arrayBuffer();
     musicBuffer = await audioCtx.decodeAudioData(ab);
-  }catch(err){
-    console.warn('Error cargando música:', err);
-  }
+  }catch(err){ console.warn('Error cargando música:', err); }
 }
-
 function startMusic(){
   if(!audioCtx || !soundOn || !musicOn || !musicBuffer) return;
-  // Evita dos reproducciones simultáneas
   stopMusic();
-
-  // Fuente en loop
   musicSource = audioCtx.createBufferSource();
-  musicSource.buffer = musicBuffer;
-  musicSource.loop = true;
-
-  // Gain propio de música (independiente del master)
-  if(!musicGain){
-    musicGain = audioCtx.createGain();
-    musicGain.gain.value = 0.12; // Volumen (0.0–1.0)
-    musicGain.connect(audioCtx.destination);
-  }
-
-  musicSource.connect(musicGain);
-  musicSource.start(0);
+  musicSource.buffer = musicBuffer; musicSource.loop = true;
+  if(!musicGain){ musicGain = audioCtx.createGain(); musicGain.gain.value = 0.12; musicGain.connect(audioCtx.destination); }
+  musicSource.connect(musicGain); musicSource.start(0);
 }
-
-function stopMusic(){
-  try{
-    if(musicSource){
-      musicSource.stop(0);
-      musicSource.disconnect();
-    }
-  }catch{}
-  musicSource = null;
-}
+function stopMusic(){ try{ musicSource?.stop(0); musicSource?.disconnect(); }catch{} musicSource=null; }
 
 // ===== Zodiacos / Luna / Circadiano =====
 const CHINESE=['Rata','Buey','Tigre','Conejo','Dragón','Serpiente','Caballo','Cabra','Mono','Gallo','Perro','Cerdo'];
 function chineseAnimal(y){ return CHINESE[(y-1900)%12]; }
 function chineseElement(y){
-  const e=(y-4)%10; // 0-1 Madera, 2-3 Fuego, 4-5 Tierra, 6-7 Metal, 8-9 Agua
+  const e=(y-4)%10;
   if(e===0||e===1) return 'Madera';
   if(e===2||e===3) return 'Fuego';
   if(e===4||e===5) return 'Tierra';
@@ -186,13 +161,13 @@ function zodiac(d){
 function moon(d){
   const syn=29.530588853, ref=new Date(Date.UTC(2000,0,6,18,14));
   const days=(d-ref)/86400000, age=((days%syn)+syn)%syn;
-  if(age<1.84566)return'Creciente nueva 🌑'.replace('Creciente nueva','Luna nueva');
+  if(age<1.84566)return'Luna nueva 🌑';
   if(age<5.53699)return'Creciente visible 🌒';
   if(age<9.22831)return'Cuarto creciente 🌓';
   if(age<12.91963)return'Gibosa creciente 🌔';
   if(age<16.61096)return'Luna llena 🌕';
   if(age<20.30228)return'Gibosa menguante 🌖';
-  if(age<23.99361)return'Cuarto menguante 🌓'.replace('🌓','🌗');
+  if(age<23.99361)return'Cuarto menguante 🌗';
   return'Creciente menguante 🌘';
 }
 function circadian(d){
@@ -204,7 +179,6 @@ function circadian(d){
   if(h<18) return'Segundo pico de energía';
   return'Desaceleración vespertina';
 }
-// Biorritmo compacto con color
 function bioCompact(days, period){
   const pct=Math.round(Math.sin(2*Math.PI*days/period)*100);
   const cls=pct>3?'bio-pos':(pct<-3?'bio-neg':'bio-neu');
@@ -213,10 +187,10 @@ function bioCompact(days, period){
 }
 function renderHeaderInfo(now=new Date()){
   const zOcc = zodiac(new Date(1976,11,4));
-  const animal = chineseAnimal(1976), elem = chineseElement(1976); // 1976 => Dragón(Fuego)
+  const animal = chineseAnimal(1976), elem = chineseElement(1976);
   const czTxt = `${animal} (${elem}) ${animal==='Dragón'?'🐉':''}`;
 
-  const set=(id,txt)=>{ const el=document.getElementById(id); if(el) el.innerHTML=txt; };
+  const set=(id,txt)=>{ const el=$id(id); if(el) el.innerHTML=txt; };
   set('hd-zodiac', zOcc);
   set('hd-czodiac', czTxt);
   set('hd-moon',   moon(now));
@@ -243,14 +217,20 @@ function animateCounter(el,to,ms=3200){
   requestAnimationFrame(step);
 }
 function initWelcome(){
+  // IDs nuevos visibles en tu HTML:
+  const elTotal = $id('nb-total','n-total');
+  const elOp    = $id('nb-active','n-op');
+  const totalBar = $id('swarm-total-bar'); // opcionales
+  const opBar    = $id('swarm-bar');
+
   const base=12_000_000;
   const ops=Math.floor(base*(0.90+Math.random()*0.06)); // 90–96%
-  animateCounter(document.getElementById('n-total'), base, 3000);
-  animateCounter(document.getElementById('n-op'), ops, 3200);
-  const totalBar=document.getElementById('swarm-total-bar');
-  const opBar=document.getElementById('swarm-bar');
+
+  animateCounter(elTotal, base, 3000);
+  animateCounter(elOp, ops, 3200);
+
   if(totalBar) totalBar.style.width='100%';
-  setTimeout(()=>{ if(opBar) opBar.style.width=Math.round(ops/base*100)+'%'; }, 600);
+  if(opBar) setTimeout(()=>{ opBar.style.width=Math.round(ops/base*100)+'%'; }, 600);
 }
 initWelcome();
 
@@ -263,7 +243,8 @@ const MODULES=[
   { id:'presion',      title:'Presión arterial', target:88 },
   { id:'detox',        title:'Detox hepático', target:93 },
 ];
-const grid=document.getElementById('grid');
+// usa #grid si existe; si no, la clase .modules-grid
+const gridEl = $id('grid') || $q('.modules-grid');
 function clamp(n,min,max){return Math.max(min,Math.min(max,n));}
 function toAngle(v){return -120 + clamp(v,0,100)*2.4;}
 function setStatus(card,text,level){
@@ -331,7 +312,7 @@ function createCard(mod){
   bStart.disabled=true; bStop.disabled=true;
   return card;
 }
-MODULES.forEach(m=>grid.appendChild(createCard(m)));
+if(gridEl){ MODULES.forEach(m=>gridEl.appendChild(createCard(m))); }
 function toggleModules(on){
   document.querySelectorAll('.card').forEach(card=>{
     const btns=card.querySelectorAll('.btn.mod');
@@ -394,7 +375,6 @@ function animateFill(el, fromPct, toPct, duration, onProgress){
     onProgress?.(v);
   });
 }
-// Color HSL dinámico rojo(0) → verde(120) según %
 function colorForPct(pct){
   const p = Math.max(0, Math.min(100, pct));
   const h = Math.round(p*1.2); // 0..120
@@ -403,30 +383,23 @@ function colorForPct(pct){
 
 // ===== Optimización (cola) =====
 const OPT_QUEUE = [
-  // 1 Entradas básicas
   'Agua','Oxígeno','Carbohidratos','Grasas saludables','Proteínas',
   'Minerales','Vitaminas',
-  // 2 Regulación (NT + Hormonas)
   'Dopamina','Serotonina','GABA','Glutamato','Acetilcolina',
   'Insulina','Glucagón','T3/T4','GH','Cortisol','Melatonina','Testosterona','Estrógeno','Progesterona','Leptina','Grelina',
-  // 3 Soporte
   'Sistema Inmune','Microbiota intestinal','Sodio','Potasio','Calcio','Músculos','Huesos','Tejido conectivo',
-  // 4 Estilo de vida
   'Movimiento físico','Sueño','Gestión emocional','Conexión social',
-  // 5 Hábitos/ambiente
   'Alimentación','Hidratación','Exposición solar','Aire limpio','Higiene/Prevención',
-  // 6 Núcleo celular
   'ADN','Reparación celular','Células madre','Telómeros','Autofagia'
 ];
-const optPanel=document.getElementById('optimizer');
-const optList=document.getElementById('opt-list');
-const optBtn=document.getElementById('opt-btn');
-const optStartBtn=document.getElementById('opt-start-btn');
-const optCancel=document.getElementById('opt-cancel');
-// Barra de progreso general
+const optPanel=$id('optimizer');
+const optList=$id('opt-list');
+const optBtn = $id('opt-btn','btn-optimize');
+const optStartBtn = $id('opt-start-btn','btn-start');
+const optCancel=$id('opt-cancel');
 const optProgress = document.querySelector('.opt-progress');
-const optProgressFill = document.getElementById('opt-progress-fill');
-const optProgressLabel = document.getElementById('opt-progress-label');
+const optProgressFill = $id('opt-progress-fill');
+const optProgressLabel = $id('opt-progress-label');
 
 let optRunning=false, optAbort=null;
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
@@ -447,7 +420,8 @@ function createOptItem(name,from){
 async function runOptimizer(){
   if(optRunning) return;
   optRunning=true; optAbort=new AbortController();
-  optList.innerHTML=''; optPanel.classList.remove('hidden'); if(optBtn) optBtn.disabled=true;
+  if(optList) optList.innerHTML='';
+  optPanel?.classList.remove('hidden'); if(optBtn) optBtn.disabled=true;
 
   // Inicial del progreso general
   if(optProgressFill){
@@ -456,8 +430,7 @@ async function runOptimizer(){
   }
   if(optProgressLabel) optProgressLabel.textContent = '0%';
 
-  const total = OPT_QUEUE.length;
-  let processed = 0;
+  const total = OPT_QUEUE.length; let processed = 0;
 
   for(const name of OPT_QUEUE){
     if(optAbort.signal.aborted) break;
@@ -467,9 +440,8 @@ async function runOptimizer(){
     const bar=row.querySelector('.opt-bar');
     const fill=row.querySelector('.opt-fill');
     const miniLabel=row.querySelector('.opt-mini-label');
-    optList.prepend(row);
+    optList?.prepend(row);
 
-    // Animar ítem hasta 100%, actualizando color y % (centrado dentro de la barrita)
     await animateFill(fill, from, 100, 850, v=>{
       const pct = Math.round(v);
       if(miniLabel) miniLabel.textContent = pct + '%';
@@ -477,12 +449,12 @@ async function runOptimizer(){
       fill.style.background = colorForPct(v);
     });
 
-    // Eco visual al ticker (aleatorio)
+    // Eco al ticker
     const keys=['scan','torrente','operativos','autorreparacion','depuracion'];
     const k=keys[Math.floor(Math.random()*keys.length)];
     setCheck(k, Math.round(60 + Math.random()*40));
 
-    // Actualizar progreso general (barra + etiqueta + color)
+    // Progreso general
     processed++;
     const gpct = Math.round((processed/total)*100);
     if(optProgressFill){
@@ -491,19 +463,18 @@ async function runOptimizer(){
     }
     if(optProgressLabel) optProgressLabel.textContent = gpct + '%';
 
-    // Pausa breve y quitar el ítem
     await sleep(300);
     row.remove();
   }
 
-  // Glow/flash suave al completar (300ms)
+  // Glow al completar
   if(optProgress && optProgressLabel && optProgressLabel.textContent === '100%'){
     const prev = optProgress.style.boxShadow;
     optProgress.style.boxShadow = '0 0 18px rgba(46,234,138,.9), 0 0 36px rgba(46,234,138,.55)';
     setTimeout(()=>{ optProgress.style.boxShadow = prev || ''; }, 320);
   }
 
-  optPanel.classList.add('hidden');
+  optPanel?.classList.add('hidden');
   optRunning=false; if(optBtn) optBtn.disabled=false;
 }
 
@@ -511,45 +482,42 @@ optBtn?.addEventListener('click',()=>{ playBeep(); runOptimizer(); });
 optStartBtn?.addEventListener('click',()=>{
   overlay.classList.add('is-hidden');
   ensureAudio(); try{ audioCtx && audioCtx.resume(); }catch{}
-  if(!isOn) powerBtn.click();
+  if(!isOn) powerBtn?.click();
   if(soundOn) startHum();
-  // Precargar música (no reproduce hasta ON+soundOn)
   loadMusicOnce();
   fx.start();
 });
 optCancel?.addEventListener('click',()=>{
-  if(!optRunning){ optPanel.classList.add('hidden'); return; }
+  if(!optRunning){ optPanel?.classList.add('hidden'); return; }
   optAbort.abort();
 });
 
 // ===== Power + Overlay + FX =====
-const overlay=document.getElementById('overlay');
-const startBtn=document.getElementById('startBtn');
-const powerBtn=document.getElementById('power-btn');
-const led=document.getElementById('led');
-const soundBtn=document.getElementById('sound-btn');
+const overlay=$id('overlay');
+const startBtn = $id('startBtn','btn-start');
+const powerBtn = $id('power-btn','btn-power');
+const led = $id('led'); // opcional
+const soundBtn = $id('sound-btn','btn-sound');
 const fx=new BloodstreamFX('fx-bloodstream');
 let isOn=false;
 
-startBtn.onclick=async()=>{
-  overlay.classList.add('is-hidden');
+startBtn?.addEventListener('click', async ()=>{
+  overlay?.classList.add('is-hidden');
   ensureAudio(); try{ await audioCtx.resume(); }catch{}
-  if(!isOn) powerBtn.click();
+  if(!isOn) powerBtn?.click();
   if(soundOn) startHum();
-  // Precargar música para que arranque rápido cuando corresponde
-  loadMusicOnce();
-  fx.start();
-};
-powerBtn.onclick=()=>{
+  loadMusicOnce(); fx.start();
+});
+
+powerBtn?.addEventListener('click', ()=>{
   isOn=!isOn;
-  powerBtn.textContent=isOn?'Apagar':'Encender';
-  led.classList.toggle('on',isOn);
+  if(powerBtn) powerBtn.textContent=isOn?'Apagar':'Encender';
+  led?.classList.toggle('on',isOn);
   toggleModules(isOn);
   if(!audioCtx) return;
 
   if(isOn && soundOn){
     startHum();
-    // Cargar si falta y reproducir música
     loadMusicOnce().then(()=> startMusic());
   } else {
     stopHum();
@@ -557,13 +525,15 @@ powerBtn.onclick=()=>{
   }
 
   if(isOn){ fx.start(); renderHeaderInfo(new Date()); } else { fx.stop(); }
-};
-soundBtn.onclick=async()=>{
+});
+
+soundBtn?.addEventListener('click', async ()=>{
   ensureAudio(); try{ await audioCtx.resume(); }catch{}
   soundOn=!soundOn;
-  soundBtn.textContent='Sonido: '+(soundOn?'ON':'OFF');
-  soundBtn.setAttribute('aria-pressed', String(soundOn));
-
+  if(soundBtn){
+    soundBtn.textContent='Sonido: '+(soundOn?'ON':'OFF');
+    soundBtn.setAttribute('aria-pressed', String(soundOn));
+  }
   if(isOn && soundOn){
     startHum();
     loadMusicOnce().then(()=> startMusic());
@@ -571,23 +541,21 @@ soundBtn.onclick=async()=>{
     stopHum();
     stopMusic();
   }
-};
+});
+
 // Failsafe: oculta overlay a los 15s
-setTimeout(()=>{ if(!overlay.classList.contains('is-hidden')){ overlay.classList.add('is-hidden'); if(!isOn) powerBtn.click(); } },15000);
+setTimeout(()=>{ if(overlay && !overlay.classList.contains('is-hidden')){ overlay.classList.add('is-hidden'); if(!isOn) powerBtn?.click(); } },15000);
 
 // Pausa FX (y música) si pestaña oculta
 document.addEventListener('visibilitychange', ()=>{
   if(document.hidden){
-    fx.stop();
-    stopMusic();
+    fx.stop(); stopMusic();
   } else {
-    if(isOn){
-      fx.start();
-      if(soundOn) loadMusicOnce().then(()=> startMusic());
-    }
+    if(isOn){ fx.start(); if(soundOn) loadMusicOnce().then(()=> startMusic()); }
   }
 });
-// Anclar optimizer y ticker justo debajo del header, incluso si otros scripts intentan moverlos
+
+// Anclar optimizer y ticker debajo del header, por si otro script los mueve
 (function(){
   function placePanels(){
     const header = document.querySelector('header,#app-header,.header');
@@ -604,12 +572,8 @@ document.addEventListener('visibilitychange', ()=>{
       }
     }
   }
-
-  // 1) Al cargar
   document.addEventListener('DOMContentLoaded', placePanels);
   window.addEventListener('load', ()=> setTimeout(placePanels, 0));
-
-  // 2) Si otro script los reubica, los volvemos a poner debajo del header
   const mo = new MutationObserver(() => placePanels());
   mo.observe(document.body, {childList:true, subtree:true});
 })();
