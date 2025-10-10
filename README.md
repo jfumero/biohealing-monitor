@@ -67,4 +67,4 @@ Experiencia futurista tipo “monitor biomédico” que simula nanorobots en el 
 - Tests básicos (Smoke/E2E) y checklist de release.
 
 ## Licencia
-MIT (o la que elijas).
+MIT
