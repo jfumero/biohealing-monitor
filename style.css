@@ -127,9 +127,41 @@ main{position:relative; z-index:5}
 
 .controls{display:flex; gap:.4rem; margin-top:.25rem}
 
-/* Optimizer panel */
-.optimizer{ position:fixed; left:16px; right:16px; bottom:16px; z-index:20; }
+/* Optimizer panel (debajo del encabezado, no fijo) */
+.optimizer{ 
+  position:relative; 
+  z-index:9; 
+  margin:12px 16px 0; 
+}
 .hidden{ display:none !important; }
+
+/* Progreso general */
+.opt-progress{
+  position:relative;
+  height:12px; 
+  background:rgba(255,255,255,0.08); 
+  border:1px solid rgba(255,255,255,0.10);
+  border-radius:999px; 
+  overflow:hidden;
+  margin:.5rem 0 .6rem;
+}
+.opt-progress-fill{
+  height:100%;
+  width:0%;
+  /* color inicial (rojo); JS lo irá cambiando dinámicamente */
+  background: linear-gradient(90deg, hsl(0 90% 50%), hsl(0 90% 50%));
+  transition: width .45s ease, background .25s linear;
+}
+
+.opt-progress-label{
+  position:absolute; inset:0;
+  display:flex; align-items:center; justify-content:center;
+  font-weight:700; font-size:.85rem;
+  text-shadow:0 1px 2px rgba(0,0,0,.35);
+  pointer-events:none;
+}
+
+/* Lista de items (ítem + mini barra + %) */
 .opt-list{ display:grid; gap:.4rem; margin:.6rem 0 }
 .opt-row{
   display:grid; grid-template-columns: 1fr auto; align-items:center; gap:.6rem;
@@ -137,13 +169,61 @@ main{position:relative; z-index:5}
   border:1px solid rgba(255,255,255,0.08);
   padding:.35rem .5rem; border-radius:.5rem;
 }
-.opt-bar{ width:220px; height:8px; background:rgba(255,255,255,0.08); border-radius:999px; overflow:hidden; border:1px solid rgba(255,255,255,0.10)}
-.opt-fill{ height:100%; width:0%; transform:scaleX(0); transform-origin:left; background:linear-gradient(90deg,var(--ok),#00ffaa); transition:transform .7s ease }
+.opt-meter{ display:flex; align-items:center; gap:.45rem; }
 
-/* Ticker */
-.sys-ticker{ position:fixed; bottom:0; left:0; right:0; z-index:15; background:rgba(255,255,255,0.05); border-top:1px solid rgba(255,255,255,0.08); overflow:hidden; white-space:nowrap }
-.sys-ticker-track{ display:inline-block; padding:.5rem .75rem; animation:ticker 24s linear infinite }
-@keyframes ticker{ from{ transform:translateX(100%) } to{ transform:translateX(-100%) } }
+/* Mini barra: igual que la general pero pequeña */
+.opt-bar{ 
+  position:relative; 
+  width:220px; 
+  height:10px;                 /* más bajita que la general */
+  background:rgba(255,255,255,0.08); 
+  border:1px solid rgba(255,255,255,0.10);
+  border-radius:999px; 
+  overflow:hidden; 
+}
+
+.opt-fill{ 
+  height:100%; 
+  width:100%;                 /* 🔧 <- lo importante: ancho base 100% */
+  transform:scaleX(0); 
+  transform-origin:left; 
+  transition: transform .7s ease, background .25s linear;
+}
+
+/* % centrado dentro de la barrita chica */
+.opt-mini-label{
+  position:absolute; inset:0;
+  display:flex; align-items:center; justify-content:center;
+  font-weight:700; font-size:.72rem; 
+  text-shadow:0 1px 2px rgba(0,0,0,.35);
+  pointer-events:none;
+  opacity:.95;
+}
+
+.opt-pct{ font-weight:700; min-width:3ch; text-align:right; opacity:.9; }
+
+.opt-actions{ display:flex; justify-content:flex-end; }
+
+/* Ticker (debajo de la cabecera, no fijo) */
+.sys-ticker{
+  position: relative;  
+  left: 0; right: 0;
+  z-index: 15;
+  background: rgba(255,255,255,0.05);
+  border-top: 1px solid rgba(255,255,255,0.08);
+  overflow: hidden;
+  white-space: nowrap;
+  margin-top: .5rem;
+}
+.sys-ticker-track{
+  display: inline-block;
+  padding: .5rem .75rem;
+  animation: ticker 24s linear infinite;
+}
+@keyframes ticker{ 
+  from{ transform:translateX(100%) } 
+  to{ transform:translateX(-100%) } 
+}
 .nb-item{ opacity:.95 }
 .nb-sep{ opacity:.45; margin:0 .6rem }
 .nb-pos{ color:var(--ok) }
@@ -153,179 +233,8 @@ main{position:relative; z-index:5}
 /* Utilidades */
 .center{ display:flex; align-items:center; justify-content:center }
 
+/* Barra general debajo del encabezado */
+.opt-progress{ margin:12px 16px 0; }
 
-/* === Override: colocar ticker debajo del header en flujo normal === */
-.sys-ticker{
-  position: relative !important;
-  bottom: auto !important;
-  left: 0; right: 0;
-  width: 100%;
-  z-index: 15;
-  overflow: hidden;
-  white-space: nowrap;
-  margin-top: 0.5rem;
-  /* Conserva tu estética (ajusta si ya lo definiste): */
-  /* background: rgba(255,255,255,0.08); */
-}
-
-#optimizer{
-  margin-top: 1rem;
-}
-
-/* Mantener la pista del ticker en una sola línea, con desplazamiento horizontal si es largo */
-.sys-ticker-track{
-  display: block;
-  white-space: nowrap;
-  overflow: hidden;
-}
-/* Forzar optimizer debajo del header, en flujo normal */
-#optimizer {
-  position: relative !important;
-  bottom: auto !important;
-  top: auto !important;
-  margin-top: 1rem;
-  display: block;
-  float: none;
-  clear: both;
-  order: 0; /* por si está en un contenedor flex/grid con order */
-}
-/* ======= OVERRIDES: Optimizer + Ticker debajo del header ======= */
-
-/* El ticker participa del flujo (no fijo al pie) */
-.sys-ticker{
-  position: relative !important;
-  bottom: auto !important;
-  left: 0; right: 0;
-  width: 100%;
-  z-index: 15;
-  overflow: hidden;
-  white-space: nowrap;
-  margin-top: 0.5rem;
-  /* Si tu tema usa "glass", podés reactivar un fondo suave: */
-  /* background: rgba(255,255,255,0.08); */
-}
-
-/* Por si algún layout lo estaba empujando */
-#optimizer{
-  position: relative !important;
-  bottom: auto !important;
-  top: auto !important;
-  display: block !important;
-  float: none !important;
-  clear: both;
-  order: 0;
-  margin-top: 1rem;
-}
-
-/* Pista del ticker en línea única */
-.sys-ticker-track{
-  display: block;
-  white-space: nowrap;
-  overflow: hidden;
-}
-
-/* === Barra GENERAL del Optimizer (la grande de arriba) === */
-#optimizer .opt-progress{
-  position: relative;
-  height: 12px;
-  background: rgba(255,255,255,0.08);
-  border-radius: 999px;
-  overflow: hidden;
-  margin: .5rem 0 .75rem;
-}
-
-#optimizer .opt-progress-fill{
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 0%;
-  background: linear-gradient(90deg, hsl(0 90% 50%), hsl(0 90% 50%));
-  transition: width .25s ease-out;
-}
-
-#optimizer .opt-progress-label{
-  position: absolute;
-  right: .5rem;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: .75rem;
-  opacity: .8;
-}
-
-/* === Barritas por elemento (dentro de cada opt-row) — tu JS ya las anima === */
-#optimizer .opt-meter .opt-bar{
-  position: relative;
-  height: 10px;
-  background: rgba(255,255,255,0.06);
-  border-radius: 999px;
-  overflow: hidden;
-}
-#optimizer .opt-meter .opt-fill{
-  transform-origin: left center;
-  height: 100%;
-}
-#optimizer .opt-mini-label{
-  position: absolute;
-  right: .35rem;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: .7rem;
-  opacity: .8;
-}
-/* Header centrado y limpio */
-.header{
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px 16px;
-  align-items: center;
-  text-align: center;
-}
-.header .brand{ display: grid; justify-items: center; gap: 6px; }
-.site-title{ margin: 0; line-height: 1.2; text-align: center; }
-.patient-line{ font-size: .9rem; opacity: .9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.header .controls{ display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; }
-
-/* HUD */
-.hud-strip{
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: max-content;
-  gap: .75rem 1rem;
-  align-items: center;
-  margin-top: .5rem;
-  overflow-x: auto;
-  white-space: nowrap;
-}
-.hud-strip .hud-item{ opacity: .9; font-size: .9rem; }
-.hud-strip strong{ opacity: .8; margin-right: .25rem; }
-
-/* Optimizer: barras por componente visibles */
-#optimizer .opt-list{ display: grid; gap: .5rem; }
-#optimizer .opt-row{ display: grid; grid-template-columns: 200px 1fr; align-items: center; gap: .5rem; }
-#optimizer .opt-meter{ width: 100%; }
-#optimizer .opt-meter .opt-bar{
-  position: relative;
-  width: 100%;
-  height: 10px;
-  border-radius: 999px;
-  background: rgba(255,255,255,0.12) !important;
-  overflow: hidden;
-}
-#optimizer .opt-meter .opt-fill{
-  display: block !important;
-  height: 100% !important;
-  transform-origin: left center !important;
-}
-#optimizer .opt-meter .opt-mini-label{
-  position: absolute;
-  right: .4rem; top: 50%;
-  transform: translateY(-50%);
-  font-size: .7rem; opacity: .85;
-}
-
-/* Ticker en flujo normal */
-.sys-ticker{ position: relative !important; bottom: auto !important; }
-
-/* Gauges en una fila compacta */
-.modules-row{ display:flex !important; flex-wrap:nowrap !important; gap:12px; overflow-x:auto; padding-bottom:6px; }
-.modules-row .card{ min-width:220px; max-width:240px; flex:0 0 auto; }
-.modules-row .gauge{ width:160px; height:160px; margin:0 auto; position:relative; }
+/* Igual que la mini, pero versión ancha/alta para la barra general */
+.opt-bar-lg{ width:100%; height:14px; }
