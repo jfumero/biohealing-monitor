@@ -1,4 +1,4 @@
-// ===== FX Futurista: Fondo sutil con partículas =====
+// ===== FX Futurista (fondo) =====
 class BloodstreamFX{
   constructor(id){
     this.canvas=document.getElementById(id);
@@ -6,12 +6,10 @@ class BloodstreamFX{
     this.dpr=Math.max(1, Math.min(2, window.devicePixelRatio||1));
     this.running=false; this.t=0;
     this.particles=[]; this.cells=[];
-    if(this.ctx){ window.addEventListener('resize',()=>this.resize(),{passive:true}); this.resize(); this.initField(); }
+    if(this.ctx){ addEventListener('resize',()=>this.resize(),{passive:true}); this.resize(); this.initField(); }
   }
-  resize(){
-    const w=innerWidth,h=innerHeight;
-    this.canvas.width=Math.floor(w*this.dpr);
-    this.canvas.height=Math.floor(h*this.dpr);
+  resize(){ const w=innerWidth,h=innerHeight;
+    this.canvas.width=Math.floor(w*this.dpr); this.canvas.height=Math.floor(h*this.dpr);
     this.canvas.style.width=w+'px'; this.canvas.style.height=h+'px';
   }
   initField(){
@@ -31,20 +29,15 @@ class BloodstreamFX{
   loop(now){
     if(!this.running||!this.ctx) return;
     const {ctx,canvas}=this; const W=canvas.width,H=canvas.height; const dt=(now-this.t)/1000; this.t=now;
-    // Fondo
     const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,'#0b0a12'); g.addColorStop(1,'#110b15');
     ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
-    // Corrientes
     ctx.lineWidth=8*this.dpr; ctx.strokeStyle='rgba(255,120,160,.08)';
     for(let i=0;i<3;i++){ const baseY=(H/4)*(i+1)+Math.sin(now/900+i)*4*this.dpr; ctx.beginPath(); ctx.moveTo(0,baseY);
-      for(let x=0;x<=W;x+=50*this.dpr){ const yy=baseY+Math.sin((x+now/5)/60+i)*2*this.dpr; ctx.lineTo(x,yy); }
-      ctx.stroke();
+      for(let x=0;x<=W;x+=50*this.dpr){ const yy=baseY+Math.sin((x+now/5)/60+i)*2*this.dpr; ctx.lineTo(x,yy); } ctx.stroke();
     }
-    // Células
     for(const c of this.cells){ ctx.fillStyle='rgba(240,90,126,.7)'; ctx.beginPath(); ctx.arc(c.x,c.y,c.r*this.dpr,0,Math.PI*2); ctx.fill();
       c.x+=c.vx; c.y+=Math.sin((c.x+now/20)/60)*(0.3*this.dpr); if(c.x>W+10){c.x=-10; c.y=Math.random()*H;}
     }
-    // Nanobots
     ctx.save(); ctx.globalCompositeOperation='lighter';
     for(const p of this.particles){
       const y=p.y+Math.sin(p.phase+now/600)*p.amp, r=p.r*this.dpr;
@@ -53,17 +46,16 @@ class BloodstreamFX{
       ctx.fillStyle='#5ad1ff'; ctx.globalAlpha=.7; ctx.beginPath(); ctx.arc(p.x,y,r,0,Math.PI*2); ctx.fill(); ctx.globalAlpha=1;
       p.x+=p.vx*(1+Math.sin(now/1200)*.04); p.phase+=dt; if(p.x>W+10){p.x=-10; p.y=Math.random()*H;}
     }
-    ctx.restore();
-    requestAnimationFrame(t=>this.loop(t));
+    ctx.restore(); requestAnimationFrame(t=>this.loop(t));
   }
 }
 
-// ===== Util: tomar IDs nuevos o viejos =====
+// ===== Helpers =====
 const $id = (...ids) => ids.map(i=> i && document.getElementById(i)).find(Boolean);
 const $q  = (sel) => document.querySelector(sel);
 
-// ===== Edad (detallada Y-M-D h:m:s) =====
-const birth = new Date(1976,11,4,0,50,0); // 4/12/1976 00:50 local
+// ===== Edad viva =====
+const birth = new Date(1976,11,4,0,50,0);
 function ageTextDetailed(now=new Date()){
   let y=now.getFullYear()-birth.getFullYear();
   let m=now.getMonth()-birth.getMonth();
@@ -83,68 +75,43 @@ function renderAge(){
 }
 setInterval(renderAge,1000); renderAge();
 
-// ===== Audio (hum + beep suave) =====
+// ===== Audio =====
 let audioCtx=null, masterGain=null, humOsc=null, humGain=null; let soundOn=true;
-function ensureAudio(){
-  if(audioCtx) return;
-  audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+function ensureAudio(){ if(audioCtx) return; audioCtx=new (window.AudioContext||window.webkitAudioContext)();
   masterGain=audioCtx.createGain(); masterGain.gain.value=0.0009; masterGain.connect(audioCtx.destination);
 }
-function playBeep(){
-  if(!audioCtx||!soundOn) return;
-  const o=audioCtx.createOscillator(), g=audioCtx.createGain();
-  o.type='sine'; o.frequency.value=880; g.gain.value=0.001; o.connect(g).connect(masterGain);
-  o.start(); g.gain.exponentialRampToValueAtTime(0.00001,audioCtx.currentTime+0.12); o.stop(audioCtx.currentTime+0.14);
+function playBeep(){ if(!audioCtx||!soundOn) return;
+  const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.type='sine'; o.frequency.value=880; g.gain.value=0.001;
+  o.connect(g).connect(masterGain); o.start(); g.gain.exponentialRampToValueAtTime(0.00001,audioCtx.currentTime+0.12); o.stop(audioCtx.currentTime+0.14);
 }
-function startHum(){
-  if(!audioCtx||humOsc||!soundOn) return;
-  humOsc=audioCtx.createOscillator(); humGain=audioCtx.createGain();
-  humOsc.type='sawtooth'; humOsc.frequency.value=110; humGain.gain.value=0.0005;
+function startHum(){ if(!audioCtx||humOsc||!soundOn) return;
+  humOsc=audioCtx.createOscillator(); humGain=audioCtx.createGain(); humOsc.type='sawtooth'; humOsc.frequency.value=110; humGain.gain.value=0.0005;
   humOsc.connect(humGain).connect(masterGain); humOsc.start();
 }
-function stopHum(){
-  if(!humOsc) return;
-  humGain.gain.exponentialRampToValueAtTime(0.00001,audioCtx.currentTime+0.2);
-  humOsc.stop(audioCtx.currentTime+0.25); humOsc=null; humGain=null;
-}
+function stopHum(){ if(!humOsc) return; humGain.gain.exponentialRampToValueAtTime(0.00001,audioCtx.currentTime+0.2); humOsc.stop(audioCtx.currentTime+0.25); humOsc=null; humGain=null; }
 
-// ===== Música MP3 (Web Audio) =====
-const MUSIC_URL = 'music.mp3';
-let musicBuffer=null, musicSource=null, musicGain=null; let musicOn=true;
-
+// ===== Música (opcional) =====
+const MUSIC_URL='music.mp3'; let musicBuffer=null, musicSource=null, musicGain=null; let musicOn=true;
 async function loadMusicOnce(){
-  try{
-    ensureAudio();
-    if(musicBuffer) return;
-    const res = await fetch(MUSIC_URL);
-    if(!res.ok) throw new Error('No se pudo cargar el MP3');
-    const ab = await res.arrayBuffer();
-    musicBuffer = await audioCtx.decodeAudioData(ab);
-  }catch(err){ console.warn('Error cargando música:', err); }
+  try{ ensureAudio(); if(musicBuffer) return;
+    const res=await fetch(MUSIC_URL); if(!res.ok) throw new Error('No se pudo cargar el MP3');
+    const ab=await res.arrayBuffer(); musicBuffer=await audioCtx.decodeAudioData(ab);
+  }catch(err){ console.warn('Error cargando música:',err); }
 }
-function startMusic(){
-  if(!audioCtx || !soundOn || !musicOn || !musicBuffer) return;
-  stopMusic();
-  musicSource = audioCtx.createBufferSource();
-  musicSource.buffer = musicBuffer; musicSource.loop = true;
-  if(!musicGain){ musicGain = audioCtx.createGain(); musicGain.gain.value = 0.12; musicGain.connect(audioCtx.destination); }
+function startMusic(){ if(!audioCtx||!soundOn||!musicOn||!musicBuffer) return; stopMusic();
+  musicSource=audioCtx.createBufferSource(); musicSource.buffer=musicBuffer; musicSource.loop=true;
+  if(!musicGain){ musicGain=audioCtx.createGain(); musicGain.gain.value=0.12; musicGain.connect(audioCtx.destination); }
   musicSource.connect(musicGain); musicSource.start(0);
 }
 function stopMusic(){ try{ musicSource?.stop(0); musicSource?.disconnect(); }catch{} musicSource=null; }
 
-// ===== Zodiacos / Luna / Circadiano =====
+// ===== Zodiaco / Luna / Circadiano (HUD) =====
 const CHINESE=['Rata','Buey','Tigre','Conejo','Dragón','Serpiente','Caballo','Cabra','Mono','Gallo','Perro','Cerdo'];
 function chineseAnimal(y){ return CHINESE[(y-1900)%12]; }
-function chineseElement(y){
-  const e=(y-4)%10;
-  if(e===0||e===1) return 'Madera';
-  if(e===2||e===3) return 'Fuego';
-  if(e===4||e===5) return 'Tierra';
-  if(e===6||e===7) return 'Metal';
-  return 'Agua';
+function chineseElement(y){ const e=(y-4)%10;
+  if(e===0||e===1) return 'Madera'; if(e===2||e===3) return 'Fuego'; if(e===4||e===5) return 'Tierra'; if(e===6||e===7) return 'Metal'; return 'Agua';
 }
-function zodiac(d){
-  const m=d.getMonth()+1, day=d.getDate();
+function zodiac(d){ const m=d.getMonth()+1, day=d.getDate();
   if((m==3&&day>=21)||(m==4&&day<=19))return'Aries ♈';
   if((m==4&&day>=20)||(m==5&&day<=20))return'Tauro ♉';
   if((m==5&&day>=21)||(m==6&&day<=20))return'Géminis ♊';
@@ -155,11 +122,9 @@ function zodiac(d){
   if((m==10&&day>=23)||(m==11&&day<=21))return'Escorpio ♏';
   if((m==11&&day>=22)||(m==12&&day<=21))return'Sagitario ♐';
   if((m==12&&day>=22)||(m==1&&day<=19))return'Capricornio ♑';
-  if((m==1&&day>=20)||(m==2&&day<=18))return'Acuario ♒';
-  return'Piscis ♓';
+  if((m==1&&day>=20)||(m==2&&day<=18))return'Acuario ♒'; return'Piscis ♓';
 }
-function moon(d){
-  const syn=29.530588853, ref=new Date(Date.UTC(2000,0,6,18,14));
+function moon(d){ const syn=29.530588853, ref=new Date(Date.UTC(2000,0,6,18,14));
   const days=(d-ref)/86400000, age=((days%syn)+syn)%syn;
   if(age<1.84566)return'Luna nueva 🌑';
   if(age<5.53699)return'Creciente visible 🌒';
@@ -170,8 +135,7 @@ function moon(d){
   if(age<23.99361)return'Cuarto menguante 🌗';
   return'Creciente menguante 🌘';
 }
-function circadian(d){
-  const h=d.getHours()+d.getMinutes()/60;
+function circadian(d){ const h=d.getHours()+d.getMinutes()/60;
   if(h>=22||h<6) return'Sueño / recuperación';
   if(h<9) return'Activación matinal';
   if(h<12) return'Alerta alta';
@@ -189,23 +153,16 @@ function renderHeaderInfo(now=new Date()){
   const zOcc = zodiac(new Date(1976,11,4));
   const animal = chineseAnimal(1976), elem = chineseElement(1976);
   const czTxt = `${animal} (${elem}) ${animal==='Dragón'?'🐉':''}`;
-
   const set=(id,txt)=>{ const el=$id(id); if(el) el.innerHTML=txt; };
-  set('hd-zodiac', zOcc);
-  set('hd-czodiac', czTxt);
-  set('hd-moon',   moon(now));
-  set('hd-circ',   circadian(now));
-
+  set('hd-zodiac', zOcc); set('hd-czodiac', czTxt); set('hd-moon', moon(now)); set('hd-circ', circadian(now));
   const birthRef = new Date(birth.getFullYear(),birth.getMonth(),birth.getDate());
   const days = Math.floor((new Date(now.getFullYear(),now.getMonth(),now.getDate()) - birthRef)/86400000);
   const f=bioCompact(days,23), e=bioCompact(days,28), i=bioCompact(days,33);
-  set('hd-bio-f', `${f.html} 💪`);
-  set('hd-bio-e', `${e.html} 💖`);
-  set('hd-bio-i', `${i.html} 🧠`);
+  set('hd-bio-f', `${f.html} 💪`); set('hd-bio-e', `${e.html} 💖`); set('hd-bio-i', `${i.html} 🧠`);
 }
 setInterval(()=>renderHeaderInfo(new Date()),1000); renderHeaderInfo(new Date());
 
-// ===== Bienvenida: contadores & barras =====
+// ===== Bienvenida: recuento + barras =====
 function animateCounter(el,to,ms=3200){
   if(!el) return;
   const start=0, t0=performance.now();
@@ -217,10 +174,9 @@ function animateCounter(el,to,ms=3200){
   requestAnimationFrame(step);
 }
 function initWelcome(){
-  // IDs nuevos visibles en tu HTML:
   const elTotal = $id('nb-total','n-total');
   const elOp    = $id('nb-active','n-op');
-  const totalBar = $id('swarm-total-bar'); // opcionales
+  const totalBar = $id('swarm-total-bar');
   const opBar    = $id('swarm-bar');
 
   const base=12_000_000;
@@ -234,7 +190,7 @@ function initWelcome(){
 }
 initWelcome();
 
-// ===== Módulos / Gauges =====
+// ===== Gauges (módulos) =====
 const MODULES=[
   { id:'org-internos', title:'Rejuvenecimiento — Órganos internos', target:95 },
   { id:'org-externos', title:'Rejuvenecimiento — Piel & tejido externo', target:92 },
@@ -243,7 +199,6 @@ const MODULES=[
   { id:'presion',      title:'Presión arterial', target:88 },
   { id:'detox',        title:'Detox hepático', target:93 },
 ];
-// usa #grid si existe; si no, la clase .modules-grid
 const gridEl = $id('grid') || $q('.modules-grid');
 function clamp(n,min,max){return Math.max(min,Math.min(max,n));}
 function toAngle(v){return -120 + clamp(v,0,100)*2.4;}
@@ -278,8 +233,7 @@ function createCard(mod){
 
   const gauge=document.createElement('div'); gauge.className='gauge';
   const dial=document.createElement('div'); dial.className='dial';
-  const needle=document.createElement('div'); needle.className='needle';
-  needle.style.transform=`rotate(${toAngle(0)}deg)`;
+  const needle=document.createElement('div'); needle.className='needle'; needle.style.transform=`rotate(${toAngle(0)}deg)`;
   const hub=document.createElement('div'); hub.className='hub';
   const value=document.createElement('div'); value.className='value'; value.textContent='0%';
   gauge.append(dial,needle,hub,value);
@@ -298,8 +252,7 @@ function createCard(mod){
     card._active=true; animateTo(card,goal); playBeep(); gauge.classList.add('neon');
   }
   function stop(){
-    gauge.classList.remove('neon');
-    clearInterval(card._timer); card._active=false;
+    gauge.classList.remove('neon'); clearInterval(card._timer); card._active=false;
     card._timer=setInterval(()=>{
       let cur=Number(card.dataset.current||10);
       cur -= Math.max(0.8,(cur-10)*0.06);
@@ -312,19 +265,17 @@ function createCard(mod){
   bStart.disabled=true; bStop.disabled=true;
   return card;
 }
-if(gridEl){ MODULES.forEach(m=>gridEl.appendChild(createCard(m))); }
+// Generar gauges sólo si la grilla está vacía (evita duplicados)
+if(gridEl && gridEl.children.length===0){ MODULES.forEach(m=>gridEl.appendChild(createCard(m))); }
 function toggleModules(on){
   document.querySelectorAll('.card').forEach(card=>{
     const btns=card.querySelectorAll('.btn.mod');
     btns.forEach(b=> b.disabled=!on);
-    if(!on){
-      clearInterval(card._timer); setVisual(card,0,false); setStatus(card,'En espera','bad');
-      card._active=false; card.querySelector('.gauge')?.classList.remove('neon');
-    }
+    if(!on){ clearInterval(card._timer); setVisual(card,0,false); setStatus(card,'En espera','bad'); card._active=false; card.querySelector('.gauge')?.classList.remove('neon'); }
   });
 }
 
-// ===== Ticker de sistema (una sola línea) =====
+// ===== Ticker =====
 const CHECKS=[
   { id:'scan', label:'Escaneo sistémico' },
   { id:'torrente', label:'Recuento en torrente sanguíneo' },
@@ -342,46 +293,13 @@ function renderSysTicker(){
   });
   track.innerHTML = parts.join('<span class="nb-sep">•</span>') + '<span class="nb-sep">•</span>' + parts.join('<span class="nb-sep">•</span>');
 }
-function setCheck(id, pct){
-  CHECK_STATE[id]=Math.max(0,Math.min(100,pct));
-  renderSysTicker();
-}
-setTimeout(()=>{
-  const overlay=document.getElementById('overlay');
-  if(overlay && !overlay.classList.contains('is-hidden')){
-    setCheck('scan',10); setCheck('torrente',20); setCheck('operativos',25); setCheck('autorreparacion',8); setCheck('depuracion',12);
-  } else {
-    renderSysTicker();
-  }
+function setCheck(id, pct){ CHECK_STATE[id]=Math.max(0,Math.min(100,pct)); renderSysTicker(); }
+setTimeout(()=>{ const ov=document.getElementById('overlay');
+  if(ov && !ov.classList.contains('is-hidden')){ setCheck('scan',10); setCheck('torrente',20); setCheck('operativos',25); setCheck('autorreparacion',8); setCheck('depuracion',12); }
+  else { renderSysTicker(); }
 },1200);
 
-// ===== Helpers de animación (para barras del Optimizer) =====
-function animateValue(from, to, duration, onUpdate){
-  return new Promise(resolve=>{
-    const t0=performance.now();
-    function step(t){
-      const k=Math.min(1,(t-t0)/duration);
-      const e = 1 - Math.pow(1-k,3); // easeOutCubic
-      const v = from + (to-from)*e;
-      onUpdate(v);
-      if(k<1) requestAnimationFrame(step); else resolve();
-    }
-    requestAnimationFrame(step);
-  });
-}
-function animateFill(el, fromPct, toPct, duration, onProgress){
-  return animateValue(fromPct, toPct, duration, v=>{
-    el.style.transform = `scaleX(${v/100})`;
-    onProgress?.(v);
-  });
-}
-function colorForPct(pct){
-  const p = Math.max(0, Math.min(100, pct));
-  const h = Math.round(p*1.2); // 0..120
-  return `linear-gradient(90deg, hsl(${h} 90% 50%), hsl(${h} 90% 50%))`;
-}
-
-// ===== Optimización (cola) =====
+// ===== Optimizer =====
 const OPT_QUEUE = [
   'Agua','Oxígeno','Carbohidratos','Grasas saludables','Proteínas',
   'Minerales','Vitaminas',
@@ -392,18 +310,15 @@ const OPT_QUEUE = [
   'Alimentación','Hidratación','Exposición solar','Aire limpio','Higiene/Prevención',
   'ADN','Reparación celular','Células madre','Telómeros','Autofagia'
 ];
-const optPanel=$id('optimizer');
-const optList=$id('opt-list');
-const optBtn = $id('opt-btn','btn-optimize');
-const optStartBtn = $id('opt-start-btn','btn-start');
-const optCancel=$id('opt-cancel');
-const optProgress = document.querySelector('.opt-progress');
-const optProgressFill = $id('opt-progress-fill');
-const optProgressLabel = $id('opt-progress-label');
-
+const optPanel=$id('optimizer'); const optList=$id('opt-list');
+const optBtn = $id('opt-btn','btn-optimize'); const optStartBtn = $id('opt-start-btn','btn-start');
+const optCancel=$id('opt-cancel'); const optProgress = document.querySelector('.opt-progress');
+const optProgressFill = $id('opt-progress-fill'); const optProgressLabel = $id('opt-progress-label');
 let optRunning=false, optAbort=null;
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
-
+function animateValue(from,to,dur,onUpdate){ return new Promise(res=>{ const t0=performance.now(); function step(t){ const k=Math.min(1,(t-t0)/dur), e=1-Math.pow(1-k,3), v=from+(to-from)*e; onUpdate(v); if(k<1)requestAnimationFrame(step); else res(); } requestAnimationFrame(step); }); }
+function animateFill(el,fromPct,toPct,dur,onProg){ return animateValue(fromPct,toPct,dur,v=>{ el.style.transform=`scaleX(${v/100})`; onProg?.(v); }); }
+function colorForPct(p){ const pct=Math.max(0,Math.min(100,p)); const h=Math.round(pct*1.2); return `linear-gradient(90deg, hsl(${h} 90% 50%), hsl(${h} 90% 50%))`; }
 function createOptItem(name,from){
   const row=document.createElement('div'); row.className='opt-row';
   row.innerHTML=`
@@ -413,167 +328,60 @@ function createOptItem(name,from){
         <div class="opt-fill" style="transform:scaleX(${from/100}); background:${colorForPct(from)}"></div>
         <div class="opt-mini-label">${Math.round(from)}%</div>
       </div>
-    </div>`;
-  return row;
+    </div>`; return row;
 }
-
 async function runOptimizer(){
-  if(optRunning) return;
-  optRunning=true; optAbort=new AbortController();
-  if(optList) optList.innerHTML='';
-  optPanel?.classList.remove('hidden'); if(optBtn) optBtn.disabled=true;
-
-  // Inicial del progreso general
-  if(optProgressFill){
-    optProgressFill.style.width = '0%';
-    optProgressFill.style.background = colorForPct(0);
-  }
-  if(optProgressLabel) optProgressLabel.textContent = '0%';
-
-  const total = OPT_QUEUE.length; let processed = 0;
-
+  if(optRunning) return; optRunning=true; optAbort=new AbortController();
+  if(optList) optList.innerHTML=''; optPanel?.classList.remove('hidden'); if(optBtn) optBtn.disabled=true;
+  if(optProgressFill){ optProgressFill.style.width='0%'; optProgressFill.style.background=colorForPct(0); }
+  if(optProgressLabel) optProgressLabel.textContent='0%';
+  const total=OPT_QUEUE.length; let processed=0;
   for(const name of OPT_QUEUE){
     if(optAbort.signal.aborted) break;
-
     const from=Math.max(10,Math.round(30+Math.random()*25)); // 30–55%
-    const row=createOptItem(name,from);
-    const bar=row.querySelector('.opt-bar');
-    const fill=row.querySelector('.opt-fill');
-    const miniLabel=row.querySelector('.opt-mini-label');
+    const row=createOptItem(name,from); const bar=row.querySelector('.opt-bar'); const fill=row.querySelector('.opt-fill'); const mini=row.querySelector('.opt-mini-label');
     optList?.prepend(row);
-
-    await animateFill(fill, from, 100, 850, v=>{
-      const pct = Math.round(v);
-      if(miniLabel) miniLabel.textContent = pct + '%';
-      if(bar) bar.setAttribute('aria-valuenow', String(pct));
-      fill.style.background = colorForPct(v);
-    });
-
-    // Eco al ticker
-    const keys=['scan','torrente','operativos','autorreparacion','depuracion'];
-    const k=keys[Math.floor(Math.random()*keys.length)];
-    setCheck(k, Math.round(60 + Math.random()*40));
-
-    // Progreso general
-    processed++;
-    const gpct = Math.round((processed/total)*100);
-    if(optProgressFill){
-      optProgressFill.style.width = gpct + '%';
-      optProgressFill.style.background = colorForPct(gpct);
-    }
-    if(optProgressLabel) optProgressLabel.textContent = gpct + '%';
-
-    await sleep(300);
-    row.remove();
+    await animateFill(fill,from,100,850,v=>{ const pct=Math.round(v); if(mini) mini.textContent=pct+'%'; if(bar) bar.setAttribute('aria-valuenow',String(pct)); fill.style.background=colorForPct(v); });
+    const keys=['scan','torrente','operativos','autorreparacion','depuracion']; const k=keys[Math.floor(Math.random()*keys.length)];
+    setCheck(k, Math.round(60+Math.random()*40));
+    processed++; const gpct=Math.round((processed/total)*100);
+    if(optProgressFill){ optProgressFill.style.width=gpct+'%'; optProgressFill.style.background=colorForPct(gpct); }
+    if(optProgressLabel) optProgressLabel.textContent=gpct+'%';
+    await sleep(300); row.remove();
   }
-
-  // Glow al completar
-  if(optProgress && optProgressLabel && optProgressLabel.textContent === '100%'){
-    const prev = optProgress.style.boxShadow;
-    optProgress.style.boxShadow = '0 0 18px rgba(46,234,138,.9), 0 0 36px rgba(46,234,138,.55)';
-    setTimeout(()=>{ optProgress.style.boxShadow = prev || ''; }, 320);
-  }
-
-  optPanel?.classList.add('hidden');
-  optRunning=false; if(optBtn) optBtn.disabled=false;
+  if(optProgress && optProgressLabel && optProgressLabel.textContent==='100%'){ const prev=optProgress.style.boxShadow; optProgress.style.boxShadow='0 0 18px rgba(46,234,138,.9), 0 0 36px rgba(46,234,138,.55)'; setTimeout(()=>{ optProgress.style.boxShadow=prev||''; },320); }
+  optPanel?.classList.add('hidden'); optRunning=false; if(optBtn) optBtn.disabled=false;
 }
-
 optBtn?.addEventListener('click',()=>{ playBeep(); runOptimizer(); });
-optStartBtn?.addEventListener('click',()=>{
-  overlay.classList.add('is-hidden');
-  ensureAudio(); try{ audioCtx && audioCtx.resume(); }catch{}
-  if(!isOn) powerBtn?.click();
-  if(soundOn) startHum();
-  loadMusicOnce();
-  fx.start();
-});
-optCancel?.addEventListener('click',()=>{
-  if(!optRunning){ optPanel?.classList.add('hidden'); return; }
-  optAbort.abort();
-});
+optCancel?.addEventListener('click',()=>{ if(!optRunning){ optPanel?.classList.add('hidden'); return; } optAbort.abort(); });
 
 // ===== Power + Overlay + FX =====
-const overlay=$id('overlay');
-const startBtn = $id('startBtn','btn-start');
-const powerBtn = $id('power-btn','btn-power');
-const led = $id('led'); // opcional
-const soundBtn = $id('sound-btn','btn-sound');
-const fx=new BloodstreamFX('fx-bloodstream');
-let isOn=false;
-
-startBtn?.addEventListener('click', async ()=>{
-  overlay?.classList.add('is-hidden');
-  ensureAudio(); try{ await audioCtx.resume(); }catch{}
-  if(!isOn) powerBtn?.click();
-  if(soundOn) startHum();
-  loadMusicOnce(); fx.start();
-});
-
+const overlay=$id('overlay'); const startBtn=$id('startBtn','btn-start'); const powerBtn=$id('power-btn','btn-power'); const soundBtn=$id('sound-btn','btn-sound');
+const led = $id('led'); const fx=new BloodstreamFX('fx-bloodstream'); let isOn=false;
+startBtn?.addEventListener('click', async ()=>{ overlay?.classList.add('is-hidden'); ensureAudio(); try{ await audioCtx.resume(); }catch{} if(!isOn) powerBtn?.click(); if(soundOn) startHum(); loadMusicOnce(); fx.start(); });
 powerBtn?.addEventListener('click', ()=>{
-  isOn=!isOn;
-  if(powerBtn) powerBtn.textContent=isOn?'Apagar':'Encender';
-  led?.classList.toggle('on',isOn);
-  toggleModules(isOn);
+  isOn=!isOn; if(powerBtn) powerBtn.textContent=isOn?'Apagar':'Encender'; led?.classList.toggle('on',isOn); toggleModules(isOn);
   if(!audioCtx) return;
-
-  if(isOn && soundOn){
-    startHum();
-    loadMusicOnce().then(()=> startMusic());
-  } else {
-    stopHum();
-    stopMusic();
-  }
-
+  if(isOn && soundOn){ startHum(); loadMusicOnce().then(()=> startMusic()); } else { stopHum(); stopMusic(); }
   if(isOn){ fx.start(); renderHeaderInfo(new Date()); } else { fx.stop(); }
 });
-
-soundBtn?.addEventListener('click', async ()=>{
-  ensureAudio(); try{ await audioCtx.resume(); }catch{}
-  soundOn=!soundOn;
-  if(soundBtn){
-    soundBtn.textContent='Sonido: '+(soundOn?'ON':'OFF');
-    soundBtn.setAttribute('aria-pressed', String(soundOn));
-  }
-  if(isOn && soundOn){
-    startHum();
-    loadMusicOnce().then(()=> startMusic());
-  } else {
-    stopHum();
-    stopMusic();
-  }
+soundBtn?.addEventListener('click', async ()=>{ ensureAudio(); try{ await audioCtx.resume(); }catch{} soundOn=!soundOn;
+  if(soundBtn){ soundBtn.textContent='Sonido: '+(soundOn?'ON':'OFF'); soundBtn.setAttribute('aria-pressed', String(soundOn)); }
+  if(isOn && soundOn){ startHum(); loadMusicOnce().then(()=> startMusic()); } else { stopHum(); stopMusic(); }
 });
-
-// Failsafe: oculta overlay a los 15s
 setTimeout(()=>{ if(overlay && !overlay.classList.contains('is-hidden')){ overlay.classList.add('is-hidden'); if(!isOn) powerBtn?.click(); } },15000);
+document.addEventListener('visibilitychange', ()=>{ if(document.hidden){ fx.stop(); stopMusic(); } else { if(isOn){ fx.start(); if(soundOn) loadMusicOnce().then(()=> startMusic()); } } });
 
-// Pausa FX (y música) si pestaña oculta
-document.addEventListener('visibilitychange', ()=>{
-  if(document.hidden){
-    fx.stop(); stopMusic();
-  } else {
-    if(isOn){ fx.start(); if(soundOn) loadMusicOnce().then(()=> startMusic()); }
-  }
-});
-
-// Anclar optimizer y ticker debajo del header, por si otro script los mueve
+// ===== Anclar optimizer y ticker debajo del header (por si otro script los mueve) =====
 (function(){
   function placePanels(){
-    const header = document.querySelector('header,#app-header,.header');
-    const opt = document.getElementById('optimizer');
-    const tick = document.getElementById('sys-ticker');
-    if (!header) return;
-    if (opt && opt.previousElementSibling !== header) {
-      header.parentNode.insertBefore(opt, header.nextSibling);
-    }
-    if (tick) {
-      const after = opt || header;
-      if (tick.previousElementSibling !== after) {
-        header.parentNode.insertBefore(tick, after.nextSibling);
-      }
-    }
+    const header=document.querySelector('header,#app-header,.header');
+    const opt=document.getElementById('optimizer'); const tick=document.getElementById('sys-ticker');
+    if(!header) return;
+    if(opt && opt.previousElementSibling!==header){ header.parentNode.insertBefore(opt, header.nextSibling); }
+    if(tick){ const after=opt||header; if(tick.previousElementSibling!==after){ header.parentNode.insertBefore(tick, after.nextSibling); } }
   }
   document.addEventListener('DOMContentLoaded', placePanels);
-  window.addEventListener('load', ()=> setTimeout(placePanels, 0));
-  const mo = new MutationObserver(() => placePanels());
-  mo.observe(document.body, {childList:true, subtree:true});
+  addEventListener('load', ()=> setTimeout(placePanels,0));
+  const mo=new MutationObserver(()=> placePanels()); mo.observe(document.body,{childList:true,subtree:true});
 })();
