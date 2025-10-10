@@ -1,34 +1,107 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>BioHealing Monitor — Nanobots HUD</title>
-  <!-- Cache-busting simple: cambia el valor v= cuando publiques -->
-  <link rel="stylesheet" href="style.css?v=20251010" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BioHealing Monitor</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!--
-    NOTA: Este es un index.html "listo" que asume tu mismo marcado actual.
-    Si tu index original tiene más secciones, mantenlas; solo necesitás:
-    - el elemento con id="age"
-    - el elemento con id="project-meta" donde va "Paciente · Edad"
-    - los scripts main.js y profile-sync.js al final, en este orden
-  -->
+  <!-- Overlay de bienvenida -->
+  <div id="overlay" class="overlay">
+    <div class="welcome card-glass">
+      <h1>BioHealing Monitor</h1>
+      <p id="project-meta">Paciente: <b>Jonathan Fumero Mesa</b> · Edad: —</p>
 
-  <!-- Header / Meta del proyecto -->
-  <header class="app-header">
-    <div class="brand">BioHealing Monitor</div>
-    <div id="project-meta">Paciente: <b>Jonathan Fumero Mesa</b> · Edad: <span id="age">cargando…</span></div>
+      <!-- Panel de nanorobots (Totales + Operativos) -->
+      <div class="swarm">
+        <div class="swarm-row">
+          <div class="swarm-head">
+            <span class="swarm-k">Nanorobots totales</span>
+            <span class="swarm-v" id="n-total">—</span>
+          </div>
+          <div class="swarm-bar">
+            <div id="swarm-total-bar" class="swarm-fill"></div>
+          </div>
+        </div>
+        <div class="swarm-row">
+          <div class="swarm-head">
+            <span class="swarm-k">Nanorobots operativos</span>
+            <span class="swarm-v" id="n-op">—</span>
+          </div>
+          <div class="swarm-bar">
+            <div id="swarm-bar" class="swarm-fill alt"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="welcome-ctas">
+        <button id="startBtn" class="btn">Comenzar</button>
+        <button id="opt-start-btn" class="btn alt">Optimizar ahora</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cabecera -->
+  <header class="header">
+    <h2 class="brand">BioHealing Monitor</h2>
+
+    <div class="patient">
+      <div class="pill">Paciente: <b>Jonathan Fumero Mesa</b></div>
+      <div class="pill">Edad: <span id="age">—</span></div>
+    </div>
+
+    <div class="header-ctrls">
+      <div id="led" class="led" title="Estado"></div>
+      <button id="power-btn" class="btn">Encender</button>
+      <button id="sound-btn" class="btn" aria-pressed="true">Sonido: ON</button>
+      <button id="opt-btn" class="btn alt" aria-controls="optimizer">Optimizar cuerpo humano</button>
+      <!-- acceso a la app de ciclos en nueva pestaña -->
+      <a href="ciclos.html" class="btn" target="_blank" rel="noopener">Ciclos personales</a>
+    </div>
+
+    <!-- HUD con datos bio/astro -->
+    <div class="hud">
+      <div class="hud-item"><span class="k">Zodiaco</span><span class="v" id="hd-zodiac">—</span></div>
+      <div class="hud-item"><span class="k">Chino</span><span class="v" id="hd-czodiac">—</span></div>
+      <div class="hud-item"><span class="k">Luna</span><span class="v" id="hd-moon">—</span></div>
+      <div class="hud-item"><span class="k">Circadiano</span><span class="v" id="hd-circ">—</span></div>
+      <div class="hud-item"><span class="k">Físico</span><span class="v" id="hd-bio-f">—</span></div>
+      <div class="hud-item"><span class="k">Emocional</span><span class="v" id="hd-bio-e">—</span></div>
+      <div class="hud-item"><span class="k">Intelectual</span><span class="v" id="hd-bio-i">—</span></div>
+    </div>
   </header>
 
-  <!-- Tu layout existente: HUD, Optimizer, Canvas FX, etc. -->
-  <main id="app">
-    <!-- Coloca aquí el resto de tu contenido original del HUD -->
+  <!-- Barra general de optimización (debajo del encabezado) -->
+  <section class="opt-progress card-glass" aria-label="Progreso general de optimización">
+    <div class="title-sm" style="margin-bottom:.35rem;">Optimización general</div>
+    <div class="opt-bar opt-bar-lg">
+      <div id="opt-progress-fill" class="opt-fill" style="transform:scaleX(0)"></div>
+      <div id="opt-progress-label" class="opt-mini-label">0%</div>
+    </div>
+  </section>
+
+  <!-- Módulos/Gauges -->
+  <main>
+    <div id="grid" class="grid"></div>
   </main>
 
-  <!-- Scripts: primero tu lógica original, luego la sincronización del perfil -->
-  <script src="main.js?v=20251010" defer></script>
-  <script src="profile-sync.js?v=20251010" defer></script>
+  <!-- Panel Optimización -->
+  <section id="optimizer" class="optimizer hidden card-glass">
+    <h3>Optimización del cuerpo humano</h3>
+    <div id="opt-list" class="opt-list"></div>
+    <button id="opt-cancel" class="btn alt">Cancelar</button>
+  </section>
+
+  <!-- Ticker inferior -->
+  <div id="sys-ticker" class="sys-ticker">
+    <div id="sys-ticker-track" class="sys-ticker-track"></div>
+  </div>
+
+  <!-- Canvas FX de fondo -->
+  <canvas id="fx-bloodstream"></canvas>
+
+  <script src="main.js"></script>
 </body>
 </html>
+<script src="profile-sync.js" defer></script>
