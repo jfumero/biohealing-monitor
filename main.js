@@ -59,7 +59,7 @@ class BloodstreamFX{
 }
 
 // ===== Edad (detallada Y-M-D h:m:s) =====
-const birth = new Date(1976,11,4,0,50,0); // 4/12/1976 00:50 local
+const birth = new Date(1976,11,4,0,43,0); // 4/12/1976 00:43 local
 function ageTextDetailed(now=new Date()){
   let y=now.getFullYear()-birth.getFullYear();
   let m=now.getMonth()-birth.getMonth();
@@ -77,6 +77,42 @@ function renderAge(){
   const ageEl=document.getElementById('age'); if(ageEl) ageEl.textContent=txt;
   const meta=document.getElementById('project-meta'); if(meta) meta.innerHTML=`Paciente: <b>Jonathan Fumero Mesa</b> · Edad: ${txt}`;
 }
+// ===== Perfil desde ciclos.html + Biorritmo físico =====
+function getCyclesBirth(){
+  // Intenta leer el perfil real guardado por ciclos.html
+  try{
+    const raw = localStorage.getItem('cycles_app_state');
+    if(raw){
+      const st = JSON.parse(raw);
+      if(st && st.birthDate){
+        const [Y,M,D] = st.birthDate.split('-').map(Number);
+        let h=0,m=0;
+        if(st.birthTime){
+          const hhmm = st.birthTime.split(':').map(Number);
+          h = hhmm[0]||0; m = hhmm[1]||0;
+        }
+        return new Date(Y,(M-1),D,h,m,0);
+      }
+    }
+  }catch(e){}
+  // Fallback al birth actual (Jonathan) si no hay perfil
+  return birth;
+}
+
+// Días desde medianoche del día de nacimiento (para biorritmos clásicos)
+function daysSinceBirth(b){
+  const today = new Date();
+  const b0 = new Date(b.getFullYear(), b.getMonth(), b.getDate());
+  const t0 = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  return Math.floor((t0 - b0) / 86400000);
+}
+
+// Porcentaje físico -100..+100
+function physicalBiorhythmPct(b){
+  const t = daysSinceBirth(b);
+  return Math.round(Math.sin(2*Math.PI*t/23) * 100);
+}
+
 setInterval(renderAge,1000); renderAge();
 
 // ===== Audio (hum + beep suave) =====
@@ -286,7 +322,16 @@ function animateTo(card,goal){
   card._timer=setInterval(()=>{
     let cur=Number(card.dataset.current||0);
     cur += (goal-cur)*0.10 + 0.6;
-    if(Math.abs(goal-cur)<0.6){cur=goal; setVisual(card,cur,true); clearInterval(card._timer); card._active=false;}
+if(Math.abs(goal-cur)<0.6){
+  cur=goal; setVisual(card,cur,true);
+  clearInterval(card._timer); card._active=false;
+  // NUEVO: interpretación específica del módulo (si existe)
+  if (typeof mod.interp === 'function') {
+    const level = cur < 40 ? 'bad' : (cur < 75 ? 'warn' : 'good');
+    setStatus(card, mod.interp(cur), level);
+  }
+}
+
     else setVisual(card,cur,true);
   },100);
 }
@@ -312,12 +357,17 @@ function createCard(mod){
 
   card.append(title,status,gauge,ctrls);
   card._timer=null; card._active=false; card.dataset.current=0;
-  const goal=clamp(mod.target??92,70,100);
+  let goal = clamp(mod.target ?? 92, 70, 100); // ahora es let (puede recalcularse)
 
   function start(){
-    if(!isOn||card._active) return;
-    card._active=true; animateTo(card,goal); playBeep(); gauge.classList.add('neon');
+  if(!isOn||card._active) return;
+  // NUEVO: si el módulo provee una función dinámica de objetivo, la usamos
+  if (typeof mod.goalFn === 'function') {
+    try { goal = clamp(mod.goalFn(), 10, 100); } catch(e){}
   }
+  card._active=true; animateTo(card,goal); playBeep(); gauge.classList.add('neon');
+}
+
   function stop(){
     gauge.classList.remove('neon');
     clearInterval(card._timer); card._active=false;
@@ -411,6 +461,7 @@ const OPT_QUEUE = [
   // 2 Regulación (NT + Hormonas)
   'Dopamina','Serotonina','GABA','Glutamato','Acetilcolina',
   'Insulina','Glucagón','T3/T4','GH','Cortisol','Melatonina','Testosterona','Estrógeno','Progesterona','Leptina','Grelina',
+  'Activar metabolismo energético', // ← NUEVO
   // 3 Soporte
   'Sistema Inmune','Microbiota intestinal','Sodio','Potasio','Calcio','Músculos','Huesos','Tejido conectivo',
   // 4 Estilo de vida
@@ -420,6 +471,7 @@ const OPT_QUEUE = [
   // 6 Núcleo celular
   'ADN','Reparación celular','Células madre','Telómeros','Autofagia'
 ];
+
 const optPanel=document.getElementById('optimizer');
 const optList=document.getElementById('opt-list');
 const optBtn=document.getElementById('opt-btn');
