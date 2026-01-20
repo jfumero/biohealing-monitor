@@ -245,12 +245,162 @@
     }
 
     // === UI ===
-    const Card = ({ title, children }) => (
-      <div className="rounded-2xl shadow p-4 bg-white/80 backdrop-blur border border-gray-100">
-        <h3 className="text-lg font-semibold mb-2">{title}</h3>
-        {children}
+    const HELP = {
+      configuracion: {
+        title: "Configuración",
+        body: [
+          ["Nombre completo", "Se usa para numerología (Expresión/Destino, Alma, Personalidad)."],
+          ["Fecha de nacimiento", "Base para biorritmos, numerología, signos, runas, etc."],
+          ["Hora de nacimiento", "En esta versión casi no cambia nada; útil si luego agregás ascendente/casas."],
+          ["Latitud/Longitud/Huso", "Se usa para amanecer/atardecer → horas planetarias."],
+          ["Fecha a calcular", "El día objetivo para todos los cálculos diarios."]
+        ]
+      },
+      resumen: {
+        title: "Resumen rápido",
+        body: [
+          ["Occidental (Sol)", "Signo solar occidental por fecha."],
+          ["Chino", "Animal y elemento del año de nacimiento."],
+          ["Maya", "Tono y sello del Tzolk’in para la fecha objetivo."],
+          ["Runas", "Arquetipos lúdicos natal y del año."]
+        ]
+      },
+      biorritmos: {
+        title: "Biorritmos",
+        body: [
+          ["Físico (23)", "Vitalidad y energía corporal."],
+          ["Emocional (28)", "Sensibilidad y variación anímica."],
+          ["Intelectual (33)", "Enfoque mental y aprendizaje."],
+          ["Nota", "Modelo lúdico; útil para observación, no es científico."]
+        ]
+      },
+      numerologia: {
+        title: "Numerología",
+        body: [
+          ["Camino de Vida", "Tema central de vida (fecha)."],
+          ["Destino/Expresión", "Talentos y forma de expresarte (nombre completo)."],
+          ["Urgencia del Alma", "Motivación interna (vocales)."],
+          ["Personalidad", "Cómo te perciben (consonantes)."],
+          ["Madurez", "Síntesis de vida + expresión."],
+          ["Año/Mes/Día Personal", "Ciclos para planificar foco anual, mensual y diario."]
+        ]
+      },
+      horas: {
+        title: "Horas planetarias",
+        body: [
+          ["Qué es", "Divide día y noche en 12+12 horas desiguales y asigna planetas por orden tradicional."],
+          ["Para qué sirve", "Elegir momentos simbólicamente favorables (Mercurio: papeles, Venus: vínculos, etc.)."],
+          ["Nota", "Cálculo aproximado por amanecer/atardecer + huso fijo."]
+        ]
+      },
+      jyotish: {
+        title: "Jyotish (védica)",
+        body: [
+          ["Ayanamsa", "Ajuste tropical→sideral (Lahiri aprox)."],
+          ["Sol/Luna sideral", "Posiciones siderales usadas en astrología védica."],
+          ["Nakshatra/Pada", "Constelación lunar (27) y subdivisión (pada)."],
+          ["Mahadasha", "Ciclo mayor Vimshottari basado en Luna natal."],
+          ["Nota", "No incluye ascendente ni casas en esta versión."]
+        ]
+      },
+      hd: {
+        title: "Human Design (básico)",
+        body: [
+          ["Fecha de Diseño", "Se busca cuando el Sol está ~88° antes del nacimiento."],
+          ["Gates", "Puertas estimadas por división uniforme del zodiaco (aprox)."],
+          ["Perfil", "Combinación de líneas (p.ej. 5/1)."],
+          ["Nota", "Para exactitud, usar mandala oficial / librería específica."]
+        ]
+      },
+      tabla30: {
+        title: "Próximos 30 días",
+        body: [
+          ["Para qué sirve", "Agenda de tendencias: biorritmos + día personal + sello/tono maya."]
+        ]
+      }
+    };
+
+    const Card = ({ title, helpKey, interpTitle="Interpretación", interpContent=null, children }) => {
+  const [openHelp, setOpenHelp] = React.useState(false);
+  const [openInterp, setOpenInterp] = React.useState(false);
+  const help = helpKey ? HELP[helpKey] : null;
+
+  const Modal = ({ title, subtitle, onClose, children }) => (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50" onMouseDown={onClose}>
+      <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full p-4" onMouseDown={(e)=>e.stopPropagation()}>
+        <div className="flex justify-between items-start gap-3 mb-2">
+          <div>
+            <h4 className="text-lg font-semibold">{title}</h4>
+            {subtitle ? <p className="text-xs text-gray-500">{subtitle}</p> : null}
+          </div>
+          <button className="px-2 py-1 rounded-lg border text-sm" onClick={onClose}>
+            Cerrar
+          </button>
+        </div>
+        <div className="text-sm leading-6">{children}</div>
       </div>
-    );
+    </div>
+  );
+
+  return (
+    <div className="rounded-2xl shadow p-4 bg-white/80 backdrop-blur border border-gray-100 relative">
+      <div className="flex items-start justify-between gap-3">
+        <h3 className="text-lg font-semibold mb-2">{title}</h3>
+
+        <div className="flex items-center gap-2">
+          {help && (
+            <button
+              className="shrink-0 px-2 py-1 rounded-lg border text-xs hover:bg-gray-50"
+              onClick={() => setOpenHelp(true)}
+              title="¿Qué significa esto?"
+            >
+              ℹ️
+            </button>
+          )}
+
+          {interpContent && (
+            <button
+              className="shrink-0 px-2 py-1 rounded-lg border text-xs hover:bg-gray-50"
+              onClick={() => setOpenInterp(true)}
+              title="Interpretación"
+            >
+              🔮
+            </button>
+          )}
+        </div>
+      </div>
+
+      {children}
+
+      {openHelp && help && (
+        <Modal
+          title={help.title}
+          subtitle="Guía rápida de interpretación"
+          onClose={() => setOpenHelp(false)}
+        >
+          <ul className="list-disc pl-5 space-y-1">
+            {help.body.map(([k, v]) => (
+              <li key={k}>
+                <strong>{k}:</strong> {v}
+              </li>
+            ))}
+          </ul>
+        </Modal>
+      )}
+
+      {openInterp && interpContent && (
+        <Modal
+          title={interpTitle}
+          subtitle="Lectura dinámica según tus valores actuales"
+          onClose={() => setOpenInterp(false)}
+        >
+          {interpContent}
+        </Modal>
+      )}
+    </div>
+  );
+};
+
     const Field = ({ label, children }) => (
       <label className="flex flex-col gap-1 text-sm">
         <span className="text-gray-600">{label}</span>
@@ -259,7 +409,54 @@
     );
     const fmtHM = (d)=> `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 
-    function App(){
+    // === Interpretaciones (dinámicas) ===
+const levelLabel = (v) => {
+  if (v >= 60) return "muy alto";
+  if (v >= 25) return "alto";
+  if (v > -25) return "medio";
+  if (v > -60) return "bajo";
+  return "muy bajo";
+};
+const levelAdvice = (v, high, mid, low) => {
+  if (v >= 25) return high;
+  if (v > -25) return mid;
+  return low;
+};
+
+const NUM_DAY_MEANING = {
+  1:{k:"Inicio", t:"Arrancar, decidir, dar el primer paso. Ideal para iniciar algo simple."},
+  2:{k:"Vínculos", t:"Cooperar, escuchar, negociar. Mejor ir suave y en equipo."},
+  3:{k:"Expresión", t:"Comunicar, socializar, creatividad. Buen día para mostrarte."},
+  4:{k:"Orden", t:"Estructura, rutina, foco. Excelente para poner el piso y organizar."},
+  5:{k:"Cambio", t:"Movimiento, flexibilidad, probar. Evitá rigidez; ajustá sobre la marcha."},
+  6:{k:"Cuidado", t:"Familia, armonía, responsabilidad afectiva. Ideal para resolver con calidez."},
+  7:{k:"Introspección", t:"Pausa, análisis, estudio, silencio. Mejor menos ruido y más profundidad."},
+  8:{k:"Logro", t:"Resultados, finanzas, liderazgo. Buen día para cerrar y empujar objetivos."},
+  9:{k:"Cierre", t:"Soltar, limpiar, terminar. Día para depurar y cerrar ciclos."},
+  11:{k:"Inspiración", t:"Intuición alta, visión. Bajá a tierra con pasos chicos."},
+  22:{k:"Construcción", t:"Materializar en grande con método. Prioriza estructura y paciencia."},
+};
+
+const PLANET_KEYS = {
+  "Sol":"Visibilidad, liderazgo, vitalidad",
+  "Luna":"Hogar, intuición, cuidado",
+  "Mercurio":"Papeles, comunicación, estudio",
+  "Venus":"Vínculos, belleza, armonía",
+  "Marte":"Acción, decisión, corte",
+  "Júpiter":"Expansión, oportunidades, confianza",
+  "Saturno":"Orden, límites, disciplina",
+};
+
+const HD_LINE = {
+  1:"Línea 1: base, investigación, seguridad en lo sólido.",
+  2:"Línea 2: talento natural, necesidad de retiro y llamado correcto.",
+  3:"Línea 3: aprendizaje por prueba/error, adaptación, resiliencia.",
+  4:"Línea 4: redes, oportunidades por vínculos, influencia cercana.",
+  5:"Línea 5: soluciones prácticas, proyección, liderazgo (cuidar expectativas).",
+  6:"Línea 6: visión, madurez, ejemplo; aprende por etapas.",
+};
+
+function App(){
       const [name,setName]=useState("Jonathan Fumero Mesa");
       const [birthDate,setBirthDate]=useState("1976-12-04");
       const [birthTime,setBirthTime]=useState("00:43");
@@ -364,6 +561,131 @@
       // UI
       const fmtHM=(d)=>`${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 
+// === Interpretación dinámica (según valores actuales) ===
+const interpBio = (
+  <div className="space-y-3">
+    <p className="text-sm">
+      Tus biorritmos hoy están en un nivel <strong>{levelLabel(bio.physical)}</strong> (físico),
+      <strong> {levelLabel(bio.emotional)}</strong> (emocional) y <strong>{levelLabel(bio.intellectual)}</strong> (intelectual).
+    </p>
+    <ul className="list-disc pl-5 space-y-1 text-sm">
+      <li><strong>Físico ({bio.physical}%):</strong> {levelAdvice(bio.physical,
+        "Aprovechá para moverte, resolver pendientes y encarar tareas que requieren energía.",
+        "Ritmo normal: hacé lo importante con pausas cortas.",
+        "Bajá un cambio: priorizá descanso, hidratación y tareas livianas."
+      )}</li>
+      <li><strong>Emocional ({bio.emotional}%):</strong> {levelAdvice(bio.emotional,
+        "Buen día para conversaciones sensibles, vínculos y creatividad.",
+        "Emociones más estables: elegí claridad y no sobreinterpretes.",
+        "Sensibilidad alta: evitá decisiones impulsivas y cuidá tu entorno."
+      )}</li>
+      <li><strong>Intelectual ({bio.intellectual}%):</strong> {levelAdvice(bio.intellectual,
+        "Ideal para estudiar, escribir, planificar, hacer cuentas o resolver problemas.",
+        "Mente pareja: hacé una lista corta y ejecutá paso a paso.",
+        "Si cuesta enfocarte, trabajá en bloques cortos y reducí multitarea."
+      )}</li>
+    </ul>
+    <p className="text-xs text-gray-500">Usalo como brújula de autocuidado (no es un modelo científico).</p>
+  </div>
+);
+
+const dayKey = NUM_DAY_MEANING[num.pd] || NUM_DAY_MEANING[reduceNum(num.pd,false)] || {k:"Día", t:"Tomalo como guía suave."};
+const monthKey = NUM_DAY_MEANING[num.pm] || {k:"Mes", t:"Tema del mes dentro de tu año personal."};
+const yearKey = NUM_DAY_MEANING[num.py] || {k:"Año", t:"Tema del año personal."};
+
+const interpNum = (
+  <div className="space-y-3">
+    <p className="text-sm">
+      <strong>Clave del día ({num.pd}):</strong> {dayKey.k}. {dayKey.t}
+    </p>
+    <ul className="list-disc pl-5 space-y-1 text-sm">
+      <li><strong>Mes personal ({num.pm}):</strong> {monthKey.k}. {monthKey.t}</li>
+      <li><strong>Año personal ({num.py}):</strong> {yearKey.k}. {yearKey.t}</li>
+      <li><strong>Consejo práctico:</strong> definí 1 acción alineada al día y 1 acción alineada al año (chiquitas, sostenibles).</li>
+    </ul>
+  </div>
+);
+
+const interpPlanet = planetHours.error ? (
+  <p className="text-sm">No se pudo calcular la interpretación porque falta amanecer/atardecer. Revisá lat/lon y huso.</p>
+) : (
+  <div className="space-y-3">
+    <p className="text-sm">
+      Hoy el día está regido por <strong>{planetHours.lord}</strong>: {PLANET_KEYS[planetHours.lord] || "energía del planeta rector"}.
+    </p>
+    <ul className="list-disc pl-5 space-y-1 text-sm">
+      <li><strong>Usalo para:</strong> planificar 1 actividad alineada (por ejemplo, Mercurio → papeles / Sol → visibilidad / Saturno → orden).</li>
+      <li><strong>Tip:</strong> si una hora te cae “pesada”, bajá exigencia y hacé tareas mecánicas; si te cae “liviana”, aprovechá para lo importante.</li>
+    </ul>
+  </div>
+);
+
+const DASHA_KEYS = {
+  Ketu:"Soltar, depurar, espiritualidad, cortar lo que no va.",
+  Venus:"Vínculos, placer, valores, armonía, recursos.",
+  Sun:"Identidad, autoridad, propósito, visibilidad.",
+  Moon:"Emoción, hogar, cuidado, cambios internos.",
+  Mars:"Acción, coraje, iniciativa, conflicto si se apura.",
+  Rahu:"Deseo, ambición, expansión, lo nuevo (cuidar excesos).",
+  Jupiter:"Crecimiento, aprendizaje, fe, oportunidades.",
+  Saturn:"Disciplina, trabajo, límites, madurez.",
+  Mercury:"Mente, negocios, comunicación, estudio.",
+};
+
+const interpJyotish = jyotish.error ? (
+  <p className="text-sm">No se pudo calcular Jyotish: {jyotish.error}</p>
+) : (
+  <div className="space-y-3">
+    <p className="text-sm">
+      En védica, tu <strong>Sol sideral</strong> está en <strong>{jyotish.sunSign}</strong>.
+      La <strong>nakshatra</strong> del momento es <strong>{jyotish.nakshatra?.name}</strong> (regente: {jyotish.nakshatra?.lord}).
+    </p>
+    <p className="text-sm">
+      <strong>Mahadasha actual:</strong> {jyotish.mahadasha?.lord} → {DASHA_KEYS[jyotish.mahadasha?.lord] || "tema del planeta regente."}
+    </p>
+    <p className="text-xs text-gray-500">Interpretación general (sin ascendente/casas).</p>
+  </div>
+);
+
+const interpHD = hd.error ? (
+  <p className="text-sm">No se pudo calcular Human Design: {hd.error}</p>
+) : (
+  <div className="space-y-3">
+    <p className="text-sm">
+      Tu perfil estimado es <strong>{hd.profile}</strong>. Esto combina tus líneas consciente/inconsciente.
+    </p>
+    <ul className="list-disc pl-5 space-y-1 text-sm">
+      <li><strong>{hd.gatePers?.line}:</strong> {HD_LINE[hd.gatePers?.line] || "—"}</li>
+      <li><strong>{hd.gateDes?.line}:</strong> {HD_LINE[hd.gateDes?.line] || "—"}</li>
+    </ul>
+    <p className="text-xs text-gray-500">Gates por división uniforme → lectura orientativa.</p>
+  </div>
+);
+
+const topDays = (() => {
+  // Selecciona 3 días “favorables” por energía combinada simple
+  const scored = dashboard.slice(0, 14).map(r => ({
+    ...r,
+    score: (r.bf*0.4) + (r.be*0.3) + (r.bi*0.3),
+  })).sort((a,b)=>b.score-a.score);
+  return scored.slice(0,3);
+})();
+
+const interp30 = (
+  <div className="space-y-3">
+    <p className="text-sm">En los próximos días, estos tienden a estar más “a favor” por energía combinada (aprox):</p>
+    <ul className="list-disc pl-5 space-y-1 text-sm">
+      {topDays.map(d => (
+        <li key={d.date}>
+          <strong>{d.date}</strong>: físico {d.bf} • emocional {d.be} • intelectual {d.bi} • día personal {d.pd} • {d.seal}
+        </li>
+      ))}
+    </ul>
+    <p className="text-xs text-gray-500">Útil para planificar: dejá lo pesado para días más altos y lo liviano para días más bajos.</p>
+  </div>
+);
+
+
       return (
         <div className="min-h-screen bg-gradient-to-br from-rose-50 to-emerald-50 text-gray-900">
           <div className="max-w-6xl mx-auto p-4 md:p-8 flex flex-col gap-6">
@@ -372,8 +694,18 @@
               <button className="px-3 py-2 rounded-xl bg-black text-white text-sm" onClick={()=>setDateStr(todayDateStr())}>Hoy</button>
             </header>
 
-            <Card title="Configuración">
-              <div className="grid md:grid-cols-3 gap-4">
+            <Card title="Configuración" helpKey="configuracion" interpTitle="Cómo usar la configuración" interpContent={(
+  <div className="space-y-2 text-sm">
+    <p><strong>Idea:</strong> cargá tus datos una vez y luego cambiá la fecha objetivo para ver la lectura del día.</p>
+    <ul className="list-disc pl-5 space-y-1">
+      <li><strong>Nombre:</strong> afecta numerología (Expresión/Alma/Personalidad).</li>
+      <li><strong>Nacimiento:</strong> define biorritmos y ciclos base.</li>
+      <li><strong>Lat/Lon/TZ:</strong> afectan horas planetarias (amanecer/atardecer).</li>
+      <li><strong>Fecha a calcular:</strong> cambia la lectura diaria (maya, numerología, horas planetarias).</li>
+    </ul>
+  </div>
+)}>
+<div className="grid md:grid-cols-3 gap-4">
                 <Field label="Nombre completo">
                   <input className="rounded-xl border p-2" value={name} onChange={(e)=>setName(e.target.value)} />
                 </Field>
@@ -400,8 +732,17 @@
             </Card>
 
             <div className="grid md:grid-cols-3 gap-4">
-              <Card title="Resumen rápido">
-                <ul className="text-sm leading-7">
+              <Card title="Resumen rápido" helpKey="resumen" interpTitle="Cómo leer el resumen" interpContent={(
+  <div className="space-y-2 text-sm">
+    <p>Usá este bloque como “vista panorámica”. Si algo te resuena, bajá al módulo correspondiente.</p>
+    <ul className="list-disc pl-5 space-y-1">
+      <li><strong>Occidental/Chino:</strong> marcos generales (no dependen de la fecha objetivo).</li>
+      <li><strong>Maya (fecha objetivo):</strong> foco simbólico del día.</li>
+      <li><strong>Runas:</strong> arquetipos para reflexión (lúdico).</li>
+    </ul>
+  </div>
+)}>
+<ul className="text-sm leading-7">
                   <li><strong>Occidental (Sol):</strong> {occidental}</li>
                   <li><strong>Chino:</strong> {chino.animal} de {chino.element}</li>
                   <li><strong>Maya (hoy):</strong> Tono {maya.tone} – {maya.toneDesc} | {maya.seal}</li>
@@ -410,7 +751,7 @@
                 </ul>
               </Card>
 
-              <Card title="Biorritmos (hoy)">
+              <Card title="Biorritmos (hoy)" helpKey="biorritmos" interpContent={interpBio}>
                 {[["Físico", bio.physical],["Emocional", bio.emotional],["Intelectual", bio.intellectual]].map(([k,v])=> (
                   <div key={k} className="mb-3">
                     <div className="flex justify-between text-sm"><span>{k}</span><span>{v}%</span></div>
@@ -422,7 +763,7 @@
                 <p className="text-xs text-gray-500">(Lúdico; no validado científicamente)</p>
               </Card>
 
-              <Card title="Numerología (fecha objetivo)">
+              <Card title="Numerología (fecha objetivo)" helpKey="numerologia" interpContent={interpNum}>
                 <ul className="text-sm leading-7">
                   <li><strong>Camino de Vida:</strong> {num.lp}</li>
                   <li><strong>Destino/Expresión:</strong> {num.exp}</li>
@@ -436,7 +777,7 @@
               </Card>
             </div>
 
-            <Card title={`Horas planetarias – ${dateStr}`}>
+            <Card title={`Horas planetarias – ${dateStr}`} helpKey="horas" interpContent={interpPlanet}>
               {planetHours.error ? (
                 <p className="text-sm text-red-600">{planetHours.error} • Verifica lat/lon y huso horario.</p>
               ) : (
@@ -465,7 +806,7 @@
               )}
             </Card>
 
-            <Card title="Jyotish (védica)">
+            <Card title="Jyotish (védica)" helpKey="jyotish" interpContent={interpJyotish}>
               {jyotish.error ? (
                 <p className="text-sm text-red-600">{jyotish.error}</p>
               ) : (
@@ -480,7 +821,7 @@
               <p className="text-xs text-gray-500 mt-2">Para Ascendente y casas, integrar Swiss Ephemeris o un cálculo de casas sidéreas.</p>
             </Card>
 
-            <Card title="Human Design (básico)">
+            <Card title="Human Design (básico)" helpKey="hd" interpContent={interpHD}>
               {hd.error ? (
                 <p className="text-sm text-red-600">{hd.error}</p>
               ) : (
@@ -494,7 +835,7 @@
               <p className="text-xs text-gray-500 mt-2">Nota: mapeo de gates por división uniforme. Para exactitud usa el mandala oficial (hdkit).</p>
             </Card>
 
-            <Card title="Próximos 30 días (biorritmos + numerología + maya)">
+            <Card title="Próximos 30 días (biorritmos + numerología + maya)" helpKey="tabla30" interpContent={interp30}>
               <div className="overflow-x-auto">
                 <table className="min-w-full text-sm">
                   <thead>
