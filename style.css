@@ -238,3 +238,193 @@ main{position:relative; z-index:5}
 
 /* Igual que la mini, pero versión ancha/alta para la barra general */
 .opt-bar-lg{ width:100%; height:14px; }
+
+
+/* ================================
+   Birthday Easter Egg
+   Se activa solo si hoy coincide con el cumpleaños guardado en cycles_app_state.
+================================ */
+
+.birthday-mode .header{
+  box-shadow: 0 0 24px rgba(90,209,255,.18), 0 0 60px rgba(255,217,77,.12);
+}
+
+.birthday-easter-egg{
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.birthday-sky{
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.birthday-panel{
+  position: fixed;
+  left: 50%;
+  top: 92px;
+  transform: translateX(-50%);
+  width: min(620px, calc(100vw - 32px));
+  text-align: center;
+  pointer-events: auto;
+  animation: birthdayPanelIn .7s ease both;
+  border-color: rgba(255,217,77,.28);
+  box-shadow:
+    0 0 24px rgba(90,209,255,.18),
+    0 0 60px rgba(255,217,77,.12),
+    0 18px 50px rgba(0,0,0,.38);
+}
+
+.birthday-panel h2{
+  margin: .35rem 0 .35rem;
+  font-size: clamp(1.35rem, 4vw, 2.15rem);
+}
+
+.birthday-panel p{
+  margin: 0;
+  color: rgba(255,255,255,.82);
+  line-height: 1.5;
+}
+
+.birthday-badge{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .35rem;
+  padding: .28rem .65rem;
+  border-radius: 999px;
+  background: rgba(255,217,77,.12);
+  border: 1px solid rgba(255,217,77,.25);
+  color: #ffe680;
+  font-size: .78rem;
+  font-weight: 800;
+  letter-spacing: .06em;
+}
+
+.birthday-actions{
+  display: flex;
+  justify-content: center;
+  margin-top: .85rem;
+}
+
+.birthday-minimized .birthday-panel{
+  display: none;
+}
+
+.birthday-balloon{
+  position: absolute;
+  bottom: -120px;
+  border-radius: 50% 50% 45% 45%;
+  background:
+    radial-gradient(circle at 32% 26%, rgba(255,255,255,.9), transparent 16%),
+    linear-gradient(160deg, hsl(var(--hue) 95% 66%), hsl(var(--hue) 90% 42%));
+  box-shadow:
+    inset -8px -12px 18px rgba(0,0,0,.22),
+    0 0 18px hsla(var(--hue), 90%, 60%, .25);
+  opacity: .92;
+  animation-name: birthdayFloatUp;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.birthday-balloon::after{
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -7px;
+  transform: translateX(-50%);
+  width: 10px;
+  height: 8px;
+  background: hsl(var(--hue) 90% 45%);
+  clip-path: polygon(50% 100%, 0 0, 100% 0);
+}
+
+.birthday-balloon-string{
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: 1px;
+  height: 54px;
+  transform: translateX(-50%);
+  background: rgba(255,255,255,.34);
+}
+
+.birthday-confetti{
+  position: absolute;
+  top: -30px;
+  border-radius: 2px;
+  background: hsl(var(--hue) 95% 62%);
+  box-shadow: 0 0 8px hsla(var(--hue), 95%, 62%, .22);
+  animation-name: birthdayConfettiFall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@keyframes birthdayFloatUp{
+  0%{
+    transform: translate3d(0, 0, 0) rotate(-4deg);
+    opacity: 0;
+  }
+  10%{
+    opacity: .92;
+  }
+  50%{
+    transform: translate3d(18px, -55vh, 0) rotate(5deg);
+  }
+  100%{
+    transform: translate3d(-12px, -115vh, 0) rotate(-6deg);
+    opacity: 0;
+  }
+}
+
+@keyframes birthdayConfettiFall{
+  0%{
+    transform: translate3d(0, -20px, 0) rotate(0deg);
+    opacity: 0;
+  }
+  8%{
+    opacity: .95;
+  }
+  100%{
+    transform: translate3d(24px, 110vh, 0) rotate(var(--spin));
+    opacity: 0;
+  }
+}
+
+@keyframes birthdayPanelIn{
+  from{
+    opacity: 0;
+    transform: translate(-50%, -14px) scale(.96);
+  }
+  to{
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+
+@media (max-width: 640px){
+  .birthday-panel{
+    top: 78px;
+    padding: 16px;
+  }
+
+  .birthday-balloon{
+    opacity: .8;
+  }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .birthday-balloon,
+  .birthday-confetti,
+  .birthday-panel{
+    animation: none !important;
+  }
+
+  .birthday-confetti{
+    display: none;
+  }
+}
