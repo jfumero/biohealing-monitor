@@ -16,53 +16,8 @@
 
     function isBirthdayToday(birthDate){
         const today = new Date();
-        const [Y,M,D] = birthDate.split("-").map(Number);
-
-        return (
-            today.getDate() === D &&
-            (today.getMonth()+1) === M
-        );
-    }
-
-    function createContainer(){
-        if(document.getElementById("birthday-overlay")) return;
-
-        const container = document.createElement("div");
-        container.id = "birthday-overlay";
-        container.style.position = "fixed";
-        container.style.inset = "0";
-        container.style.pointerEvents = "none";
-        container.style.zIndex = "999";
-
-        document.body.appendChild(container);
-    }
-
-    function createBalloon(){
-        const el = document.createElement("div");
-        el.textContent = "🎈";
-
-        el.style.position = "absolute";
-        el.style.left = Math.random()*100 + "%";
-        el.style.bottom = "-50px";
-        el.style.fontSize = (20 + Math.random()*30) + "px";
-        el.style.animation = `floatUp ${6 + Math.random()*4}s linear infinite`;
-
-        return el;
-    }
-
-    function createConfetti(){
-        const el = document.createElement("div");
-
-        el.style.position = "absolute";
-        el.style.left = Math.random()*100 + "%";
-        el.style.top = "-10px";
-        el.style.width = "6px";
-        el.style.height = "10px";
-        el.style.background = `hsl(${Math.random()*360}, 80%, 60%)`;
-        el.style.opacity = "0.8";
-        el.style.animation = `fallDown ${4 + Math.random()*3}s linear infinite`;
-
-        return el;
+        const [, M, D] = String(birthDate).split("-").map(Number);
+        return today.getDate() === D && today.getMonth() + 1 === M;
     }
 
     function injectStyles(){
@@ -70,31 +25,204 @@
 
         const style = document.createElement("style");
         style.id = "birthday-styles";
-        style.innerHTML = `
-        @keyframes floatUp {
-            from { transform: translateY(0); opacity:1; }
-            to { transform: translateY(-110vh); opacity:0; }
+        style.textContent = `
+        #birthday-overlay{
+        position:fixed;
+        inset:0;
+        z-index:9999;
+        pointer-events:none;
+        overflow:hidden;
         }
 
-        @keyframes fallDown {
-            from { transform: translateY(0); }
-            to { transform: translateY(110vh); }
+        .birthday-system-banner{
+            position:fixed;
+            top:92px;
+            left:50%;
+            transform:translateX(-50%);
+            z-index:10000;
+            padding:12px 18px;
+            border-radius:999px;
+            color:#001018;
+            font-weight:900;
+            letter-spacing:.04em;
+            text-align:center;
+            background:linear-gradient(90deg,#5ad1ff,#2eea8a,#ffd94d);
+            box-shadow:0 0 18px rgba(90,209,255,.9), 0 0 42px rgba(46,234,138,.45);
+            animation:birthdayPulse 1.8s ease-in-out infinite;
+            max-width:calc(100vw - 24px);
+            white-space:nowrap;
+        }
+
+        .birthday-subtitle{
+            display:block;
+            font-size:.72rem;
+            font-weight:700;
+            opacity:.85;
+            letter-spacing:.02em;
+            margin-top:2px;
+        }
+
+        .birthday-balloon{
+            position:absolute;
+            bottom:-80px;
+            filter:drop-shadow(0 0 10px rgba(255,255,255,.35));
+            animation-name:birthdayFloat;
+            animation-timing-function:linear;
+            animation-iteration-count:infinite;
+        }
+
+        .birthday-confetti{
+            position:absolute;
+            top:-20px;
+            border-radius:2px;
+            opacity:.9;
+            animation-name:birthdayFall;
+            animation-timing-function:linear;
+            animation-iteration-count:infinite;
+        }
+
+        .birthday-spark{
+            position:absolute;
+            width:4px;
+            height:4px;
+            border-radius:999px;
+            background:#fff;
+            box-shadow:0 0 10px #fff, 0 0 18px #5ad1ff;
+            animation:birthdaySpark 2.8s ease-in-out infinite;
+        }
+
+        .birthday-scan-glow{
+            position:fixed;
+            inset:0;
+            z-index:9998;
+            pointer-events:none;
+            background:
+            radial-gradient(circle at 20% 20%, rgba(90,209,255,.18), transparent 32%),
+ radial-gradient(circle at 80% 30%, rgba(46,234,138,.14), transparent 34%),
+ radial-gradient(circle at 50% 80%, rgba(255,217,77,.10), transparent 38%);
+ animation:birthdayGlow 4s ease-in-out infinite alternate;
+        }
+
+        @keyframes birthdayFloat{
+            0%{ transform:translateY(0) translateX(0) rotate(-4deg); opacity:0; }
+            8%{ opacity:1; }
+            50%{ transform:translateY(-55vh) translateX(24px) rotate(5deg); }
+            100%{ transform:translateY(-115vh) translateX(-16px) rotate(-6deg); opacity:0; }
+        }
+
+        @keyframes birthdayFall{
+            0%{ transform:translateY(0) rotate(0deg); opacity:1; }
+            100%{ transform:translateY(115vh) rotate(720deg); opacity:0; }
+        }
+
+        @keyframes birthdayPulse{
+            0%,100%{ transform:translateX(-50%) scale(1); }
+            50%{ transform:translateX(-50%) scale(1.035); }
+        }
+
+        @keyframes birthdaySpark{
+            0%,100%{ opacity:.15; transform:scale(.6); }
+            50%{ opacity:1; transform:scale(1.7); }
+        }
+
+        @keyframes birthdayGlow{
+            from{ opacity:.45; }
+            to{ opacity:.85; }
+        }
+
+        @media (max-width:640px){
+            .birthday-system-banner{
+                top:78px;
+                font-size:.78rem;
+                padding:10px 12px;
+                white-space:normal;
+                border-radius:18px;
+            }
         }
         `;
+
         document.head.appendChild(style);
     }
 
+    function createOverlay(){
+        if(document.getElementById("birthday-overlay")) return;
+
+        const glow = document.createElement("div");
+        glow.className = "birthday-scan-glow";
+
+        const overlay = document.createElement("div");
+        overlay.id = "birthday-overlay";
+
+        const banner = document.createElement("div");
+        banner.className = "birthday-system-banner";
+        banner.innerHTML = `
+        🎉 MODO CUMPLEAÑOS ACTIVADO 🎉
+        <span class="birthday-subtitle">Nanorobots en protocolo de celebración y regeneración simbólica</span>
+        `;
+
+        document.body.appendChild(glow);
+        document.body.appendChild(overlay);
+        document.body.appendChild(banner);
+    }
+
+    function createBalloon(){
+        const el = document.createElement("div");
+        const colors = ["🎈","🎈","🎈","🎉","✨"];
+
+        el.className = "birthday-balloon";
+        el.textContent = colors[Math.floor(Math.random() * colors.length)];
+        el.style.left = Math.random() * 100 + "%";
+        el.style.fontSize = (26 + Math.random() * 34) + "px";
+        el.style.animationDuration = (7 + Math.random() * 6) + "s";
+        el.style.animationDelay = (Math.random() * 5) + "s";
+
+        return el;
+    }
+
+    function createConfetti(){
+        const el = document.createElement("div");
+
+        el.className = "birthday-confetti";
+        el.style.left = Math.random() * 100 + "%";
+        el.style.width = (5 + Math.random() * 5) + "px";
+        el.style.height = (8 + Math.random() * 9) + "px";
+        el.style.background = `hsl(${Math.random() * 360}, 90%, 62%)`;
+        el.style.animationDuration = (4 + Math.random() * 5) + "s";
+        el.style.animationDelay = (Math.random() * 5) + "s";
+
+        return el;
+    }
+
+    function createSpark(){
+        const el = document.createElement("div");
+
+        el.className = "birthday-spark";
+        el.style.left = Math.random() * 100 + "%";
+        el.style.top = Math.random() * 100 + "%";
+        el.style.animationDelay = (Math.random() * 3) + "s";
+
+        return el;
+    }
+
     function runEffect(){
-        const container = document.getElementById("birthday-overlay");
-        if(!container) return;
+        const overlay = document.getElementById("birthday-overlay");
+        if(!overlay) return;
 
-        for(let i=0;i<15;i++){
-            container.appendChild(createBalloon());
+        overlay.innerHTML = "";
+
+        for(let i = 0; i < 20; i++){
+            overlay.appendChild(createBalloon());
         }
 
-        for(let i=0;i<25;i++){
-            container.appendChild(createConfetti());
+        for(let i = 0; i < 70; i++){
+            overlay.appendChild(createConfetti());
         }
+
+        for(let i = 0; i < 35; i++){
+            overlay.appendChild(createSpark());
+        }
+
+        console.log("🎉 Birthday mode activo — efecto mejorado");
     }
 
     function init(){
@@ -103,16 +231,16 @@
 
         if(!isBirthdayToday(profile.birthDate)) return;
 
-        createContainer();
         injectStyles();
+        createOverlay();
         runEffect();
 
-        console.log("🎉 Birthday mode activo");
+        setInterval(runEffect, 45000);
     }
 
     if(document.readyState === "loading"){
         document.addEventListener("DOMContentLoaded", init);
-    } else {
+    }else{
         init();
     }
 
