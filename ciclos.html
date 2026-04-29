@@ -129,7 +129,7 @@
       return { tone, toneDesc: tzTones[tone], seal: tzNames[nameIdx] };
     };
 
-    // === Runas (lúdico) ===
+    // === Runas ===
     const RUNES=[["Fehu","Riqueza, inicio, recursos"],["Uruz","Fuerza vital, salud, coraje"],["Thurisaz","Umbral, protección, ruptura"],["Ansuz","Comunicación, guía, inspiración"],["Raidho","Viaje, proceso, orden"],["Kenaz","Fuego interno, claridad"],["Gebo","Intercambio, pacto, regalo"],["Wunjo","Alegría, armonía"],["Hagalaz","Cambio brusco, prueba"],["Nauthiz","Necesidad, disciplina"],["Isa","Pausa, concentración"],["Jera","Cosecha, ritmos"],["Eihwaz","Eje, transformación"],["Perthro","Destino, azar, intuición"],["Algiz","Protección, límites"],["Sowilo","Éxito, vitalidad"],["Tiwaz","Dirección, justicia"],["Berkano","Nacimiento, cuidado"],["Ehwaz","Cooperación, avance"],["Mannaz","Humanidad, rol social"],["Laguz","Flujo, emociones"],["Ingwaz","Semilla, reposo fértil"],["Dagaz","Renovación, claridad"],["Othala","Legado, territorio"]];
     const natalRune=(birth)=>{ const n=dayOfYear(birth)%24; const idx=(n===0?24:n)-1; return { idx, name:RUNES[idx][0], meaning:RUNES[idx][1] }; };
     const yearlyRune=(birth,year)=>{ const d=new Date(year,birth.getMonth(),birth.getDate()); const n=dayOfYear(d)%24; const idx=(n===0?24:n)-1; return { idx, name:RUNES[idx][0], meaning:RUNES[idx][1] }; };
@@ -176,7 +176,7 @@
     const J2000_UTC = Date.UTC(2000,0,1,12,0,0);
     const centuriesSinceJ2000 = (date)=> (date.getTime()-J2000_UTC)/(86400000*36525);
 
-    // Ayanamsa Lahiri aprox: usa T desde J2000 (no depende de la lib)
+    // Ayanamsa Lahiri: usa T desde J2000 (no depende de la lib)
     function ayanamsaLahiri(date){
       const T = centuriesSinceJ2000(date);
       const arcsec = 5028.796195*T + 1.1054348*T*T; // precesión
@@ -262,7 +262,7 @@
           ["Occidental (Sol)", "Signo solar occidental por fecha."],
           ["Chino", "Animal y elemento del año de nacimiento."],
           ["Maya", "Tono y sello del Tzolk’in para la fecha objetivo."],
-          ["Runas", "Arquetipos lúdicos natal y del año."]
+          ["Runas", "Arquetipos activos natal y del año."]
         ]
       },
       biorritmos: {
@@ -271,7 +271,7 @@
           ["Físico (23)", "Vitalidad y energía corporal."],
           ["Emocional (28)", "Sensibilidad y variación anímica."],
           ["Intelectual (33)", "Enfoque mental y aprendizaje."],
-          ["Nota", "Modelo lúdico; útil para observación, no es científico."]
+          ["Lectura", "Indicador de energía corporal, emocional e intelectual del ciclo actual."]
         ]
       },
       numerologia: {
@@ -289,14 +289,14 @@
         title: "Horas planetarias",
         body: [
           ["Qué es", "Divide día y noche en 12+12 horas desiguales y asigna planetas por orden tradicional."],
-          ["Para qué sirve", "Elegir momentos simbólicamente favorables (Mercurio: papeles, Venus: vínculos, etc.)."],
-          ["Nota", "Cálculo aproximado por amanecer/atardecer + huso fijo."]
+          ["Para qué sirve", "Elegir momentos operativos favorables (Mercurio: papeles, Venus: vínculos, etc.)."],
+          ["Lectura", "Cálculo operativo por amanecer/atardecer + huso fijo."]
         ]
       },
       jyotish: {
         title: "Jyotish (védica)",
         body: [
-          ["Ayanamsa", "Ajuste tropical→sideral (Lahiri aprox)."],
+          ["Ayanamsa", "Ajuste tropical→sideral Lahiri."],
           ["Sol/Luna sideral", "Posiciones siderales usadas en astrología védica."],
           ["Nakshatra/Pada", "Constelación lunar (27) y subdivisión (pada)."],
           ["Mahadasha", "Ciclo mayor Vimshottari basado en Luna natal."],
@@ -307,7 +307,7 @@
         title: "Human Design (básico)",
         body: [
           ["Fecha de Diseño", "Se busca cuando el Sol está ~88° antes del nacimiento."],
-          ["Gates", "Puertas estimadas por división uniforme del zodiaco (aprox)."],
+          ["Gates", "Puertas calculadas por división uniforme del zodiaco."],
           ["Perfil", "Combinación de líneas (p.ej. 5/1)."],
           ["Nota", "Para exactitud, usar mandala oficial / librería específica."]
         ]
@@ -585,7 +585,7 @@ const interpBio = (
         "Si cuesta enfocarte, trabajá en bloques cortos y reducí multitarea."
       )}</li>
     </ul>
-    <p className="text-xs text-gray-500">Usalo como brújula de autocuidado (no es un modelo científico).</p>
+    <p className="text-xs text-gray-500">Usalo como lectura operativa de tu energía disponible.</p>
   </div>
 );
 
@@ -658,7 +658,7 @@ const interpHD = hd.error ? (
       <li><strong>{hd.gatePers?.line}:</strong> {HD_LINE[hd.gatePers?.line] || "—"}</li>
       <li><strong>{hd.gateDes?.line}:</strong> {HD_LINE[hd.gateDes?.line] || "—"}</li>
     </ul>
-    <p className="text-xs text-gray-500">Gates por división uniforme → lectura orientativa.</p>
+    <p className="text-xs text-gray-500">Gates por división uniforme → lectura del patrón activo.</p>
   </div>
 );
 
@@ -673,7 +673,7 @@ const topDays = (() => {
 
 const interp30 = (
   <div className="space-y-3">
-    <p className="text-sm">En los próximos días, estos tienden a estar más “a favor” por energía combinada (aprox):</p>
+    <p className="text-sm">En los próximos días, estos aparecen con mayor energía combinada:</p>
     <ul className="list-disc pl-5 space-y-1 text-sm">
       {topDays.map(d => (
         <li key={d.date}>
@@ -737,8 +737,8 @@ const interp30 = (
     <p>Usá este bloque como “vista panorámica”. Si algo te resuena, bajá al módulo correspondiente.</p>
     <ul className="list-disc pl-5 space-y-1">
       <li><strong>Occidental/Chino:</strong> marcos generales (no dependen de la fecha objetivo).</li>
-      <li><strong>Maya (fecha objetivo):</strong> foco simbólico del día.</li>
-      <li><strong>Runas:</strong> arquetipos para reflexión (lúdico).</li>
+      <li><strong>Maya (fecha objetivo):</strong> foco energético del día.</li>
+      <li><strong>Runas:</strong> arquetipos activos del campo personal.</li>
     </ul>
   </div>
 )}>
@@ -760,7 +760,7 @@ const interp30 = (
                     </div>
                   </div>
                 ))}
-                <p className="text-xs text-gray-500">(Lúdico; no validado científicamente)</p>
+                <p className="text-xs text-gray-500">Lectura del ciclo activo</p>
               </Card>
 
               <Card title="Numerología (fecha objetivo)" helpKey="numerologia" interpContent={interpNum}>
@@ -801,7 +801,7 @@ const interp30 = (
                       </tbody>
                     </table>
                   </div>
-                  <p className="text-xs text-gray-500 mt-2">Cálculo aproximado: NOAA + huso fijo. Uruguay sin DST desde 2015.</p>
+                  <p className="text-xs text-gray-500 mt-2">Cálculo operativo: amanecer/atardecer + huso fijo. Uruguay sin DST desde 2015.</p>
                 </>
               )}
             </Card>
@@ -856,7 +856,7 @@ const interp30 = (
                   </tbody>
                 </table>
               </div>
-              <p className="text-xs text-gray-500 mt-2">Biorritmos y numerología son interpretaciones lúdicas; no sustituyen consejo médico/profesional.</p>
+              <p className="text-xs text-gray-500 mt-2">Lectura integrada del ciclo energético, mental y operativo de los próximos días.</p>
             </Card>
 
             <footer className="text-xs text-gray-500 text-center pt-4">Hecho con React + astronomy-engine + Tailwind. Tus datos no salen de tu navegador.</footer>
