@@ -129,16 +129,6 @@
             from{ opacity:.45; }
             to{ opacity:.85; }
         }
-
-        @media (max-width:640px){
-            .birthday-system-banner{
-                top:78px;
-                font-size:.78rem;
-                padding:10px 12px;
-                white-space:normal;
-                border-radius:18px;
-            }
-        }
         `;
 
         document.head.appendChild(style);
@@ -156,8 +146,8 @@
         const banner = document.createElement("div");
         banner.className = "birthday-system-banner";
         banner.innerHTML = `
-        🎉 MODO CUMPLEAÑOS ACTIVADO 🎉
-        <span class="birthday-subtitle">Nanorobots en protocolo de celebración y regeneración simbólica</span>
+        🎉 PROTOCOLO DE CELEBRACIÓN ACTIVADO 🎉
+        <span class="birthday-subtitle">Sistema en estado de regeneración máxima</span>
         `;
 
         document.body.appendChild(glow);
@@ -167,14 +157,14 @@
 
     function createBalloon(){
         const el = document.createElement("div");
-        const colors = ["🎈","🎈","🎈","🎉","✨"];
+        const icons = ["🎈","✨","🎉"];
 
         el.className = "birthday-balloon";
-        el.textContent = colors[Math.floor(Math.random() * colors.length)];
-        el.style.left = Math.random() * 100 + "%";
-        el.style.fontSize = (26 + Math.random() * 34) + "px";
-        el.style.animationDuration = (7 + Math.random() * 6) + "s";
-        el.style.animationDelay = (Math.random() * 5) + "s";
+        el.textContent = icons[Math.floor(Math.random()*icons.length)];
+        el.style.left = Math.random()*100 + "%";
+        el.style.fontSize = (26 + Math.random()*34) + "px";
+        el.style.animationDuration = (7 + Math.random()*6) + "s";
+        el.style.animationDelay = (Math.random()*5) + "s";
 
         return el;
     }
@@ -183,12 +173,12 @@
         const el = document.createElement("div");
 
         el.className = "birthday-confetti";
-        el.style.left = Math.random() * 100 + "%";
-        el.style.width = (5 + Math.random() * 5) + "px";
-        el.style.height = (8 + Math.random() * 9) + "px";
-        el.style.background = `hsl(${Math.random() * 360}, 90%, 62%)`;
-        el.style.animationDuration = (4 + Math.random() * 5) + "s";
-        el.style.animationDelay = (Math.random() * 5) + "s";
+        el.style.left = Math.random()*100 + "%";
+        el.style.width = (5 + Math.random()*5) + "px";
+        el.style.height = (8 + Math.random()*9) + "px";
+        el.style.background = `hsl(${Math.random()*360}, 90%, 62%)`;
+        el.style.animationDuration = (4 + Math.random()*5) + "s";
+        el.style.animationDelay = (Math.random()*5) + "s";
 
         return el;
     }
@@ -197,9 +187,9 @@
         const el = document.createElement("div");
 
         el.className = "birthday-spark";
-        el.style.left = Math.random() * 100 + "%";
-        el.style.top = Math.random() * 100 + "%";
-        el.style.animationDelay = (Math.random() * 3) + "s";
+        el.style.left = Math.random()*100 + "%";
+        el.style.top = Math.random()*100 + "%";
+        el.style.animationDelay = (Math.random()*3) + "s";
 
         return el;
     }
@@ -210,25 +200,14 @@
 
         overlay.innerHTML = "";
 
-        for(let i = 0; i < 20; i++){
-            overlay.appendChild(createBalloon());
-        }
-
-        for(let i = 0; i < 70; i++){
-            overlay.appendChild(createConfetti());
-        }
-
-        for(let i = 0; i < 35; i++){
-            overlay.appendChild(createSpark());
-        }
-
-        console.log("🎉 Birthday mode activo — efecto mejorado");
+        for(let i=0;i<20;i++) overlay.appendChild(createBalloon());
+        for(let i=0;i<70;i++) overlay.appendChild(createConfetti());
+        for(let i=0;i<35;i++) overlay.appendChild(createSpark());
     }
 
     function init(){
         const profile = readProfile();
         if(!profile) return;
-
         if(!isBirthdayToday(profile.birthDate)) return;
 
         injectStyles();
