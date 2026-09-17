@@ -7,7 +7,7 @@ import './theme.css';
 
     const { useEffect, useMemo, useState } = React;
     // Astronomy global (según build)
-    
+
 
 import { PI, deg2rad, rad2deg, norm360, pad2, todayDateStr, dayOfYear, bioVal, vowels, pythMap, stripAccents, letterVal, reduceNum, reduceNoMasters, lifePath, sumName, expressionNum, soulUrgeNum, personalityNum, maturityNum, personalYear, personalMonth, personalDay, westernSun, chineseAnimal, chineseElement, gregorianToJDN, tzNames, tzTones, tzolkinForDate, RUNES, natalRune, yearlyRune, CHALDEAN, dayLordFromWeekday, seqFromLord, sunriseSunset, nextDay, planetaryHours, J2000_UTC, centuriesSinceJ2000, ayanamsaLahiri, eclipticLongitude, siderealLongitude, NAK_NAMES, DASHA_LORDS, DASHA_YEARS, nakshatraFromLon, currentMahadasha, findDesignDate, gateFromDegreesUniform } from './cycle-calculations';
     // === UI ===
@@ -493,7 +493,7 @@ const interp30 = (
               {!locationValid ? <p role="status" className="storage-notice">Completa una latitud entre −90 y 90, longitud entre −180 y 180 y huso entre −12 y 14.</p> : null}
               {saveError ? <p role="status" className="storage-notice">No se pudo guardar el perfil. Los cambios se conservarán solo mientras esta página permanezca abierta.</p> : null}
             </Card></details>
-            <div className="cycle-date"><label htmlFor="target-date">Fecha de lectura</label><input id="target-date" type="date" value={dateStr} onChange={e=>{if(validDate(e.target.value))setDateStr(e.target.value);}}/><span className="muted">Interpretaciones simbólicas para explorar, no predicciones.</span></div>
+            <div className="cycle-date"><label htmlFor="target-date">Fecha de lectura</label><input id="target-date" type="date" value={dateStr} onChange={e=>{if(validDate(e.target.value))setDateStr(e.target.value);}}/><span className="muted">Elige un día para explorar tus ciclos.</span></div>
 
             <div className="grid md:grid-cols-3 gap-4">
               <Card title="Resumen rápido" helpKey="resumen" interpTitle="Cómo leer el resumen" interpContent={(
@@ -623,11 +623,11 @@ const interp30 = (
               <p className="text-xs text-gray-500 mt-2">Lectura integrada del ciclo energético, mental y operativo de los próximos días.</p>
             </Card>
 
-            <footer className="text-xs text-gray-500 text-center pt-4">Las lecturas de Jyotish y Human Design conservan los cálculos aproximados de la versión anterior.</footer>
+
           </div>
         </main></Shell>
       );
     }
 
     if (typeof document !== 'undefined') createRoot(document.getElementById('root')).render(<App />);
-  
+
