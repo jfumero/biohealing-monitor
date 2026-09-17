@@ -27,6 +27,10 @@ npm run preview
 
 - Sesión de 60 segundos con pausa, continuación, cancelación y resumen final.
 - Un reloj general y siete módulos individuales, con escalas de 0 a 100.
+- Escena de nanorobots: entrada en el mapa corporal, recorrido, foco por zonas y regreso a una constelación central.
+- Vista celular animada y selección de cabeza, tórax, abdomen, brazos, piernas o cuerpo completo.
+- Pausa compartida entre sesión, enjambre y vista celular; modo tranquilo con menos partículas y cambios por etapa.
+- Información sobre la naturaleza de la experiencia disponible en «Acerca de BioHealing», sin avisos repetidos en el monitor.
 - Música opcional, apagada inicialmente; se pausa al ocultar la pestaña.
 - Modo tranquilo y respeto de la preferencia del sistema de movimiento reducido.
 - Perfil compartido, biorritmos, numerología, runas, horas planetarias, Jyotish aproximado, Human Design básico y tabla de 30 días.
@@ -37,6 +41,7 @@ npm run preview
 
 - `src/main.jsx`: monitor, sesión y módulos.
 - `src/Gauge.jsx`: instrumento SVG reutilizable.
+- `src/NanobotScene.jsx` y `src/nanobots.js`: escena corporal, etapas y trayectorias deterministas del enjambre.
 - `src/Shell.jsx`: navegación común.
 - `src/profile.js`: validación, almacenamiento y cálculos diarios compartidos.
 - `src/session.js`: estados y duración de la sesión.
