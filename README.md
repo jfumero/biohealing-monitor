@@ -27,7 +27,8 @@ npm run preview
 
 - Sesión de 60 segundos con pausa, continuación, cancelación y resumen final.
 - Un reloj general y siete módulos individuales, con escalas de 0 a 100.
-- Escena de nanorobots: entrada en el mapa corporal, recorrido, foco por zonas y regreso a una constelación central.
+- Escena de nanorobots: entrada única por el antebrazo, recorrido vascular, foco por zonas y vigilancia distribuida al terminar.
+- Figura anatómica vectorial verde con musculatura, control de transparencia y red vascular que aparece gradualmente.
 - Vista celular animada y selección de cabeza, tórax, abdomen, brazos, piernas o cuerpo completo.
 - Pausa compartida entre sesión, enjambre y vista celular; modo tranquilo con menos partículas y cambios por etapa.
 - Información sobre la naturaleza de la experiencia disponible en «Acerca de BioHealing», sin avisos repetidos en el monitor.
@@ -42,6 +43,7 @@ npm run preview
 - `src/main.jsx`: monitor, sesión y módulos.
 - `src/Gauge.jsx`: instrumento SVG reutilizable.
 - `src/NanobotScene.jsx` y `src/nanobots.js`: escena corporal, etapas y trayectorias deterministas del enjambre.
+- `src/AnatomicalBody.jsx`: ilustración anatómica y vasos con las mismas curvas que recorren las partículas.
 - `src/Shell.jsx`: navegación común.
 - `src/profile.js`: validación, almacenamiento y cálculos diarios compartidos.
 - `src/session.js`: estados y duración de la sesión.
@@ -57,6 +59,8 @@ Se conserva la clave `cycles_app_state` de localStorage. Los perfiles existentes
 Los cálculos simbólicos conservan las aproximaciones de la versión anterior. Se unificó el cómputo diario de biorritmos y se corrigieron los límites del zodiaco occidental. La fecha de lectura comienza en el día actual; el usuario puede elegir otra fecha. Los scripts anteriores fueron reemplazados y su historial sigue disponible en Git.
 
 ## Validación de esta versión
+
+La figura es una ilustración estilizada en SVG, no una reproducción fotográfica ni un modelo anatómico clínico. La generación de un recurso raster fue bloqueada por el generador de imágenes; se amplió el recurso vectorial nativo. Se inspeccionó una representación estática de la ilustración.
 
 Verificados: compilación de producción, conservación de perfiles, manejo de almacenamiento inválido, coherencia de biorritmos, secuencia de sesión y generación de las pantallas del monitor y ciclos.
 
