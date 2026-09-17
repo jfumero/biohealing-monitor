@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Diagnóstico — BioHealing Monitor</title>
-  <link rel="stylesheet" href="style.css?v=1" />
+  <link rel="stylesheet" href="/src/theme.css" />
   <style>
     .diag-wrap { max-width: 1024px; margin: 24px auto; padding: 16px; }
     .diag-card { border: 1px solid #00ffff44; border-radius: 12px; padding: 16px; background: #071018; }
@@ -24,7 +24,8 @@
     .kv { display: grid; grid-template-columns: 160px 1fr; gap: 8px 12px; }
     .kv div { padding: 6px 8px; background: #0a1620; border: 1px solid #0ff1; border-radius: 8px; }
     .kv .k { color: #86d7ff; }
-    .kv .v { color: #d5f4ff; }
+    .kv .v { color: #d5f4ff; overflow-wrap: anywhere; }
+    @media(max-width:520px){ .kv { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -45,12 +46,12 @@
 
       <div class="links">
         <a class="btn" href="index.html">← Volver al monitor</a>
-        <a class="btn" href="ciclos.html" target="_blank" rel="noopener">Abrir Ciclos personales ↗</a>
+        <a class="btn" href="ciclos.html" >Abrir Ciclos personales ↗</a>
         <a class="btn" href="diag.html">Refrescar diagnóstico</a>
       </div>
     </div>
   </div>
 
-  <script src="diag.js?v=1"></script>
+  <script type="module" src="diag.js"></script>
 </body>
 </html>

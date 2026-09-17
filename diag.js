@@ -1,3 +1,4 @@
+import musicUrl from './music.mp3';
 (function () {
   const $ = (id) => document.getElementById(id);
   const list = $("diag-list");
@@ -27,9 +28,8 @@
       .then(r => li(`${okTxt} (HTTP ${r.status})`, r.ok ? "ok" : (warn ? "warn" : "err")))
       .catch(() => li(errTxt, warn ? "warn" : "err"));
 
-  checkHead("style.css?v=1", "style.css accesible", "style.css no accesible");
-  checkHead("main.js?v=1", "main.js accesible", "main.js no accesible");
-  checkHead("music.mp3", "music.mp3 accesible", "music.mp3 no accesible (opcional)", true);
+  checkHead("index.html", "Monitor accesible", "Monitor no accesible");
+  checkHead(musicUrl, "music.mp3 accesible", "music.mp3 no accesible (opcional)", true);
 
   // Estas dos validan que vercel.json no reescriba todo a index.html
   checkHead("ciclos.html", "ciclos.html accesible directamente", "ciclos.html no accesible: revisar vercel.json");
