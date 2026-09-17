@@ -22,10 +22,15 @@ test('both application entries render meaningful content with valid SVG gauges a
     }));
     const running=renderScene('running',35);
     assert.match(running,/Pausar recorrido/);
+    assert.match(running,/Transparencia del cuerpo/);
+    assert.match(running,/class="anatomical-body"/);
+    assert.match(running,/class="vascular-layer"/);
+    const ids=new Set([...running.matchAll(/id="([^"]+)"/g)].map(m=>m[1]));
+    for(const reference of running.matchAll(/url\(#([^)]+)\)/g)) assert.ok(ids.has(reference[1]),reference[1]);
     assert.equal((running.match(/class="nano-particle"/g)||[]).length,56);
     assert.equal((renderScene('running',35,true).match(/class="nano-particle"/g)||[]).length,14);
     assert.match(renderScene('paused',35),/Continuar recorrido/);
-    assert.match(renderScene('complete',60),/Integración completa/);
+    assert.match(renderScene('complete',60),/Vigilancia distribuida/);
     assert.ok(!running.includes('NaN'));
     const cycles=await server.ssrLoadModule('/src/cycles.jsx');
     const page=renderToString(React.createElement(cycles.App));
