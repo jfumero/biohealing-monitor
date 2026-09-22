@@ -225,12 +225,14 @@ export function App(){
       const [lat,setLat]=useState(initial.lat);
       const [lon,setLon]=useState(initial.lon);
       const [tz,setTz]=useState(initial.tz);
+      const [birthUtcOffset,setBirthUtcOffset]=useState(initial.birthUtcOffset);
+      const [conceptionDate,setConceptionDate]=useState(initial.conceptionDate);
       const [dateStr,setDateStr]=useState(todayDateStr());
       const [saveError,setSaveError]=useState(false);
       const locationValid = lat !== '' && lon !== '' && tz !== '' && Number.isFinite(Number(lat)) && Number.isFinite(Number(lon)) && Number.isFinite(Number(tz)) && Number(lat)>=-90 && Number(lat)<=90 && Number(lon)>=-180 && Number(lon)<=180 && Number(tz)>=-12 && Number(tz)<=14;
       useEffect(()=>{
-        if(locationValid) setSaveError(!writeProfile({name,birthDate,birthTime,lat,lon,tz}));
-      },[name,birthDate,birthTime,lat,lon,tz,locationValid]);
+        if(locationValid) setSaveError(!writeProfile({name,birthDate,birthTime,lat,lon,tz,birthUtcOffset,conceptionDate}));
+      },[name,birthDate,birthTime,lat,lon,tz,birthUtcOffset,conceptionDate,locationValid]);
       useEffect(()=>{
         const openProfile = () => {
           if(location.hash==='#perfil') {
@@ -475,6 +477,13 @@ const interp30 = (
                 </Field>
                 <Field label="Hora de nacimiento (opcional)">
                   <input type="time" className="rounded-xl border p-2" value={birthTime} onChange={(e)=>setBirthTime(e.target.value)} />
+                </Field>
+                <Field label="Huso al nacer (UTC; Uruguay suele ser −3)">
+                  <input type="number" step="0.25" min="-12" max="14" className="rounded-xl border p-2" value={birthUtcOffset} onChange={(e)=>{const n=Number(e.target.value);if(e.target.value!=='' && n>=-12 && n<=14)setBirthUtcOffset(n);}} />
+                </Field>
+                <Field label="Concepción estimada (opcional)">
+                  <input type="date" max={birthDate} className="rounded-xl border p-2" value={conceptionDate} onChange={(e)=>{const v=e.target.value;if(!v || (validDate(v) && v<=birthDate))setConceptionDate(v);}} />
+                  <small>Vacío: 266 días antes del nacimiento. Ajusta el huso histórico si lo conoces.</small>
                 </Field>
                 <Field label="Latitud (−34.86 Montevideo/Ciudad de la Costa)">
                   <input type="number" step="0.0001" className="rounded-xl border p-2" value={lat} min="-90" max="90" onChange={(e)=>setLat(e.target.value)} />

@@ -1,5 +1,5 @@
 export const PROFILE_KEY = 'cycles_app_state';
-export const DEFAULT_PROFILE = { name: 'Jonathan Fumero Mesa', birthDate: '1976-12-04', birthTime: '00:43', lat: -34.86, lon: -55.97, tz: -3 };
+export const DEFAULT_PROFILE = { name: 'Jonathan Fumero Mesa', birthDate: '1976-12-04', birthTime: '00:43', lat: -34.86, lon: -55.97, tz: -3, birthUtcOffset: -3, conceptionDate: '' };
 
 export function validDate(value) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value || '')) return false;
@@ -15,6 +15,8 @@ export function normalizeProfile(value = {}) {
     name: typeof value.name === 'string' ? value.name.slice(0, 100) : DEFAULT_PROFILE.name,
     birthDate: validDate(value.birthDate) ? value.birthDate : DEFAULT_PROFILE.birthDate,
     birthTime: /^([01]\d|2[0-3]):[0-5]\d$/.test(value.birthTime || '') ? value.birthTime : DEFAULT_PROFILE.birthTime,
+    birthUtcOffset: value.birthUtcOffset == null ? number('tz', -12, 14) : number('birthUtcOffset', -12, 14),
+    conceptionDate: validDate(value.conceptionDate) && value.conceptionDate <= (validDate(value.birthDate) ? value.birthDate : DEFAULT_PROFILE.birthDate) ? value.conceptionDate : '',
     lat: number('lat', -90, 90), lon: number('lon', -180, 180), tz: number('tz', -12, 14),
   };
 }
