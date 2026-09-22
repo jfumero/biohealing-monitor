@@ -2,6 +2,7 @@ import React, { useEffect, useReducer, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Shell } from './Shell';
 import Gauge from './Gauge';
+import LifeClock from './LifeClock';
 import NanobotScene from './NanobotScene';
 import { ageYears, birthFromProfile, biorhythm, readProfile, zodiac } from './profile';
 import { MODULES, QUEUE, SESSION_SECONDS, INITIAL_SESSION, sessionReducer, progress } from './session';
@@ -67,11 +68,10 @@ export function App() {
   }, [running,sound]);
   const stepIndex = Math.min(QUEUE.length-1, Math.floor(pct/100*QUEUE.length));
   const stateLabel = {idle:'Listo para comenzar',running:'Sesión en curso',paused:'Sesión en pausa',cancelled:'Sesión finalizada',complete:'Enjambre en vigilancia'}[session.status];
-  const birthday = birth.getMonth()===now.getMonth() && birth.getDate()===now.getDate();
   return <Shell><main id="main" className={`monitor ${quiet?'quiet':''}`}>
     <header className="topbar"><span className="breadcrumb">Tu espacio <span>/</span> <strong>Monitor</strong></span><div className="topbar-profile"><span className="avatar">{profile.name.trim().slice(0,1)||'B'}</span><span>{profile.name||'Mi perfil'}</span><a href="/ciclos.html#perfil" aria-label="Editar perfil">↗</a></div></header>
     <section className="page-heading"><div><div className="eyebrow">BIENVENIDO A TU ESPACIO</div><h1>Conecta. Respira. <em>Equilibra.</em></h1><p>Tu momento de calma, con una nueva perspectiva.</p></div><div className="date-block"><span>{now.toLocaleDateString('es-UY',{weekday:'long',day:'numeric',month:'long'})}</span><strong>{now.toLocaleTimeString('es-UY',{hour:'2-digit',minute:'2-digit'})}</strong></div></section>
-    {birthday ? <div className="birthday-note">✧ ¡Feliz cumpleaños, {profile.name.split(' ')[0]}! Hoy celebramos tu nueva vuelta al sol.</div> : null}
+    <LifeClock profile={profile} quiet={quiet} />
     <section className="hero-grid" aria-label="Sesión y resumen personal">
       <div className="session-info"><div className="eyebrow"><i className={`status-dot ${running?'lit':''}`}/>{stateLabel}</div><h2>Un pequeño ritual.<br/><span>Todo tu universo.</span></h2><p>Despliega tu enjambre, sigue sus caminos de luz y dedica 60 segundos a tu mundo interior.</p><div className="session-buttons">
         <button className="button primary" onClick={() => dispatch({type:running?'pause':session.status==='paused'?'resume':'start'})}><span aria-hidden="true">{running?'Ⅱ':'▷'}</span>{running?'Pausar sesión':session.status==='paused'?'Continuar sesión':'Iniciar sesión'}</button>

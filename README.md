@@ -67,3 +67,11 @@ Verificados: compilación de producción, conservación de perfiles, manejo de a
 Pendiente: revisión visual en navegador a 1440, 768 y 390 px, teclado, audio e interacciones completas. El navegador de la sesión de desarrollo bloqueó el acceso por no poder verificar una política de seguridad; las pruebas de renderizado no sustituyen esa comprobación.
 
 Licencia: MIT, según la documentación original.
+
+### Reloj de vida
+
+Cuenta calendario hasta segundos, con huso fijo al nacer configurable en el perfil y segundos de nacimiento asumidos como 00. El reloj depende de los datos introducidos y de la hora del dispositivo. Los meses se ajustan al último día disponible; el cumpleaños del 29 de febrero se celebra el 28 en años no bisiestos. Los globos aparecen una vez por cumpleaños y sesión del navegador, permiten repetir la celebración y respetan el movimiento reducido.
+
+La edad prenatal se muestra hasta días y siempre como estimación: fecha manual o nacimiento menos 266 días. No reconstruye una concepción real. Referencia: [ACOG, métodos para estimar la fecha de parto](https://www.acog.org/clinical/clinical-guidance/committee-opinion/articles/2017/05/methods-for-estimating-the-due-date) (280 días desde la última menstruación y ovulación supuesta al día 14). No es el [conteo coreano tradicional](https://www.korea.net/NewsFocus/policies/view?articleId=234677).
+
+Verificación: pruebas de calendario, husos, cumpleaños, persistencia y renderizado; compilación de producción. La comprobación visual interactiva continúa limitada por la política del navegador disponible en este entorno.

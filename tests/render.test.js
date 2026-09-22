@@ -10,6 +10,9 @@ test('both application entries render meaningful content with valid SVG gauges a
     const monitor=await server.ssrLoadModule('/src/main.jsx');
     const html=renderToString(React.createElement(monitor.App));
     assert.match(html,/Iniciar sesión/);
+    assert.match(html,/Tu reloj de vida/);
+    assert.match(html,/Desde la concepción/);
+    assert.match(html,/segundos/);
     assert.equal((html.match(/role="meter"/g)||[]).length,8);
     assert.ok(!html.includes('MPH'));
     assert.match(html,/Presión arterial/);
