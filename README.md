@@ -85,3 +85,9 @@ La hora predeterminada se corrige a 00:49 y se migra el antiguo perfil de Jonath
 Las asociaciones sirven para reflexión, no como predicciones ni mediciones de salud. El HD existente usa división uniforme y no sustituye un BodyGraph: [fuente del sistema](https://jovianarchive.com/pages/get-your-human-design-chart). Contexto de simbolismo zodiacal: [Astrodienst](https://www.astro.com/astrology/in_elements_e.htm). Las propuestas diarias son textos propios.
 
 Verificación: pruebas de variación de lecturas, intervalos horarios, migración, persistencia y renderizado, más compilación de producción. No se ha verificado la interacción visual en navegador.
+
+### Síntesis general y tarot
+
+El resumen reúne los nueve métodos presentes en una lectura editorial por reglas, sin servicios externos ni IA. Detecta coincidencias planetarias, contrasta las curvas y propone una acción del día; el desplegable muestra la contribución de cada método y las limitaciones de las aproximaciones. Cambia con los datos y el momento consultado.
+
+Tarot: 22 arcanos mayores al derecho, textos originales, sorteo uniforme con Web Crypto y rechazo de la cola sesgada. Cada pulsación es independiente y puede repetir carta. La carta y el momento consultado permanecen en memoria hasta otro sorteo o salir de la página. No se envían datos ni se requiere una clave API. Pruebas de cobertura de cartas, rechazo, repetición, síntesis, errores parciales y renderizado; compilación de producción. Verificación visual interactiva pendiente.
