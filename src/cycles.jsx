@@ -1,3 +1,5 @@
+import MomentReading from './MomentReading';
+import { bioReading, numberReading, numberTheme, mayaReading, planetReading, jyotishReading, hdReading, agendaReading, westernReading, chineseReading } from './moment-readings';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import * as Astro from 'astronomy-engine';
@@ -119,7 +121,7 @@ function Modal({ title, subtitle, onClose, children }) {
             </button>
           )}
 
-          {interpContent && (
+          {interpContent && helpKey === "configuracion" && (
             <button
               className="shrink-0 px-2 py-1 rounded-lg border text-xs hover:bg-gray-50"
               onClick={() => setOpenInterp(true)}
@@ -132,6 +134,7 @@ function Modal({ title, subtitle, onClose, children }) {
       </div>
 
       {children}
+      {interpContent && helpKey !== "configuracion" && <div>{interpContent}</div>}
 
       {openHelp && help && (
         <Modal
@@ -170,53 +173,6 @@ function Modal({ title, subtitle, onClose, children }) {
     );
     const fmtHM = (d)=> `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 
-    // === Interpretaciones (dinámicas) ===
-const levelLabel = (v) => {
-  if (v >= 60) return "muy alto";
-  if (v >= 25) return "alto";
-  if (v > -25) return "medio";
-  if (v > -60) return "bajo";
-  return "muy bajo";
-};
-const levelAdvice = (v, high, mid, low) => {
-  if (v >= 25) return high;
-  if (v > -25) return mid;
-  return low;
-};
-
-const NUM_DAY_MEANING = {
-  1:{k:"Inicio", t:"Arrancar, decidir, dar el primer paso. Ideal para iniciar algo simple."},
-  2:{k:"Vínculos", t:"Cooperar, escuchar, negociar. Mejor ir suave y en equipo."},
-  3:{k:"Expresión", t:"Comunicar, socializar, creatividad. Buen día para mostrarte."},
-  4:{k:"Orden", t:"Estructura, rutina, foco. Excelente para poner el piso y organizar."},
-  5:{k:"Cambio", t:"Movimiento, flexibilidad, probar. Evitá rigidez; ajustá sobre la marcha."},
-  6:{k:"Cuidado", t:"Familia, armonía, responsabilidad afectiva. Ideal para resolver con calidez."},
-  7:{k:"Introspección", t:"Pausa, análisis, estudio, silencio. Mejor menos ruido y más profundidad."},
-  8:{k:"Logro", t:"Resultados, finanzas, liderazgo. Buen día para cerrar y empujar objetivos."},
-  9:{k:"Cierre", t:"Soltar, limpiar, terminar. Día para depurar y cerrar ciclos."},
-  11:{k:"Inspiración", t:"Intuición alta, visión. Bajá a tierra con pasos chicos."},
-  22:{k:"Construcción", t:"Materializar en grande con método. Prioriza estructura y paciencia."},
-};
-
-const PLANET_KEYS = {
-  "Sol":"Visibilidad, liderazgo, vitalidad",
-  "Luna":"Hogar, intuición, cuidado",
-  "Mercurio":"Papeles, comunicación, estudio",
-  "Venus":"Vínculos, belleza, armonía",
-  "Marte":"Acción, decisión, corte",
-  "Júpiter":"Expansión, oportunidades, confianza",
-  "Saturno":"Orden, límites, disciplina",
-};
-
-const HD_LINE = {
-  1:"Línea 1: base, investigación, seguridad en lo sólido.",
-  2:"Línea 2: talento natural, necesidad de retiro y llamado correcto.",
-  3:"Línea 3: aprendizaje por prueba/error, adaptación, resiliencia.",
-  4:"Línea 4: redes, oportunidades por vínculos, influencia cercana.",
-  5:"Línea 5: soluciones prácticas, proyección, liderazgo (cuidar expectativas).",
-  6:"Línea 6: visión, madurez, ejemplo; aprende por etapas.",
-};
-
 export function App(){
       const [initial] = useState(readProfile);
       const [name,setName]=useState(initial.name);
@@ -227,11 +183,12 @@ export function App(){
       const [tz,setTz]=useState(initial.tz);
       const [birthUtcOffset,setBirthUtcOffset]=useState(initial.birthUtcOffset);
       const [conceptionDate,setConceptionDate]=useState(initial.conceptionDate);
-      const [dateStr,setDateStr]=useState(todayDateStr());
+      const [dateStr,setDateStr]=useState(()=>new Date(Date.now()+initial.tz*3600000).toISOString().slice(0,10));
+      const [readingTime,setReadingTime]=useState(()=>new Date(Date.now()+initial.tz*3600000).toISOString().slice(11,16));
       const [saveError,setSaveError]=useState(false);
       const locationValid = lat !== '' && lon !== '' && tz !== '' && Number.isFinite(Number(lat)) && Number.isFinite(Number(lon)) && Number.isFinite(Number(tz)) && Number(lat)>=-90 && Number(lat)<=90 && Number(lon)>=-180 && Number(lon)<=180 && Number(tz)>=-12 && Number(tz)<=14;
       useEffect(()=>{
-        if(locationValid) setSaveError(!writeProfile({name,birthDate,birthTime,lat,lon,tz,birthUtcOffset,conceptionDate}));
+        if(locationValid) setSaveError(!writeProfile({name,birthDate,birthTime,lat,lon,tz,birthUtcOffset,conceptionDate,birthTimeRevision:1}));
       },[name,birthDate,birthTime,lat,lon,tz,birthUtcOffset,conceptionDate,locationValid]);
       useEffect(()=>{
         const openProfile = () => {
@@ -245,7 +202,9 @@ export function App(){
       },[]);
 
       const birth=useMemo(()=> new Date(`${birthDate}T${birthTime || "00:00"}:00`),[birthDate,birthTime]);
-      const target=useMemo(()=> new Date(`${dateStr}T12:00:00`),[dateStr]);
+      const target=useMemo(()=> new Date(`${dateStr}T${readingTime}:00`),[dateStr,readingTime]);
+      const birthInstant=useMemo(()=>new Date(+new Date(`${birthDate}T${birthTime || "00:00"}:00Z`) - Number(birthUtcOffset)*3600000),[birthDate,birthTime,birthUtcOffset]);
+      const targetInstant=useMemo(()=>new Date(+new Date(`${dateStr}T${readingTime}:00Z`) - Number(tz)*3600000),[dateStr,readingTime,tz]);
 
       // Biorritmos
       const bio=useMemo(()=>({
@@ -273,38 +232,38 @@ export function App(){
       // Jyotish (corregido)
       const jyotish=useMemo(()=>{
         try{
-          const ayan=ayanamsaLahiri(target);
-          const lonSunTrop=eclipticLongitude(Astro.Body.Sun, target);
-          const lonMoonTrop=eclipticLongitude(Astro.Body.Moon, target);
+          const ayan=ayanamsaLahiri(targetInstant);
+          const lonSunTrop=eclipticLongitude(Astro.Body.Sun, targetInstant);
+          const lonMoonTrop=eclipticLongitude(Astro.Body.Moon, targetInstant);
           const lonSunSid=siderealLongitude(lonSunTrop, ayan);
           const lonMoonSid=siderealLongitude(lonMoonTrop, ayan);
           const nk=nakshatraFromLon(lonMoonSid);
 
           const moonBirthSid=siderealLongitude(
-            eclipticLongitude(Astro.Body.Moon, birth),
-            ayanamsaLahiri(birth)
+            eclipticLongitude(Astro.Body.Moon, birthInstant),
+            ayanamsaLahiri(birthInstant)
           );
-          const md=currentMahadasha(birth, target, moonBirthSid);
+          const md=currentMahadasha(birthInstant, targetInstant, moonBirthSid);
 
           const sidSigns=["Aries","Tauro","Géminis","Cáncer","Leo","Virgo","Libra","Escorpio","Sagitario","Capricornio","Acuario","Piscis"];
           const sunSign=sidSigns[Math.floor(lonSunSid/30)];
 
           return { ayan, lonSunSid, lonMoonSid, sunSign, nakshatra:nk, mahadasha:md };
         }catch(e){ return { error:e?.message || String(e) }; }
-      },[birth,target]);
+      },[birthInstant,targetInstant]);
 
       // Human Design (básico) – corregido
       const hd=useMemo(()=>{
         try{
-          const designDate=findDesignDate(birth);
-          const sunPers=eclipticLongitude(Astro.Body.Sun, birth);
+          const designDate=findDesignDate(birthInstant);
+          const sunPers=eclipticLongitude(Astro.Body.Sun, birthInstant);
           const sunDesi=eclipticLongitude(Astro.Body.Sun, designDate);
           const gP=gateFromDegreesUniform(sunPers);
           const gD=gateFromDegreesUniform(sunDesi);
           const profile=`${gP.line}/${gD.line}`;
           return { designDate, sunPers, sunDesi, gatePers:gP, gateDes:gD, profile, note:"Para gates exactos usa el mandala oficial (hdkit)." };
         }catch(e){ return { error:e?.message || String(e) }; }
-      },[birth]);
+      },[birthInstant]);
 
       // Dashboard 30 días
       const dashboard=useMemo(()=>{
@@ -324,139 +283,33 @@ export function App(){
       // UI
       const fmtHM=(d)=>`${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 
-// === Interpretación dinámica (según valores actuales) ===
-const interpBio = (
-  <div className="space-y-3">
-    <p className="text-sm">
-      Tus biorritmos hoy están en un nivel <strong>{levelLabel(bio.physical)}</strong> (físico),
-      <strong> {levelLabel(bio.emotional)}</strong> (emocional) y <strong>{levelLabel(bio.intellectual)}</strong> (intelectual).
-    </p>
-    <ul className="list-disc pl-5 space-y-1 text-sm">
-      <li><strong>Físico ({bio.physical}%):</strong> {levelAdvice(bio.physical,
-        "Aprovechá para moverte, resolver pendientes y encarar tareas que requieren energía.",
-        "Ritmo normal: hacé lo importante con pausas cortas.",
-        "Bajá un cambio: priorizá descanso, hidratación y tareas livianas."
-      )}</li>
-      <li><strong>Emocional ({bio.emotional}%):</strong> {levelAdvice(bio.emotional,
-        "Buen día para conversaciones sensibles, vínculos y creatividad.",
-        "Emociones más estables: elegí claridad y no sobreinterpretes.",
-        "Sensibilidad alta: evitá decisiones impulsivas y cuidá tu entorno."
-      )}</li>
-      <li><strong>Intelectual ({bio.intellectual}%):</strong> {levelAdvice(bio.intellectual,
-        "Ideal para estudiar, escribir, planificar, hacer cuentas o resolver problemas.",
-        "Mente pareja: hacé una lista corta y ejecutá paso a paso.",
-        "Si cuesta enfocarte, trabajá en bloques cortos y reducí multitarea."
-      )}</li>
-    </ul>
-    <p className="text-xs text-gray-500">Usalo como lectura operativa de tu energía disponible.</p>
-  </div>
-);
-
-const dayKey = NUM_DAY_MEANING[num.pd] || NUM_DAY_MEANING[reduceNum(num.pd,false)] || {k:"Día", t:"Tomalo como guía suave."};
-const monthKey = NUM_DAY_MEANING[num.pm] || {k:"Mes", t:"Tema del mes dentro de tu año personal."};
-const yearKey = NUM_DAY_MEANING[num.py] || {k:"Año", t:"Tema del año personal."};
-
-const interpNum = (
-  <div className="space-y-3">
-    <p className="text-sm">
-      <strong>Clave del día ({num.pd}):</strong> {dayKey.k}. {dayKey.t}
-    </p>
-    <ul className="list-disc pl-5 space-y-1 text-sm">
-      <li><strong>Mes personal ({num.pm}):</strong> {monthKey.k}. {monthKey.t}</li>
-      <li><strong>Año personal ({num.py}):</strong> {yearKey.k}. {yearKey.t}</li>
-      <li><strong>Consejo práctico:</strong> definí 1 acción alineada al día y 1 acción alineada al año (chiquitas, sostenibles).</li>
-    </ul>
-  </div>
-);
-
-const interpPlanet = planetHours.error ? (
-  <p className="text-sm">No se pudo calcular la interpretación porque falta amanecer/atardecer. Revisá lat/lon y huso.</p>
-) : (
-  <div className="space-y-3">
-    <p className="text-sm">
-      Hoy el día está regido por <strong>{planetHours.lord}</strong>: {PLANET_KEYS[planetHours.lord] || "energía del planeta rector"}.
-    </p>
-    <ul className="list-disc pl-5 space-y-1 text-sm">
-      <li><strong>Usalo para:</strong> planificar 1 actividad alineada (por ejemplo, Mercurio → papeles / Sol → visibilidad / Saturno → orden).</li>
-      <li><strong>Tip:</strong> si una hora te cae “pesada”, bajá exigencia y hacé tareas mecánicas; si te cae “liviana”, aprovechá para lo importante.</li>
-    </ul>
-  </div>
-);
-
-const DASHA_KEYS = {
-  Ketu:"Soltar, depurar, espiritualidad, cortar lo que no va.",
-  Venus:"Vínculos, placer, valores, armonía, recursos.",
-  Sun:"Identidad, autoridad, propósito, visibilidad.",
-  Moon:"Emoción, hogar, cuidado, cambios internos.",
-  Mars:"Acción, coraje, iniciativa, conflicto si se apura.",
-  Rahu:"Deseo, ambición, expansión, lo nuevo (cuidar excesos).",
-  Jupiter:"Crecimiento, aprendizaje, fe, oportunidades.",
-  Saturn:"Disciplina, trabajo, límites, madurez.",
-  Mercury:"Mente, negocios, comunicación, estudio.",
-};
-
-const interpJyotish = jyotish.error ? (
-  <p className="text-sm">No se pudo calcular Jyotish: {jyotish.error}</p>
-) : (
-  <div className="space-y-3">
-    <p className="text-sm">
-      En védica, tu <strong>Sol sideral</strong> está en <strong>{jyotish.sunSign}</strong>.
-      La <strong>nakshatra</strong> del momento es <strong>{jyotish.nakshatra?.name}</strong> (regente: {jyotish.nakshatra?.lord}).
-    </p>
-    <p className="text-sm">
-      <strong>Mahadasha actual:</strong> {jyotish.mahadasha?.lord} → {DASHA_KEYS[jyotish.mahadasha?.lord] || "tema del planeta regente."}
-    </p>
-    <p className="text-xs text-gray-500">Interpretación general (sin ascendente/casas).</p>
-  </div>
-);
-
-const interpHD = hd.error ? (
-  <p className="text-sm">No se pudo calcular Human Design: {hd.error}</p>
-) : (
-  <div className="space-y-3">
-    <p className="text-sm">
-      Tu perfil estimado es <strong>{hd.profile}</strong>. Esto combina tus líneas consciente/inconsciente.
-    </p>
-    <ul className="list-disc pl-5 space-y-1 text-sm">
-      <li><strong>{hd.gatePers?.line}:</strong> {HD_LINE[hd.gatePers?.line] || "—"}</li>
-      <li><strong>{hd.gateDes?.line}:</strong> {HD_LINE[hd.gateDes?.line] || "—"}</li>
-    </ul>
-    <p className="text-xs text-gray-500">Gates por división uniforme → lectura del patrón activo.</p>
-  </div>
-);
-
-const topDays = (() => {
-  // Selecciona 3 días “favorables” por energía combinada simple
-  const scored = dashboard.slice(0, 14).map(r => ({
-    ...r,
-    score: (r.bf*0.4) + (r.be*0.3) + (r.bi*0.3),
-  })).sort((a,b)=>b.score-a.score);
-  return scored.slice(0,3);
-})();
-
-const interp30 = (
-  <div className="space-y-3">
-    <p className="text-sm">En los próximos días, estos aparecen con mayor energía combinada:</p>
-    <ul className="list-disc pl-5 space-y-1 text-sm">
-      {topDays.map(d => (
-        <li key={d.date}>
-          <strong>{d.date}</strong>: físico {d.bf} • emocional {d.be} • intelectual {d.bi} • día personal {d.pd} • {d.seal}
-        </li>
-      ))}
-    </ul>
-    <p className="text-xs text-gray-500">Útil para planificar: dejá lo pesado para días más altos y lo liviano para días más bajos.</p>
-  </div>
-);
-
+const interpBio = <MomentReading reading={bioReading(bio)} />;
+const interpNum = <><MomentReading reading={numberReading(num)} /><details className="mt-3"><summary>Mis números natales en esta lectura</summary>{[["Camino de vida",num.lp],["Expresión",num.exp],["Alma",num.soul],["Personalidad",num.pers],["Madurez",num.mat]].map(([label,n])=><p key={label} className="text-sm mt-2"><strong>{label} {n} · {numberTheme(n)[0]}:</strong> {numberTheme(n)[1]} En la fecha elegida, relaciónalo con el foco de {numberTheme(num.pd)[0]}.</p>)}</details></>;
+const interpPlanet = <MomentReading reading={planetReading(planetHours,target)} />;
+const interpJyotish = <MomentReading reading={jyotishReading(jyotish)} />;
+const interpHD = <MomentReading reading={hdReading(hd,num.pd)} />;
+const interp30 = <p className="reading-caption mt-3">Cada fecha incluye una propuesta basada en su día personal. Las curvas son referencias simbólicas, no un pronóstico de energía ni un ranking de días mejores o peores.</p>;
+const summaryReading = <>
+  <MomentReading reading={mayaReading(maya,tzNames.indexOf(maya.seal))} />
+  <MomentReading reading={{title:`Runas · ${runes.year.name} en ${target.getFullYear()}`,text:`La runa anual calculada reúne estos temas: ${runes.year.meaning}. Tu runa natal ${runes.natal.name} aporta ${runes.natal.meaning.toLowerCase()}. ${runes.year.name===runes.natal.name?'En este cálculo coinciden: puedes profundizar en un solo tema.':'La propuesta es explorar cómo se complementan ambos símbolos.'}`,action:`Elige una de esas palabras y escribe una situación concreta donde aparezca. Relaciónala con el foco de ${numberTheme(num.pd)[0]} del día.`,question:'¿Qué respuesta propia encuentro al mirar esta situación desde ese símbolo?'}} />
+  <MomentReading reading={westernReading(occidental,num.pd)} />
+  <MomentReading reading={chineseReading(chino,num.pd)} />
+</>;
 
       return (
         <Shell page="cycles"><main id="main" className="cycles-page">
           <div className="flex flex-col gap-6">
             <header className="flex items-center justify-between gap-4">
               <div className="cycles-heading"><span className="eyebrow">TU UNIVERSO PERSONAL</span><h1>Una mirada a tus ciclos.</h1><p>Explora tus ritmos, encuentra un momento para ti.</p></div>
-              <button className="px-3 py-2 rounded-xl bg-black text-white text-sm" onClick={()=>setDateStr(todayDateStr())}>Hoy</button>
+              <button className="px-3 py-2 rounded-xl bg-black text-white text-sm" onClick={()=>{const now=new Date(Date.now()+Number(tz)*3600000);setDateStr(now.toISOString().slice(0,10));setReadingTime(now.toISOString().slice(11,16));}}>Ahora</button>
             </header>
 
+            <section className="reading-context" aria-label="Momento de la lectura">
+              <h2>Tu lectura del momento</h2>
+              <label>Fecha de la lectura<input type="date" value={dateStr} onChange={e=>{if(validDate(e.target.value))setDateStr(e.target.value);}} /></label>
+              <label>Hora de la lectura<input type="time" value={readingTime} onChange={e=>{if(e.target.value)setReadingTime(e.target.value);}} /></label>
+              <p>Lecturas simbólicas para reflexionar sobre {dateStr} a las {readingTime} (UTC{Number(tz)>=0?'+':''}{tz}). Cambia el momento para explorar otra lectura. Los datos natales permanecen como referencia.</p>
+            </section>
             <details id="perfil"><summary>◇ Mi perfil y ubicación · Editar datos</summary><Card title="Configuración" helpKey="configuracion" interpTitle="Cómo usar la configuración" interpContent={(
   <div className="space-y-2 text-sm">
     <p><strong>Idea:</strong> cargá tus datos una vez y luego cambiá la fecha objetivo para ver la lectura del día.</p>
@@ -475,7 +328,7 @@ const interp30 = (
                 <Field label="Fecha de nacimiento">
                   <input type="date" className="rounded-xl border p-2" value={birthDate} onChange={(e)=>{if(validDate(e.target.value))setBirthDate(e.target.value);}} />
                 </Field>
-                <Field label="Hora de nacimiento (opcional)">
+                <Field label="Hora de nacimiento">
                   <input type="time" className="rounded-xl border p-2" value={birthTime} onChange={(e)=>setBirthTime(e.target.value)} />
                 </Field>
                 <Field label="Huso al nacer (UTC; Uruguay suele ser −3)">
@@ -505,16 +358,7 @@ const interp30 = (
             <div className="cycle-date"><label htmlFor="target-date">Fecha de lectura</label><input id="target-date" type="date" value={dateStr} onChange={e=>{if(validDate(e.target.value))setDateStr(e.target.value);}}/><span className="muted">Elige un día para explorar tus ciclos.</span></div>
 
             <div className="grid md:grid-cols-3 gap-4">
-              <Card title="Resumen rápido" helpKey="resumen" interpTitle="Cómo leer el resumen" interpContent={(
-  <div className="space-y-2 text-sm">
-    <p>Usá este bloque como “vista panorámica”. Si algo te resuena, bajá al módulo correspondiente.</p>
-    <ul className="list-disc pl-5 space-y-1">
-      <li><strong>Occidental/Chino:</strong> marcos generales (no dependen de la fecha objetivo).</li>
-      <li><strong>Maya (fecha objetivo):</strong> foco energético del día.</li>
-      <li><strong>Runas:</strong> arquetipos activos del campo personal.</li>
-    </ul>
-  </div>
-)}>
+              <Card title="Resumen rápido" helpKey="resumen" interpContent={summaryReading}>
 <ul className="text-sm leading-7">
                   <li><strong>Occidental (Sol):</strong> {occidental}</li>
                   <li><strong>Chino:</strong> {chino.animal} de {chino.element}</li>
@@ -533,7 +377,7 @@ const interp30 = (
                     </div>
                   </div>
                 ))}
-                <p className="text-xs text-gray-500">Lectura del ciclo activo</p>
+                <p className="text-xs text-gray-500">Curvas simbólicas del ciclo; no son mediciones de tu estado físico o emocional</p>
               </Card>
 
               <Card title="Numerología (fecha objetivo)" helpKey="numerologia" interpContent={interpNum}>
@@ -585,13 +429,13 @@ const interp30 = (
               ) : (
                 <ul className="text-sm leading-7">
                   <li><strong>Ayanamsa (Lahiri):</strong> {jyotish.ayan?.toFixed(3)}°</li>
-                  <li><strong>Sol sideral:</strong> {jyotish.sunSign} ({jyotish.lonSunSid?.toFixed(2)}°)</li>
+                  <li><strong>Sol sideral del momento:</strong> {jyotish.sunSign} ({jyotish.lonSunSid?.toFixed(2)}°)</li>
                   <li><strong>Luna sideral:</strong> {jyotish.lonMoonSid?.toFixed(2)}°</li>
                   <li><strong>Nakshatra:</strong> {jyotish.nakshatra?.name} — Pada {jyotish.nakshatra?.pada} (regente: {jyotish.nakshatra?.lord})</li>
                   <li><strong>Mahadasha actual:</strong> {jyotish.mahadasha?.lord} {jyotish.mahadasha?.from?.toISOString().slice(0,10)} → {jyotish.mahadasha?.to?.toISOString().slice(0,10)}</li>
                 </ul>
               )}
-              <p className="text-xs text-gray-500 mt-2">Para Ascendente y casas, integrar Swiss Ephemeris o un cálculo de casas sidéreas.</p>
+              <p className="text-xs text-gray-500 mt-2">Lectura general del momento y del período natal, sin ascendente ni casas.</p>
             </Card>
 
             <Card title="Human Design (básico)" helpKey="hd" interpContent={interpHD}>
@@ -605,14 +449,14 @@ const interp30 = (
                   <li><strong>Perfil:</strong> {hd.profile}</li>
                 </ul>
               )}
-              <p className="text-xs text-gray-500 mt-2">Nota: mapeo de gates por división uniforme. Para exactitud usa el mandala oficial (hdkit).</p>
+              <p className="text-xs text-gray-500 mt-2">Aproximación exploratoria: no determina tu tipo, estrategia ni autoridad de Human Design.</p>
             </Card>
 
             <Card title="Próximos 30 días (biorritmos + numerología + maya)" helpKey="tabla30" interpContent={interp30}>
               <div className="overflow-x-auto">
                 <table className="min-w-full text-sm">
                   <thead>
-                    <tr className="text-left border-b"><th className="py-2 pr-2">Fecha</th><th className="py-2 pr-2">Físico %</th><th className="py-2 pr-2">Emocional %</th><th className="py-2 pr-2">Intelectual %</th><th className="py-2 pr-2">Día Pers.</th><th className="py-2 pr-2">Tono</th><th className="py-2 pr-2">Sello</th></tr>
+                    <tr className="text-left border-b"><th className="py-2 pr-2">Fecha</th><th className="py-2 pr-2">Físico %</th><th className="py-2 pr-2">Emocional %</th><th className="py-2 pr-2">Intelectual %</th><th className="py-2 pr-2">Día Pers.</th><th className="py-2 pr-2">Tono</th><th className="py-2 pr-2">Sello</th><th className="py-2 pr-2">Propuesta para el día</th></tr>
                   </thead>
                   <tbody>
                     {dashboard.map((row) => (
@@ -623,7 +467,7 @@ const interp30 = (
                         <td className="py-1 pr-2">{row.bi}</td>
                         <td className="py-1 pr-2">{row.pd}</td>
                         <td className="py-1 pr-2">{row.tone}</td>
-                        <td className="py-1 pr-2">{row.seal}</td>
+                        <td className="py-1 pr-2">{row.seal}</td><td className="reading-agenda">{agendaReading(row)}</td>
                       </tr>
                     ))}
                   </tbody>

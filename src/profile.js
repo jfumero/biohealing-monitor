@@ -1,5 +1,5 @@
 export const PROFILE_KEY = 'cycles_app_state';
-export const DEFAULT_PROFILE = { name: 'Jonathan Fumero Mesa', birthDate: '1976-12-04', birthTime: '00:43', lat: -34.86, lon: -55.97, tz: -3, birthUtcOffset: -3, conceptionDate: '' };
+export const DEFAULT_PROFILE = { name: 'Jonathan Fumero Mesa', birthDate: '1976-12-04', birthTime: '00:49', lat: -34.86, lon: -55.97, tz: -3, birthUtcOffset: -3, conceptionDate: '', birthTimeRevision: 1 };
 
 export function validDate(value) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value || '')) return false;
@@ -10,8 +10,11 @@ export function localDate(d = new Date()) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 export function normalizeProfile(value = {}) {
+  // Correct the owner's old saved default once; keep later manual edits.
+  if (!value.birthTimeRevision && value.birthDate === DEFAULT_PROFILE.birthDate && value.name === DEFAULT_PROFILE.name && value.birthTime === '00:43') value = {...value, birthTime: '00:49'};
   const number = (key, min, max) => Number.isFinite(Number(value[key])) && value[key] !== '' && value[key] != null && Number(value[key]) >= min && Number(value[key]) <= max ? Number(value[key]) : DEFAULT_PROFILE[key];
   return {
+    birthTimeRevision: 1,
     name: typeof value.name === 'string' ? value.name.slice(0, 100) : DEFAULT_PROFILE.name,
     birthDate: validDate(value.birthDate) ? value.birthDate : DEFAULT_PROFILE.birthDate,
     birthTime: /^([01]\d|2[0-3]):[0-5]\d$/.test(value.birthTime || '') ? value.birthTime : DEFAULT_PROFILE.birthTime,
