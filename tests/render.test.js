@@ -38,6 +38,10 @@ test('both application entries render meaningful content with valid SVG gauges a
     const cycles=await server.ssrLoadModule('/src/cycles.jsx');
     const page=renderToString(React.createElement(cycles.App));
     for(const label of ['Numerología','Horas planetarias','Jyotish','Human Design','Próximos 30 días']) assert.ok(page.includes(label),label);
+    assert.match(page,/Tu lectura del momento/);
+    assert.match(page,/Para llevarlo a tu día/);
+    assert.match(page,/Propuesta para el día/);
+    assert.match(page,/00:49/);
     assert.ok(!page.includes('NaN'));
     assert.ok(!page.includes('is not a function'));
   } finally { await server.close(); }

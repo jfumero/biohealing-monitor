@@ -75,3 +75,13 @@ Cuenta calendario hasta segundos, con huso fijo al nacer configurable en el perf
 La edad prenatal se muestra hasta días y siempre como estimación: fecha manual o nacimiento menos 266 días. No reconstruye una concepción real. Referencia: [ACOG, métodos para estimar la fecha de parto](https://www.acog.org/clinical/clinical-guidance/committee-opinion/articles/2017/05/methods-for-estimating-the-due-date) (280 días desde la última menstruación y ovulación supuesta al día 14). No es el [conteo coreano tradicional](https://www.korea.net/NewsFocus/policies/view?articleId=234677).
 
 Verificación: pruebas de calendario, husos, cumpleaños, persistencia y renderizado; compilación de producción. La comprobación visual interactiva continúa limitada por la política del navegador disponible en este entorno.
+
+### Lecturas del momento
+
+Las tarjetas muestran interpretaciones editoriales visibles, con un foco, una acción y una pregunta. Se actualizan al cambiar fecha/hora, con botón Ahora en el huso configurado. Cubren biorritmos, numerología (incluidos números natales), sello/tono, runas, referencia occidental/china, horas planetarias, Jyotish, aproximación de Human Design y agenda de 30 días. Los cruces de signos natales con numerología se identifican como propuestas editoriales, no tránsitos. La referencia china mantiene su cálculo por año gregoriano.
+
+La hora predeterminada se corrige a 00:49 y se migra el antiguo perfil de Jonathan con 00:43 una sola vez. Se conservan otros perfiles y posteriores ediciones. Los cálculos astronómicos usan el instante de nacimiento con su huso fijo; los ciclos de fecha conservan el calendario civil.
+
+Las asociaciones sirven para reflexión, no como predicciones ni mediciones de salud. El HD existente usa división uniforme y no sustituye un BodyGraph: [fuente del sistema](https://jovianarchive.com/pages/get-your-human-design-chart). Contexto de simbolismo zodiacal: [Astrodienst](https://www.astro.com/astrology/in_elements_e.htm). Las propuestas diarias son textos propios.
+
+Verificación: pruebas de variación de lecturas, intervalos horarios, migración, persistencia y renderizado, más compilación de producción. No se ha verificado la interacción visual en navegador.
