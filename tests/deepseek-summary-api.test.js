@@ -20,6 +20,13 @@ test('requires POST and returns JSON without contacting DeepSeek', async () => {
   assert.equal(res.body.error, 'Método no permitido.');
 });
 
+test('rejects browser requests from another origin', async () => {
+  const res = makeResponse();
+  await handler({ method: 'POST', headers: { origin: 'https://attacker.example', host: 'biohealing.example' } }, res);
+  assert.equal(res.statusCode, 403);
+  assert.equal(res.body.error, 'Origen no permitido.');
+});
+
 test('validates source readings before sending the request', async () => {
   const res = makeResponse();
   const previous = process.env.DEEPSEEK_API_KEY;
