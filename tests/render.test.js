@@ -41,6 +41,9 @@ test('both application entries render meaningful content with valid SVG gauges a
     assert.match(page,/Tu lectura del momento/);
     assert.match(page,/Tu resumen general/);
     assert.match(page,/Leer con DeepSeek/);
+    assert.match(page,/Conversar sobre mi lectura/);
+    assert.match(page,/Enviar pregunta/);
+    assert.match(page,/Tu pregunta/);
     assert.match(page,/Sacar una carta/);
     assert.match(page,/22 arcanos mayores/);
     assert.match(page,/Para llevarlo a tu día/);

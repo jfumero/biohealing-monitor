@@ -101,3 +101,11 @@ El botón «Leer con DeepSeek» es manual: no hay consultas al cargar, cambiar f
 El endpoint es público: exige origen de producción o del despliegue y limita a seis consultas/minuto por IP por instancia. Estas barreras no son autenticación ni un límite global de gasto; los contadores se reinician al escalar. Para acceso exclusivamente privado o un presupuesto global estricto, se necesita autenticación y límites persistentes/WAF. No se registran claves, datos ni textos en logs del código. Las lecturas se conservan solo mientras el componente esté abierto. El servidor no persiste resultados.
 
 Pruebas: validación, datos excluidos, errores de proveedor y saldo, timeout, respuesta incompleta, límites y renderizado. `npm run dev` solo sirve Vite; el endpoint requiere Vercel o `vercel dev` con el secreto configurado.
+
+### Preguntas sobre las lecturas
+
+El desplegable «Conversar sobre mi lectura» (o «Conversar sobre esta carta») permite enviar una pregunta de hasta 1000 caracteres. Incluye los resultados del momento, la lectura generada si existe y las dos últimas parejas pregunta/respuesta. El historial visible dura mientras el componente está abierto, sin persistencia en el navegador ni en el servidor. Se puede empezar una nueva conversación. Cada envío usa la API; no hay peticiones automáticas.
+
+Cambiar contexto o regenerar la lectura cancela la petición pendiente y reinicia el diálogo. En el tarot se usa el momento guardado al sortear. En caso de error, el texto de la pregunta se conserva para reintentar. El servidor valida roles alternados, número de mensajes y tamaños; no acepta mensajes system aportados por el cliente. La instrucción de conversación distingue la lectura simbólica de un diagnóstico y no infiere salud a partir de los ciclos.
+
+Pruebas: formato y límite de historial, rechazo de roles inyectados, contexto de carta y lectura, envío al proveedor simulado y renderizado accesible.
