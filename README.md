@@ -91,3 +91,13 @@ Verificación: pruebas de variación de lecturas, intervalos horarios, migració
 El resumen reúne los nueve métodos presentes en una lectura editorial por reglas, sin servicios externos ni IA. Detecta coincidencias planetarias, contrasta las curvas y propone una acción del día; el desplegable muestra la contribución de cada método y las limitaciones de las aproximaciones. Cambia con los datos y el momento consultado.
 
 Tarot: 22 arcanos mayores al derecho, textos originales, sorteo uniforme con Web Crypto y rechazo de la cola sesgada. Cada pulsación es independiente y puede repetir carta. La carta y el momento consultado permanecen en memoria hasta otro sorteo o salir de la página. No se envían datos ni se requiere una clave API. Pruebas de cobertura de cartas, rechazo, repetición, síntesis, errores parciales y renderizado; compilación de producción. Verificación visual interactiva pendiente.
+
+### DeepSeek (resumen y tarot)
+
+`POST /api/reading` ejecuta la consulta en una función de Vercel. Requiere `DEEPSEEK_API_KEY` solo en el entorno del servidor (Production); nunca usar prefijo VITE ni incluir la clave en archivos versionados. Modelo `deepseek-flash`, pensamiento desactivado, máximo 1200 tokens y timeout de 45 segundos. Referencia: https://api-docs.deepseek.com/api/create-chat-completion/ .
+
+El botón «Leer con DeepSeek» es manual: no hay consultas al cargar, cambiar fecha o sacar carta. Envía momento consultado, resultados de los métodos y, para tarot, el identificador de la carta; excluye nombre, nacimiento y coordenadas. El servidor valida y limita la carga, reconstruye la carta y mantiene instrucciones fijas. La respuesta se presenta como texto escapado por React. Si falla, se mantiene la lectura base (o la última lectura generada). Cambiar el contexto del resumen o volver a sortear cancela solicitudes anteriores y descarta sus textos. La carta conserva el contexto del sorteo.
+
+El endpoint es público: exige origen de producción o del despliegue y limita a seis consultas/minuto por IP por instancia. Estas barreras no son autenticación ni un límite global de gasto; los contadores se reinician al escalar. Para acceso exclusivamente privado o un presupuesto global estricto, se necesita autenticación y límites persistentes/WAF. No se registran claves, datos ni textos en logs del código. Las lecturas se conservan solo mientras el componente esté abierto. El servidor no persiste resultados.
+
+Pruebas: validación, datos excluidos, errores de proveedor y saldo, timeout, respuesta incompleta, límites y renderizado. `npm run dev` solo sirve Vite; el endpoint requiere Vercel o `vercel dev` con el secreto configurado.
