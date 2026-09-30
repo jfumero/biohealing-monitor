@@ -18,4 +18,4 @@ La ilustración de fondo es decorativa. Los textos, relojes, botones y datos son
 
 ## Verificación
 
-Pruebas de renderizado para las tres entradas, conservación de funciones y vínculos; compilación de producción. La inspección interactiva del diseño con el navegador fue rechazada por fallo de revisión automática debido al límite temporal de uso. No se ha validado visualmente desktop/móvil en ese navegador.
+Pruebas de renderizado para las tres entradas y compilación de producción correctas. Verificación interactiva en escritorio y móvil de 390 px: portada, sorteo de carta, apertura y cierre de conversación con foco en la pregunta, menú móvil, acceso a ciclos, expansión de numerología y visualización. Sin errores de consola en esos recorridos ni desbordamiento horizontal en portada y ciclos. El bloqueo temporal inicial del navegador se resolvió. No se repitieron llamadas de pago a DeepSeek ni pruebas de audio en este cambio visual.

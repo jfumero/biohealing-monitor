@@ -115,3 +115,5 @@ Pruebas: formato y límite de historial, rechazo de roles inyectados, contexto d
 `/` muestra Mi día: reloj compacto expandible, acceso a lectura y conversación en diálogo, tarot con interpretación desplegable, indicadores de ciclos y acceso al recorrido. `/visualizacion.html` conserva el monitor completo. `/ciclos.html` mantiene todos los métodos y la configuración; cada método despliega su contenido y dispone de enlace directo. El menú lateral enlaza las secciones y se pliega con un botón accesible en pantallas pequeñas.
 
 La portada usa exactamente los cálculos del módulo de ciclos, sin duplicar fórmulas. Abrir diálogos o menús no consulta DeepSeek: solo los botones de generación y envío. Se conserva la carta al cerrar la interpretación y la conversación al cerrar el diálogo. El reloj completo y los globos de cumpleaños siguen disponibles. Detalles del diseño y procedencia del fondo en DESIGN.md.
+
+Verificación del rediseño: portada y navegación revisadas en navegador de escritorio y móvil (390 px), carta aleatoria, diálogo de conversación, métodos desplegables y acceso a visualización. Sin errores de consola en el recorrido revisado. Ver DESIGN.md.
