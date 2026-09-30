@@ -1,3 +1,4 @@
+import DayDashboard from './DayDashboard';
 import { GeneralReading, TarotCard } from './GeneralAndTarot';
 import { generalReading } from './general-reading';
 import MomentReading from './MomentReading';
@@ -21,7 +22,7 @@ import { PI, deg2rad, rad2deg, norm360, pad2, todayDateStr, dayOfYear, bioVal, v
         body: [
           ["Nombre completo", "Se usa para numerología (Expresión/Destino, Alma, Personalidad)."],
           ["Fecha de nacimiento", "Base para biorritmos, numerología, signos, runas, etc."],
-          ["Hora de nacimiento", "En esta versión casi no cambia nada; útil si luego agregás ascendente/casas."],
+          ["Hora de nacimiento", "Se usa en el reloj de vida y los cálculos astronómicos natales."],
           ["Latitud/Longitud/Huso", "Se usa para amanecer/atardecer → horas planetarias."],
           ["Fecha a calcular", "El día objetivo para todos los cálculos diarios."]
         ]
@@ -108,7 +109,7 @@ function Modal({ title, subtitle, onClose, children }) {
 
 
   return (
-    <div className="cycle-card rounded-2xl shadow p-4 bg-white/80 backdrop-blur border border-gray-100 relative">
+    <div id={`metodo-${helpKey}`} className="cycle-card rounded-2xl shadow p-4 bg-white/80 backdrop-blur border border-gray-100 relative">
       <div className="flex items-start justify-between gap-3">
         <h3 className="text-lg font-semibold mb-2">{title}</h3>
 
@@ -135,8 +136,7 @@ function Modal({ title, subtitle, onClose, children }) {
         </div>
       </div>
 
-      {children}
-      {interpContent && helpKey !== "configuracion" && <div>{interpContent}</div>}
+      {helpKey==='configuracion' ? children : <details className="method-details"><summary>Ver datos e interpretación</summary><div className="method-content">{children}{interpContent && <div>{interpContent}</div>}</div></details>}
 
       {openHelp && help && (
         <Modal
@@ -175,7 +175,7 @@ function Modal({ title, subtitle, onClose, children }) {
     );
     const fmtHM = (d)=> `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 
-export function App(){
+export function App({mode='cycles'}){
       const [initial] = useState(readProfile);
       const [name,setName]=useState(initial.name);
       const [birthDate,setBirthDate]=useState(initial.birthDate);
@@ -194,6 +194,11 @@ export function App(){
       },[name,birthDate,birthTime,lat,lon,tz,birthUtcOffset,conceptionDate,locationValid]);
       useEffect(()=>{
         const openProfile = () => {
+          if(location.hash.startsWith('#metodo-')) {
+            const target=document.getElementById(location.hash.slice(1));
+            target?.querySelector('.method-details')?.setAttribute('open','');
+            target?.scrollIntoView({block:'start'});
+          }
           if(location.hash==='#perfil') {
             document.getElementById('perfil')?.setAttribute('open','');
             document.getElementById('perfil')?.scrollIntoView();
@@ -300,6 +305,7 @@ const summaryReading = <>
   <MomentReading reading={chineseReading(chino,num.pd)} />
 </>;
 
+      if(mode==='day') return <DayDashboard profile={{name,birthDate,birthTime,lat,lon,tz,birthUtcOffset,conceptionDate}} overview={overview} context={readingContext} bio={bio} />;
       return (
         <Shell page="cycles"><main id="main" className="cycles-page">
           <div className="flex flex-col gap-6">
@@ -314,8 +320,9 @@ const summaryReading = <>
               <label>Hora de la lectura<input type="time" value={readingTime} onChange={e=>{if(e.target.value)setReadingTime(e.target.value);}} /></label>
               <p>Lecturas simbólicas para reflexionar sobre {dateStr} a las {readingTime} (UTC{Number(tz)>=0?'+':''}{tz}). Cambia el momento para explorar otra lectura. Los datos natales permanecen como referencia.</p>
             </section>
-            <GeneralReading reading={overview} context={readingContext} />
-            <TarotCard context={readingContext} sources={overview.sources} />
+            <details className="cycles-extra"><summary>✧ Abrir mi resumen general y conversar</summary><GeneralReading reading={overview} context={readingContext} /></details>
+            <details className="cycles-extra"><summary>◇ Sacar una carta</summary><TarotCard context={readingContext} sources={overview.sources} /></details>
+            <nav className="method-navigation" aria-label="Ir a un método">{[['resumen','Signos, sello y runas'],['biorritmos','Biorritmos'],['numerologia','Numerología'],['horas','Horas planetarias'],['jyotish','Jyotish'],['hd','Human Design'],['tabla30','Agenda de 30 días']].map(([id,label])=><a key={id} href={`#metodo-${id}`} onClick={()=>{const node=document.getElementById(`metodo-${id}`);node?.querySelector('.method-details')?.setAttribute('open','');}}>{label}</a>)}</nav>
             <details id="perfil"><summary>◇ Mi perfil y ubicación · Editar datos</summary><Card title="Configuración" helpKey="configuracion" interpTitle="Cómo usar la configuración" interpContent={(
   <div className="space-y-2 text-sm">
     <p><strong>Idea:</strong> cargá tus datos una vez y luego cambiá la fecha objetivo para ver la lectura del día.</p>
@@ -487,6 +494,3 @@ const summaryReading = <>
         </main></Shell>
       );
     }
-
-    if (typeof document !== 'undefined') createRoot(document.getElementById('root')).render(<App />);
-
