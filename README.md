@@ -109,3 +109,9 @@ El desplegable «Conversar sobre mi lectura» (o «Conversar sobre esta carta»)
 Cambiar contexto o regenerar la lectura cancela la petición pendiente y reinicia el diálogo. En el tarot se usa el momento guardado al sortear. En caso de error, el texto de la pregunta se conserva para reintentar. El servidor valida roles alternados, número de mensajes y tamaños; no acepta mensajes system aportados por el cliente. La instrucción de conversación distingue la lectura simbólica de un diagnóstico y no infiere salud a partir de los ciclos.
 
 Pruebas: formato y límite de historial, rechazo de roles inyectados, contexto de carta y lectura, envío al proveedor simulado y renderizado accesible.
+
+### Nueva portada y navegación
+
+`/` muestra Mi día: reloj compacto expandible, acceso a lectura y conversación en diálogo, tarot con interpretación desplegable, indicadores de ciclos y acceso al recorrido. `/visualizacion.html` conserva el monitor completo. `/ciclos.html` mantiene todos los métodos y la configuración; cada método despliega su contenido y dispone de enlace directo. El menú lateral enlaza las secciones y se pliega con un botón accesible en pantallas pequeñas.
+
+La portada usa exactamente los cálculos del módulo de ciclos, sin duplicar fórmulas. Abrir diálogos o menús no consulta DeepSeek: solo los botones de generación y envío. Se conserva la carta al cerrar la interpretación y la conversación al cerrar el diálogo. El reloj completo y los globos de cumpleaños siguen disponibles. Detalles del diseño y procedencia del fondo en DESIGN.md.

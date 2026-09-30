@@ -37,6 +37,14 @@ test('both application entries render meaningful content with valid SVG gauges a
     assert.ok(!running.includes('NaN'));
     const cycles=await server.ssrLoadModule('/src/cycles.jsx');
     const page=renderToString(React.createElement(cycles.App));
+    const day=renderToString(React.createElement(cycles.App,{mode:'day'}));
+    for(const label of ['Buen día, Jonathan','Tu reloj de vida','Tu carta de hoy','Tus ciclos, de un vistazo','Conversar sobre mi lectura','Ver lectura completa','Ver detalle','Mi perfil','Ajustes']) assert.ok(day.replace(/<!--.*?-->/g,'').includes(label),label);
+    for(const link of ['/visualizacion.html','/ciclos.html','/#carta','/#conversar']) assert.ok(day.includes(`href="${link}"`),link);
+    assert.ok(!day.includes('NaN'));
+    const allIds=[...day.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);
+    assert.equal(new Set(allIds).size,allIds.length,'dashboard IDs must be unique');
+    assert.equal((day.match(/class="day-ring"/g)||[]).length,3);
+
     for(const label of ['Numerología','Horas planetarias','Jyotish','Human Design','Próximos 30 días']) assert.ok(page.includes(label),label);
     assert.match(page,/Tu lectura del momento/);
     assert.match(page,/Tu resumen general/);
