@@ -40,6 +40,7 @@ test('both application entries render meaningful content with valid SVG gauges a
     for(const label of ['Numerología','Horas planetarias','Jyotish','Human Design','Próximos 30 días']) assert.ok(page.includes(label),label);
     assert.match(page,/Tu lectura del momento/);
     assert.match(page,/Tu resumen general/);
+    assert.match(page,/Leer con DeepSeek/);
     assert.match(page,/Sacar una carta/);
     assert.match(page,/22 arcanos mayores/);
     assert.match(page,/Para llevarlo a tu día/);

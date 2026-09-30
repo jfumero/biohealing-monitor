@@ -285,6 +285,8 @@ export function App(){
       // UI
       const fmtHM=(d)=>`${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 
+const overview = generalReading({num,bio,maya,sealIndex:tzNames.indexOf(maya.seal),runes,occidental,chino,jyotish,hd,planetHours,target});
+const readingContext = `${dateStr} ${readingTime} (UTC${Number(tz)>=0?'+':''}${tz})`;
 const interpBio = <MomentReading reading={bioReading(bio)} />;
 const interpNum = <><MomentReading reading={numberReading(num)} /><details className="mt-3"><summary>Mis números natales en esta lectura</summary>{[["Camino de vida",num.lp],["Expresión",num.exp],["Alma",num.soul],["Personalidad",num.pers],["Madurez",num.mat]].map(([label,n])=><p key={label} className="text-sm mt-2"><strong>{label} {n} · {numberTheme(n)[0]}:</strong> {numberTheme(n)[1]} En la fecha elegida, relaciónalo con el foco de {numberTheme(num.pd)[0]}.</p>)}</details></>;
 const interpPlanet = <MomentReading reading={planetReading(planetHours,target)} />;
@@ -312,8 +314,8 @@ const summaryReading = <>
               <label>Hora de la lectura<input type="time" value={readingTime} onChange={e=>{if(e.target.value)setReadingTime(e.target.value);}} /></label>
               <p>Lecturas simbólicas para reflexionar sobre {dateStr} a las {readingTime} (UTC{Number(tz)>=0?'+':''}{tz}). Cambia el momento para explorar otra lectura. Los datos natales permanecen como referencia.</p>
             </section>
-            <GeneralReading reading={generalReading({num,bio,maya,sealIndex:tzNames.indexOf(maya.seal),runes,occidental,chino,jyotish,hd,planetHours,target})} />
-            <TarotCard context={`${dateStr} ${readingTime} (UTC${Number(tz)>=0?'+':''}${tz})`} />
+            <GeneralReading reading={overview} context={readingContext} />
+            <TarotCard context={readingContext} sources={overview.sources} />
             <details id="perfil"><summary>◇ Mi perfil y ubicación · Editar datos</summary><Card title="Configuración" helpKey="configuracion" interpTitle="Cómo usar la configuración" interpContent={(
   <div className="space-y-2 text-sm">
     <p><strong>Idea:</strong> cargá tus datos una vez y luego cambiá la fecha objetivo para ver la lectura del día.</p>
