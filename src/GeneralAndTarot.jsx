@@ -1,9 +1,66 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { drawCard } from './tarot';
 import './general-tarot.css';
-export function GeneralReading({reading}) {
-  return <section className="general-reading" aria-labelledby="general-title"><span className="eyebrow">TODAS LAS MIRADAS, UNA PAUSA</span><h2 id="general-title">Tu resumen general</h2><h3>{reading.title}</h3>{reading.paragraphs.map((p,i)=><p key={i}>{p}</p>)}<div className="general-action"><strong>Qué puedes hacer hoy</strong><p>{reading.action}</p><em>{reading.question}</em></div><details><summary>Cómo se unen las lecturas</summary><p>Esta síntesis combina los textos y cálculos de la web. Es una lectura simbólica creada con reglas, sin IA externa; las coincidencias entre métodos no son una confirmación de lo que ocurrirá.</p>{reading.sources.map(([name,text])=><p key={name}><strong>{name}:</strong> {text}</p>)}</details></section>;
+
+export function GeneralReading({ reading }) {
+  const [generated, setGenerated] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const sourceKey = JSON.stringify(reading.sources);
+
+  useEffect(() => {
+    setGenerated(null);
+    setError('');
+  }, [sourceKey]);
+
+  async function generate() {
+    setLoading(true);
+    setError('');
+    try {
+      const response = await fetch('/api/deepseek-summary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sources: reading.sources.map(([name, text]) => ({ name, text })),
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'No se pudo generar la síntesis.');
+      setGenerated(data.reading);
+    } catch (err) {
+      setError(err.message || 'No se pudo generar la síntesis. Vuelve a intentarlo.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return <section className="general-reading" aria-labelledby="general-title">
+    <span className="eyebrow">TODAS LAS MIRADAS, UNA PAUSA</span>
+    <h2 id="general-title">Tu resumen general</h2>
+    <p>DeepSeek integra las lecturas del momento en una reflexión, una acción y una pregunta.</p>
+    <p className="reading-caption">Al pedir la síntesis se envían a DeepSeek los textos de las lecturas. No se envían tu nombre ni tu fecha u hora de nacimiento. Es una reflexión simbólica, no una predicción ni un consejo médico.</p>
+    <button type="button" onClick={generate} disabled={loading} aria-busy={loading}>
+      {loading ? 'Preparando tu síntesis…' : generated ? 'Generar otra síntesis' : 'Generar síntesis con DeepSeek'}
+    </button>
+    {loading && <p role="status">DeepSeek está reuniendo las lecturas…</p>}
+    {error && <p className="reading-error" role="alert">{error}</p>}
+    {generated && <div className="deepseek-reading" aria-live="polite">
+      <p className="reading-caption">Síntesis generada con DeepSeek</p>
+      <h3>{generated.title}</h3>
+      {generated.paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}
+      <div className="general-action">
+        <strong>Qué puedes hacer hoy</strong>
+        <p>{generated.action}</p>
+        <em>{generated.question}</em>
+      </div>
+    </div>}
+    <details>
+      <summary>Lecturas que se incluyen</summary>
+      {reading.sources.map(([name, text]) => <p key={name}><strong>{name}:</strong> {text}</p>)}
+    </details>
+  </section>;
 }
+
 export function TarotCard({context}) {
   const [draw,setDraw]=useState(null);
   const [error,setError]=useState('');
