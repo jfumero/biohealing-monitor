@@ -312,7 +312,7 @@ const summaryReading = <>
               <label>Hora de la lectura<input type="time" value={readingTime} onChange={e=>{if(e.target.value)setReadingTime(e.target.value);}} /></label>
               <p>Lecturas simbólicas para reflexionar sobre {dateStr} a las {readingTime} (UTC{Number(tz)>=0?'+':''}{tz}). Cambia el momento para explorar otra lectura. Los datos natales permanecen como referencia.</p>
             </section>
-            <GeneralReading reading={generalReading({num,bio,maya,sealIndex:tzNames.indexOf(maya.seal),runes,occidental,chino,jyotish,hd,planetHours,target})} />
+            <GeneralReading reading={generalReading({num,bio,maya,sealIndex:tzNames.indexOf(maya.seal),runes,occidental,chino,jyotish,hd,planetHours,target})} context={dateStr + " " + readingTime + " (UTC" + (Number(tz)>=0?"+":"") + tz + ")"} />
             <TarotCard context={`${dateStr} ${readingTime} (UTC${Number(tz)>=0?'+':''}${tz})`} />
             <details id="perfil"><summary>◇ Mi perfil y ubicación · Editar datos</summary><Card title="Configuración" helpKey="configuracion" interpTitle="Cómo usar la configuración" interpContent={(
   <div className="space-y-2 text-sm">
