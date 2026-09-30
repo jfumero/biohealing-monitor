@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { drawCard } from './tarot';
 import './general-tarot.css';
 
-export function GeneralReading({ reading }) {
+export function GeneralReading({ reading, context }) {
   const [generated, setGenerated] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -11,7 +11,7 @@ export function GeneralReading({ reading }) {
   useEffect(() => {
     setGenerated(null);
     setError('');
-  }, [sourceKey]);
+  }, [sourceKey, context]);
 
   async function generate() {
     setLoading(true);
