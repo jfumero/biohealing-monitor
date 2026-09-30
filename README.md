@@ -91,3 +91,8 @@ Verificación: pruebas de variación de lecturas, intervalos horarios, migració
 El resumen reúne los nueve métodos presentes en una lectura editorial por reglas, sin servicios externos ni IA. Detecta coincidencias planetarias, contrasta las curvas y propone una acción del día; el desplegable muestra la contribución de cada método y las limitaciones de las aproximaciones. Cambia con los datos y el momento consultado.
 
 Tarot: 22 arcanos mayores al derecho, textos originales, sorteo uniforme con Web Crypto y rechazo de la cola sesgada. Cada pulsación es independiente y puede repetir carta. La carta y el momento consultado permanecen en memoria hasta otro sorteo o salir de la página. No se envían datos ni se requiere una clave API. Pruebas de cobertura de cartas, rechazo, repetición, síntesis, errores parciales y renderizado; compilación de producción. Verificación visual interactiva pendiente.
+
+
+### Síntesis general con DeepSeek
+
+El resumen general se genera al pulsar **Generar síntesis con DeepSeek**. La web envía las lecturas simbólicas mostradas a `/api/deepseek-summary`; la función de Vercel llama a la API de DeepSeek y valida la respuesta. No se envían el nombre ni la fecha u hora de nacimiento. La clave `DEEPSEEK_API_KEY` se configura como variable privada de entorno en Vercel y no se incluye en el frontend. El modelo predeterminado es `deepseek-flash`; se puede cambiar con la variable privada opcional `DEEPSEEK_MODEL`.
