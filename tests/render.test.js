@@ -38,8 +38,8 @@ test('both application entries render meaningful content with valid SVG gauges a
     const cycles=await server.ssrLoadModule('/src/cycles.jsx');
     const page=renderToString(React.createElement(cycles.App));
     const day=renderToString(React.createElement(cycles.App,{mode:'day'}));
-    for(const label of ['Buen día, Jonathan','Tu reloj de vida','Tu carta de hoy','Tus ciclos, de un vistazo','Conversar sobre mi lectura','Ver lectura completa','Ver detalle','Mi perfil','Ajustes']) assert.ok(day.replace(/<!--.*?-->/g,'').includes(label),label);
-    for(const link of ['/visualizacion.html','/ciclos.html','/#carta','/#conversar']) assert.ok(day.includes(`href="${link}"`),link);
+    for(const label of ['Buen día, Jonathan','Tu reloj de vida','Tu carta de hoy','Tus ciclos, de un vistazo','Descubrí tu día','Explorar los detalles','Ver detalle','Mi perfil','Ajustes']) assert.ok(day.replace(/<!--.*?-->/g,'').includes(label),label);
+    for(const link of ['/visualizacion.html','/ciclos.html']) assert.ok(day.includes(`href="${link}"`),link);
     assert.ok(!day.includes('NaN'));
     const allIds=[...day.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);
     assert.equal(new Set(allIds).size,allIds.length,'dashboard IDs must be unique');
@@ -47,11 +47,9 @@ test('both application entries render meaningful content with valid SVG gauges a
 
     for(const label of ['Numerología','Horas planetarias','Jyotish','Human Design','Próximos 30 días']) assert.ok(page.includes(label),label);
     assert.match(page,/Tu lectura del momento/);
-    assert.match(page,/Tu resumen general/);
-    assert.match(page,/Sacar mi carta y continuar/);
+    assert.match(page,/Volver a mi lectura del día/);
     assert.ok(!page.includes('Enviar pregunta'),'AI interaction waits for a card');
-    assert.match(page,/Sacar una carta/);
-    assert.match(page,/22 arcanos mayores/);
+
     assert.match(page,/Para llevarlo a tu día/);
     assert.match(page,/Propuesta para el día/);
     assert.match(page,/00:49/);

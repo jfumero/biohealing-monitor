@@ -1,4 +1,4 @@
-import React, { useId, useRef, useState, useEffect } from 'react';
+import React, { useId, useRef, useState } from 'react';
 import './nanobots.css';
 import Icon from './Icon';
 import './harmonious.css';
@@ -6,10 +6,8 @@ import './harmonious.css';
 export function Brand() { return <a className="brand" href="/"><span className="brand-symbol" aria-hidden="true">✳</span><span>biohealing<span className="brand-sub">TU ESPACIO PERSONAL</span></span></a>; }
 export function Shell({children, page = 'visualization'}) {
   const [menu,setMenu]=useState(false);
-  const [hash,setHash]=useState(()=>typeof location!=='undefined'?location.hash:'');
-  useEffect(()=>{const update=()=>setHash(location.hash);window.addEventListener('hashchange',update);return()=>window.removeEventListener('hashchange',update);},[]);
-  const links=[['day','Mi día','/','home'],['cycles','Mis ciclos','/ciclos.html','cycles'],['card','Mi carta','/#carta','card'],['visualization','Visualización','/visualizacion.html','eye'],['chat','Conversar','/#conversar','chat']];
-  const selected=page==='day'?(hash==='#carta'?'card':hash==='#conversar'?'chat':'day'):page;
+  const links=[['day','Mi día','/','home'],['cycles','Mis ciclos','/ciclos.html','cycles'],['visualization','Visualización','/visualizacion.html','eye']];
+  const selected=page;
   const about = useRef(null);
   const aboutTitle = useId();
   return <div className="app-shell harmonious">

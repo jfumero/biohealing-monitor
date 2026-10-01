@@ -12,3 +12,9 @@
 .conversation-view .ai-reading>.daily-card-prompt{display:block}.daily-card-prompt{padding:24px;border:1px solid #467662;border-radius:16px;background:#10382e}.daily-card-prompt h3{font:400 28px Georgia,serif;margin:14px 0}.daily-card-prompt p{line-height:1.7;margin:12px 0}.daily-card-prompt .ai-button{margin-top:12px}
 
 .conversation-view .ai-reading>.daily-card-context{display:block;margin:0 0 18px;color:#bcebd4}
+
+.daily-journey{width:100%;max-width:900px;margin:auto}.daily-journey>p{line-height:1.75;margin:12px 0}.daily-journey .button{border-radius:26px;padding:13px 22px;margin-top:16px}.daily-journey .ai-prose{font:400 18px/1.85 Georgia,serif;color:#d9eee0}.daily-journey .ai-prose p{margin:18px 0;white-space:pre-wrap}.daily-journey h2:focus{outline:none}.daily-explore{margin-top:24px;border-top:1px solid #345b4c;padding-top:18px}.daily-explore summary{cursor:pointer;color:#a9dfc6}.daily-explore p{margin:14px 0;line-height:1.7}.daily-explore a{color:#bcebd6;text-decoration:underline}.daily-saved{font-size:12px;color:#9abdac}.daily-companion{padding:25px;text-align:center}.daily-companion h2{font:400 24px Georgia,serif;margin-bottom:20px}.daily-companion .tarot-face{margin:0 auto;max-width:150px;min-height:200px}.daily-companion p{font-size:13px;line-height:1.7;color:#b3cfbf;margin-top:20px}.conversation-inline>summary{pointer-events:none;list-style:none;font:400 25px Georgia,serif!important}.conversation-inline>summary::-webkit-details-marker{display:none}.daily-journey .conversation-inline{margin-top:28px}.daily-journey button:disabled{opacity:.6;cursor:wait}
+
+.conversation-inline>h3{font:400 25px Georgia,serif;color:#b9f1d8;margin:0 0 16px}
+
+.daily-journey>.ai-note{font-size:12px;line-height:1.65;color:#a6c8b8}
