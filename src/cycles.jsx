@@ -1,3 +1,4 @@
+import { drawCard } from './tarot';
 import DayDashboard from './DayDashboard';
 import { GeneralReading, TarotCard } from './GeneralAndTarot';
 import { generalReading } from './general-reading';
@@ -292,6 +293,15 @@ export function App({mode='cycles'}){
 
 const overview = generalReading({num,bio,maya,sealIndex:tzNames.indexOf(maya.seal),runes,occidental,chino,jyotish,hd,planetHours,target});
 const readingContext = `${dateStr} ${readingTime} (UTC${Number(tz)>=0?'+':''}${tz})`;
+const [dailyDraw,setDailyDraw]=React.useState(null);
+const [drawError,setDrawError]=React.useState('');
+const dayKey=JSON.stringify([readingContext,overview.aiSources]);
+const draw=dailyDraw?.dayKey===dayKey?dailyDraw:null;
+function chooseDailyCard(){
+  try {setDailyDraw({card:drawCard(),context:readingContext,sources:overview.aiSources,id:Date.now(),dayKey});setDrawError('');}
+  catch {setDrawError('No se pudo sacar la carta. Vuelve a intentarlo.');}
+}
+
 const interpBio = <MomentReading reading={bioReading(bio)} />;
 const interpNum = <><MomentReading reading={numberReading(num)} /><details className="mt-3"><summary>Mis números natales en esta lectura</summary>{[["Camino de vida",num.lp],["Expresión",num.exp],["Alma",num.soul],["Personalidad",num.pers],["Madurez",num.mat]].map(([label,n])=><p key={label} className="text-sm mt-2"><strong>{label} {n} · {numberTheme(n)[0]}:</strong> {numberTheme(n)[1]} En la fecha elegida, relaciónalo con el foco de {numberTheme(num.pd)[0]}.</p>)}</details></>;
 const interpPlanet = <MomentReading reading={planetReading(planetHours,target)} />;
@@ -305,7 +315,7 @@ const summaryReading = <>
   <MomentReading reading={chineseReading(chino,num.pd)} />
 </>;
 
-      if(mode==='day') return <DayDashboard profile={{name,birthDate,birthTime,lat,lon,tz,birthUtcOffset,conceptionDate}} overview={overview} context={readingContext} bio={bio} />;
+      if(mode==='day') return <DayDashboard profile={{name,birthDate,birthTime,lat,lon,tz,birthUtcOffset,conceptionDate}} overview={overview} context={readingContext} bio={bio} draw={draw} onDraw={chooseDailyCard} drawError={drawError} />;
       return (
         <Shell page="cycles"><main id="main" className="cycles-page">
           <div className="flex flex-col gap-6">
@@ -320,8 +330,8 @@ const summaryReading = <>
               <label>Hora de la lectura<input type="time" value={readingTime} onChange={e=>{if(e.target.value)setReadingTime(e.target.value);}} /></label>
               <p>Lecturas simbólicas para reflexionar sobre {dateStr} a las {readingTime} (UTC{Number(tz)>=0?'+':''}{tz}). Cambia el momento para explorar otra lectura. Los datos natales permanecen como referencia.</p>
             </section>
-            <details className="cycles-extra"><summary>✧ Abrir mi resumen general y conversar</summary><GeneralReading reading={overview} context={readingContext} /></details>
-            <details className="cycles-extra"><summary>◇ Sacar una carta</summary><TarotCard context={readingContext} sources={overview.sources} /></details>
+            <details className="cycles-extra"><summary>✧ Abrir mi resumen general y conversar</summary><GeneralReading reading={overview} context={readingContext} draw={draw} onDraw={chooseDailyCard} drawError={drawError} /></details>
+            <details className="cycles-extra"><summary>◇ Sacar una carta</summary><TarotCard context={readingContext} sources={overview.aiSources} draw={draw} onDraw={chooseDailyCard} drawError={drawError} /></details>
             <nav className="method-navigation" aria-label="Ir a un método">{[['resumen','Signos, sello y runas'],['biorritmos','Biorritmos'],['numerologia','Numerología'],['horas','Horas planetarias'],['jyotish','Jyotish'],['hd','Human Design'],['tabla30','Agenda de 30 días']].map(([id,label])=><a key={id} href={`#metodo-${id}`} onClick={()=>{const node=document.getElementById(`metodo-${id}`);node?.querySelector('.method-details')?.setAttribute('open','');}}>{label}</a>)}</nav>
             <details id="perfil"><summary>◇ Mi perfil y ubicación · Editar datos</summary><Card title="Configuración" helpKey="configuracion" interpTitle="Cómo usar la configuración" interpContent={(
   <div className="space-y-2 text-sm">

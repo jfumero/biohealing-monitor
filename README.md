@@ -117,3 +117,7 @@ Pruebas: formato y límite de historial, rechazo de roles inyectados, contexto d
 La portada usa exactamente los cálculos del módulo de ciclos, sin duplicar fórmulas. Abrir diálogos o menús no consulta DeepSeek: solo los botones de generación y envío. Se conserva la carta al cerrar la interpretación y la conversación al cerrar el diálogo. El reloj completo y los globos de cumpleaños siguen disponibles. Detalles del diseño y procedencia del fondo en DESIGN.md.
 
 Verificación del rediseño: portada y navegación revisadas en navegador de escritorio y móvil (390 px), carta aleatoria, diálogo de conversación, métodos desplegables y acceso a visualización. Sin errores de consola en el recorrido revisado. Ver DESIGN.md.
+
+### Carta compartida y contexto diario de IA
+Antes de generar el resumen con IA o conversar, la interfaz solicita sortear una carta. La misma carta se muestra en la portada y se incluye en el resumen, el chat y su interpretación. Sacar otra carta o cambiar el contexto reinicia la lectura y conversación asociadas. La carta vive durante la visita; no se guarda entre recargas o páginas. El resumen base sigue disponible sin IA.
+La IA recibe los nueve métodos con sus valores calculados, números natales y personales, curvas, sello/tono, runas, signos de referencia, las 24 horas planetarias, Jyotish y aproximaciones de Human Design. No se añaden nombre, fecha de nacimiento ni coordenadas al envío. La agenda futura de 30 días y las sesiones de visualización no se incluyen en este contexto del día.

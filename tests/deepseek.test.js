@@ -9,7 +9,7 @@ test('payload whitelist excludes profile data and selects card on the server',()
  assert.equal(data.card.name,'La Estrella');assert.ok(!('name' in data));assert.ok(!('birthDate' in data));
  assert.throws(()=>validateInput({...input,kind:'tarot',cardId:99}));
  assert.throws(()=>validateInput({...input,sources:[['Other','bad']]}));
- assert.throws(()=>validateInput({...input,sources:[['Numerología','a'.repeat(1501)]]}));
+ assert.throws(()=>validateInput({...input,sources:[['Numerología','a'.repeat(4001)]]}));
 });
 test('server invokes fixed model and endpoint without returning credentials',async()=>{
  let calls=0;
@@ -24,7 +24,7 @@ test('server invokes fixed model and endpoint without returning credentials',asy
 });
 test('rejects cross-origin requests, invalid bodies and missing configuration before provider call',async()=>{
  let calls=0;const handler=createHandler({env:{},fetchImpl:async()=>{calls++;}});
- for(const [request,status] of [[{...req(),method:'GET'},405],[{...req(),headers:{...req().headers,origin:'https://other.example'}},403],[req('{bad'),400],[req({...input,context:'x'.repeat(20000)}),413],[req(),503]]){
+ for(const [request,status] of [[{...req(),method:'GET'},405],[{...req(),headers:{...req().headers,origin:'https://other.example'}},403],[req('{bad'),400],[req({...input,context:'x'.repeat(50000)}),413],[req(),503]]){
   const response=res();await handler(request,response);assert.equal(response.statusCode,status);
  }
  assert.equal(calls,0);
@@ -59,4 +59,12 @@ test('chat endpoint passes question and history to provider and supports seriali
  }});
  const response=res();await handler(req(JSON.stringify(body)),response);
  assert.equal(response.statusCode,200);assert.equal(last.messages.at(-1).content,body.question);
+});
+
+test('daily summary includes the same server-resolved card as conversation',()=>{
+ const summary=validateInput({...input,cardId:17});
+ const chat=validateInput({...input,kind:'chat',cardId:17,question:'¿Cómo se relaciona con mi día?'});
+ assert.deepEqual(summary.card,chat.card);
+ assert.match(buildMessages(summary)[1].content,/La Estrella/);
+ assert.throws(()=>validateInput({...input,cardId:99}));
 });
