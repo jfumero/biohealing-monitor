@@ -1,3 +1,6 @@
+import {westernChart} from './western-astrology';
+import {kabbalahForDay} from './kabbalah';
+import {AstrologyPanel,KabbalahPanel} from './PersonalMethods';
 import DayDashboard from './DayDashboard';
 import { generalReading } from './general-reading';
 import MomentReading from './MomentReading';
@@ -179,6 +182,9 @@ export function App({mode='cycles'}){
       const [name,setName]=useState(initial.name);
       const [birthDate,setBirthDate]=useState(initial.birthDate);
       const [birthTime,setBirthTime]=useState(initial.birthTime);
+      const [birthLat,setBirthLat]=useState(initial.birthLat);
+      const [birthLon,setBirthLon]=useState(initial.birthLon);
+      const [birthTimeKnown,setBirthTimeKnown]=useState(initial.birthTimeKnown);
       const [lat,setLat]=useState(initial.lat);
       const [lon,setLon]=useState(initial.lon);
       const [tz,setTz]=useState(initial.tz);
@@ -196,8 +202,8 @@ export function App({mode='cycles'}){
       const [saveError,setSaveError]=useState(false);
       const locationValid = lat !== '' && lon !== '' && tz !== '' && Number.isFinite(Number(lat)) && Number.isFinite(Number(lon)) && Number.isFinite(Number(tz)) && Number(lat)>=-90 && Number(lat)<=90 && Number(lon)>=-180 && Number(lon)<=180 && Number(tz)>=-12 && Number(tz)<=14;
       useEffect(()=>{
-        if(locationValid) setSaveError(!writeProfile({name,birthDate,birthTime,lat,lon,tz,birthUtcOffset,conceptionDate,birthTimeRevision:1}));
-      },[name,birthDate,birthTime,lat,lon,tz,birthUtcOffset,conceptionDate,locationValid]);
+        if(locationValid) setSaveError(!writeProfile({name,birthDate,birthTime,birthLat,birthLon,birthTimeKnown,lat,lon,tz,birthUtcOffset,conceptionDate,birthTimeRevision:1}));
+      },[name,birthDate,birthTime,birthLat,birthLon,birthTimeKnown,lat,lon,tz,birthUtcOffset,conceptionDate,locationValid]);
       useEffect(()=>{
         const openProfile = () => {
           if(location.hash.startsWith('#metodo-')) {
@@ -219,6 +225,9 @@ export function App({mode='cycles'}){
       const birthInstant=useMemo(()=>new Date(+new Date(`${birthDate}T${birthTime || "00:00"}:00Z`) - Number(birthUtcOffset)*3600000),[birthDate,birthTime,birthUtcOffset]);
       const targetInstant=useMemo(()=>new Date(+new Date(`${dateStr}T${readingTime}:00Z`) - Number(tz)*3600000),[dateStr,readingTime,tz]);
 
+      const westernBirth=useMemo(()=>birthTimeKnown?birthInstant:new Date(+new Date(`${birthDate}T12:00:00Z`)-Number(birthUtcOffset)*3600000),[birthTimeKnown,birthInstant,birthDate,birthUtcOffset]);
+      const western=useMemo(()=>westernChart({birthInstant:westernBirth,targetInstant,birthLat,birthLon,birthTimeKnown}),[westernBirth,targetInstant,birthLat,birthLon,birthTimeKnown]);
+      const kabbalah=useMemo(()=>kabbalahForDay(dateStr),[dateStr]);
       // Biorritmos
       const bio=useMemo(()=>({
         physical: Math.round(bioVal(birth,target,23)*1000)/10,
@@ -296,7 +305,7 @@ export function App({mode='cycles'}){
       // UI
       const fmtHM=(d)=>`${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 
-const overview = generalReading({num,bio,maya,sealIndex:tzNames.indexOf(maya.seal),runes,occidental,chino,jyotish,hd,planetHours,target});
+const overview = generalReading({num,bio,maya,sealIndex:tzNames.indexOf(maya.seal),runes,occidental,chino,jyotish,hd,planetHours,target,western,kabbalah});
 const readingContext = `${dateStr} ${readingTime} (UTC${Number(tz)>=0?'+':''}${tz})`;
 const interpBio = <MomentReading reading={bioReading(bio)} />;
 const interpNum = <><MomentReading reading={numberReading(num)} /><details className="mt-3"><summary>Mis números natales en esta lectura</summary>{[["Camino de vida",num.lp],["Expresión",num.exp],["Alma",num.soul],["Personalidad",num.pers],["Madurez",num.mat]].map(([label,n])=><p key={label} className="text-sm mt-2"><strong>{label} {n} · {numberTheme(n)[0]}:</strong> {numberTheme(n)[1]} En la fecha elegida, relaciónalo con el foco de {numberTheme(num.pd)[0]}.</p>)}</details></>;
@@ -311,7 +320,7 @@ const summaryReading = <>
   <MomentReading reading={chineseReading(chino,num.pd)} />
 </>;
 
-      if(mode==='day') return <DayDashboard key={JSON.stringify([dateStr,name,birthDate,birthTime,lat,lon,tz,birthUtcOffset,conceptionDate])} profile={{name,birthDate,birthTime,lat,lon,tz,birthUtcOffset,conceptionDate}} overview={overview} context={readingContext} bio={bio} />;
+      if(mode==='day') return <DayDashboard key={JSON.stringify([dateStr,name,birthDate,birthTime,birthLat,birthLon,birthTimeKnown,lat,lon,tz,birthUtcOffset,conceptionDate])} profile={{name,birthDate,birthTime,birthLat,birthLon,birthTimeKnown,lat,lon,tz,birthUtcOffset,conceptionDate}} overview={overview} context={readingContext} bio={bio} />;
       return (
         <Shell page="cycles"><main id="main" className="cycles-page">
           <div className="flex flex-col gap-6">
@@ -327,7 +336,7 @@ const summaryReading = <>
               <p>Lecturas simbólicas para reflexionar sobre {dateStr} a las {readingTime} (UTC{Number(tz)>=0?'+':''}{tz}). Cambia el momento para explorar otra lectura. Los datos natales permanecen como referencia.</p>
             </section>
             <a className="button primary" href="/#lectura">Volver a mi lectura del día →</a>
-            <nav className="method-navigation" aria-label="Ir a un método">{[['resumen','Signos, sello y runas'],['biorritmos','Biorritmos'],['numerologia','Numerología'],['horas','Horas planetarias'],['jyotish','Jyotish'],['hd','Human Design'],['tabla30','Agenda de 30 días']].map(([id,label])=><a key={id} href={`#metodo-${id}`} onClick={()=>{const node=document.getElementById(`metodo-${id}`);node?.querySelector('.method-details')?.setAttribute('open','');}}>{label}</a>)}</nav>
+            <nav className="method-navigation" aria-label="Ir a un método">{[['resumen','Signos, sello y runas'],['biorritmos','Biorritmos'],['numerologia','Numerología'],['horas','Horas planetarias'],['occidental','Carta natal y tránsitos'],['cabala','Árbol de la Vida'],['jyotish','Jyotish'],['hd','Human Design'],['tabla30','Agenda de 30 días']].map(([id,label])=><a key={id} href={`#metodo-${id}`} onClick={()=>{const node=document.getElementById(`metodo-${id}`);node?.querySelector('.method-details')?.setAttribute('open','');}}>{label}</a>)}</nav>
             <details id="perfil"><summary>◇ Mi perfil y ubicación · Editar datos</summary><Card title="Configuración" helpKey="configuracion" interpTitle="Cómo usar la configuración" interpContent={(
   <div className="space-y-2 text-sm">
     <p><strong>Idea:</strong> cargá tus datos una vez y luego cambiá la fecha objetivo para ver la lectura del día.</p>
@@ -352,14 +361,19 @@ const summaryReading = <>
                 <Field label="Huso al nacer (UTC; Uruguay suele ser −3)">
                   <input type="number" step="0.25" min="-12" max="14" className="rounded-xl border p-2" value={birthUtcOffset} onChange={(e)=>{const n=Number(e.target.value);if(e.target.value!=='' && n>=-12 && n<=14)setBirthUtcOffset(n);}} />
                 </Field>
+                <Field label="¿La hora de nacimiento está confirmada?">
+                  <span><input type="checkbox" checked={birthTimeKnown} onChange={e=>setBirthTimeKnown(e.target.checked)}/> Sí, usarla para mi carta natal</span><small>Sin confirmar: se usa mediodía como referencia y se omiten Luna natal, ascendente y casas.</small>
+                </Field>
+                <Field label="Latitud del lugar de nacimiento"><input type="number" step="0.0001" min="-90" max="90" value={birthLat} onChange={e=>setBirthLat(e.target.value)}/></Field>
+                <Field label="Longitud del lugar de nacimiento"><input type="number" step="0.0001" min="-180" max="180" value={birthLon} onChange={e=>setBirthLon(e.target.value)}/><small>Son coordenadas del lugar donde naciste, independientes de tu domicilio actual.</small></Field>
                 <Field label="Concepción estimada (opcional)">
                   <input type="date" max={birthDate} className="rounded-xl border p-2" value={conceptionDate} onChange={(e)=>{const v=e.target.value;if(!v || (validDate(v) && v<=birthDate))setConceptionDate(v);}} />
                   <small>Vacío: 266 días antes del nacimiento. Ajusta el huso histórico si lo conoces.</small>
                 </Field>
-                <Field label="Latitud (−34.86 Montevideo/Ciudad de la Costa)">
+                <Field label="Latitud de tu ubicación actual">
                   <input type="number" step="0.0001" className="rounded-xl border p-2" value={lat} min="-90" max="90" onChange={(e)=>setLat(e.target.value)} />
                 </Field>
-                <Field label="Longitud (−55.97)">
+                <Field label="Longitud de tu ubicación actual">
                   <input type="number" step="0.0001" className="rounded-xl border p-2" value={lon} min="-180" max="180" onChange={(e)=>setLon(e.target.value)} />
                 </Field>
                 <Field label="Huso horario (UYT = −3)">
@@ -441,6 +455,8 @@ const summaryReading = <>
               )}
             </Card>
 
+            <section id="metodo-occidental"><AstrologyPanel chart={western}/></section>
+            <section id="metodo-cabala"><KabbalahPanel focus={kabbalah}/></section>
             <Card title="Jyotish (védica)" helpKey="jyotish" interpContent={interpJyotish}>
               {jyotish.error ? (
                 <p className="text-sm text-red-600">{jyotish.error}</p>

@@ -1,5 +1,5 @@
 export const PROFILE_KEY = 'cycles_app_state';
-export const DEFAULT_PROFILE = { name: 'Jonathan Fumero Mesa', birthDate: '1976-12-04', birthTime: '00:49', lat: -34.86, lon: -55.97, tz: -3, birthUtcOffset: -3, conceptionDate: '', birthTimeRevision: 1 };
+export const DEFAULT_PROFILE = { name: 'Jonathan Fumero Mesa', birthDate: '1976-12-04', birthTime: '00:49', lat: -34.86, lon: -55.97, tz: -3, birthUtcOffset: -3, conceptionDate: '', birthTimeRevision: 1, birthLat: '', birthLon: '', birthTimeKnown: false };
 
 export function validDate(value) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value || '')) return false;
@@ -15,6 +15,9 @@ export function normalizeProfile(value = {}) {
   const number = (key, min, max) => Number.isFinite(Number(value[key])) && value[key] !== '' && value[key] != null && Number(value[key]) >= min && Number(value[key]) <= max ? Number(value[key]) : DEFAULT_PROFILE[key];
   return {
     birthTimeRevision: 1,
+    birthLat: value.birthLat !== '' && value.birthLat != null && Number.isFinite(Number(value.birthLat)) && Math.abs(Number(value.birthLat)) <= 90 ? Number(value.birthLat) : '',
+    birthLon: value.birthLon !== '' && value.birthLon != null && Number.isFinite(Number(value.birthLon)) && Math.abs(Number(value.birthLon)) <= 180 ? Number(value.birthLon) : '',
+    birthTimeKnown: value.birthTimeKnown === true,
     name: typeof value.name === 'string' ? value.name.slice(0, 100) : DEFAULT_PROFILE.name,
     birthDate: validDate(value.birthDate) ? value.birthDate : DEFAULT_PROFILE.birthDate,
     birthTime: /^([01]\d|2[0-3]):[0-5]\d$/.test(value.birthTime || '') ? value.birthTime : DEFAULT_PROFILE.birthTime,
