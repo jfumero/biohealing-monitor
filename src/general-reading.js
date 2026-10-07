@@ -1,5 +1,6 @@
+import {westernAIContext} from './western-astrology.js';
 import { numberTheme, planetTheme, bioReading, mayaReading, westernReading, chineseReading, hdReading } from './moment-readings.js';
-export function generalReading({num,bio,maya,sealIndex,runes,occidental,chino,jyotish,hd,planetHours,target}) {
+export function generalReading({num,bio,maya,sealIndex,runes,occidental,chino,jyotish,hd,planetHours,target,western,kabbalah}) {
   const [focus,action,question]=numberTheme(num.pd);
   const active=planetHours.rows?.find(r=>target>=r.start && target<r.end);
   const planet=active?.planet || (!planetHours.error && planetHours.lord);
@@ -19,5 +20,7 @@ export function generalReading({num,bio,maya,sealIndex,runes,occidental,chino,jy
     sources:[['Numerología',`Día ${num.pd}, mes ${num.pm}, año ${num.py}: ${focus}.`],['Biorritmos',bioReading(bio).text],['Sello y tono',mayaReading(maya,sealIndex).text],['Runas',`${runes.natal.name}: ${runes.natal.meaning}. ${runes.year.name}: ${runes.year.meaning}.`],['Occidental',westernReading(occidental,num.pd).text],['Chino',chineseReading(chino,num.pd).text],['Horas planetarias',planet?`${active?'Hora':'Día'} de ${planet}: ${planetTheme(planet)[0]}.`:'Sin datos suficientes para esta ubicación.'],['Jyotish',lunar?`Regente lunar ${lunar}; período ${long || 'no disponible'}.`:'Lectura no disponible.'],['Human Design',hdReading(hd,num.pd).text]]
   };
   reading.aiSources=reading.sources.map(([label,text],i)=>[label,`${text}\nDatos calculados: ${JSON.stringify([{caminoDeVida:num.lp,expresion:num.exp,alma:num.soul,personalidad:num.pers,madurez:num.mat,anoPersonal:num.py,mesPersonal:num.pm,diaPersonal:num.pd},bio,maya,runes,{signoNatal:occidental},chino,{regente:planetHours.lord,horaActual:active,horas:planetHours.rows,error:planetHours.error},jyotish,{perfil:hd.profile,longitudSolarPersonalidad:hd.sunPers,longitudSolarDiseno:hd.sunDesi,puertaPersonalidad:hd.gatePers,puertaDiseno:hd.gateDes,nota:hd.note,error:hd.error}][i])}`]);
+  if(western){reading.sources[4]=['Occidental',western.text];reading.aiSources[4]=['Occidental',westernAIContext(western)];}
+  if(kabbalah){const row=['Cábala',`${kabbalah.name} · ${kabbalah.quality}: ${kabbalah.text} Ejercicio: ${kabbalah.action} Frase: ${kabbalah.phrase} Método: ${kabbalah.method}`];reading.sources.push(row);reading.aiSources.push(row);}
   return reading;
 }
